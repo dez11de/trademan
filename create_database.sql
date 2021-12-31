@@ -12,11 +12,11 @@ SET FOREIGN_KEY_CHECKS = 1;
 
 CREATE TABLE POSITION (
 	PositionID INT NOT NULL AUTO_INCREMENT,
+	Status ENUM('Planned', 'Ordered', 'Filled', 'Stopped', 'Closed', 'Cancelled', 'Liquidated','Logged'),
 	Symbol VARCHAR(10) NOT NULL,
-	Status ENUM('planned', 'ordered', 'position', 'stopped', 'closed', 'cancelled', 'logged'),
-	Side ENUM('long', 'short'),
-	Risk DECIMAL(5,2),
 	`Size` DECIMAL(21,12),
+	Side ENUM('Long', 'Short'),
+	Risk DECIMAL(5,2),
 	EntryPrice DECIMAL(21,12),
 	HardStopLoss DECIMAL(21,12),
 	Notes TEXT,
@@ -27,6 +27,7 @@ CREATE TABLE POSITION (
 	ModifyTime DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
 	INDEX(Symbol),
+	INDEX(Status),
 	INDEX(EntryTime),
 	INDEX(ModifyTime),
 

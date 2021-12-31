@@ -1,0 +1,115 @@
+USE test_trademan;
+
+SET FOREIGN_KEY_CHECKS = 0;
+
+DROP TABLE IF EXISTS `POSITION`;
+DROP TABLE IF EXISTS `ORDER`;
+DROP TABLE IF EXISTS `LOG`;
+
+DROP TRIGGER IF EXISTS positionModifyTrigger;
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+CREATE TABLE POSITION (
+	PositionID INT NOT NULL AUTO_INCREMENT,
+	Symbol VARCHAR(10) NOT NULL,
+	Status ENUM('planned', 'ordered', 'position', 'stopped', 'closed', 'cancelled', 'logged'),
+	Side ENUM('long', 'short'),
+	Risk DECIMAL(5,2),
+	`Size` DECIMAL(21,12),
+	EntryPrice DECIMAL(21,12),
+	HardStopLoss DECIMAL(21,12),
+	Notes TEXT,
+	TradingViewPlan VARCHAR(100),
+	RewardRiskRatio DECIMAL (6,2),
+	Profit DECIMAL(21,12),
+	EntryTime DATETIME DEFAULT CURRENT_TIMESTAMP,
+	ModifyTime DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+	INDEX(Symbol),
+	INDEX(EntryTime),
+	INDEX(ModifyTime),
+
+	PRIMARY KEY (PositionID)
+);
+
+CREATE TABLE `ORDER` (
+	OrderID INT NOT NULL AUTO_INCREMENT,
+	PositionID INT NOT NULL, 
+	ExchangeOrderID VARCHAR(50),
+	Status ENUM('planned', 'ordered', 'position', 'stopped', 'closed', 'cancelled', 'logged'),
+	OrderType ENUM('Soft StopLoss', 'Take Profit'),
+	`Size` DECIMAL(21,12),
+	TriggerPrice DECIMAL(21,12),
+	Price DECIMAL(21,12),
+	EntryTime DATETIME DEFAULT CURRENT_TIMESTAMP,
+	ModifyTime DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+	INDEX(EntryTime),
+	INDEX(ModifyTime),
+
+	PRIMARY KEY (OrderID),
+	FOREIGN KEY (PositionID) REFERENCES `POSITION`(PositionID)
+);
+
+CREATE TABLE `LOG` (
+	LogID INT NOT NULL AUTO_INCREMENT,
+	PositionID INT NOT NULL,
+	Source ENUM('trigger', 'software', 'user'),
+	Text TEXT,
+	EntryTime DATETIME DEFAULT CURRENT_TIMESTAMP,
+
+	INDEX(EntryTime),
+	INDEX(Source),
+
+	PRIMARY KEY (LogID),
+	FOREIGN KEY (PositionID) REFERENCES `POSITION`(PositionID)
+);
+
+DELIMITER $$
+
+CREATE TRIGGER positionModifyTrigger
+AFTER UPDATE ON `POSITION` FOR EACH ROW
+BEGIN
+	DECLARE logText Text;
+	SET logText = "Updated fields: ";
+	IF OLD.Status <> NEW.Status THEN
+		SET logText = CONCAT(logText, 'Status: ', OLD.Status, '->', NEW.Status, ', ');
+	END IF;
+	IF OLD.Risk <> NEW.Risk THEN
+		SET logText = CONCAT(logText, 'Risk: ', OLD.Risk, '->', NEW.Risk, ', ');
+	END IF;
+	IF OLD.`Size` <> NEW.`Size` THEN
+		SET logText = CONCAT(logText, 'Status: ', OLD.`Size`, '->', NEW.`Size`, ', ');
+	END IF;
+	IF OLD.EntryPrice <> NEW.EntryPrice THEN
+		SET logText = CONCAT(logText, 'EntryPrice: ', OLD.EntryPrice, '->', NEW.EntryPrice, ', ');
+	END IF;
+	IF OLD.HardStopLoss <> NEW.HardStopLoss THEN
+		SET logText = CONCAT(logText, 'HardStopLoss: ', OLD.HardStopLoss, '->', NEW.HardStopLoss, ', ');
+	END IF;
+	IF OLD.Notes <> NEW.Notes THEN
+		SET logText = CONCAT(logText, 'Notes: ', OLD.Notes, '->', NEW.Notes, ', ');
+	END IF;
+	IF OLD.TradingViewPlan <> NEW.TradingViewPlan THEN
+		SET logText = CONCAT(logText, 'TradingViewPlan: ', OLD.TradingViewPlan, '->', NEW.TradingViewPlan, ', ');
+	END IF;
+	IF OLD.RewardRiskRatio <> NEW.RewardRiskRatio THEN
+		SET logText = CONCAT(logText, 'Status: ', OLD.RewardRiskRatio, '->', NEW.RewardRiskRatio, ', ');
+	END IF;
+	IF OLD.Profit <> NEW.Profit THEN
+		SET logText = CONCAT(logText, 'Profit: ', OLD.Profit, '->', NEW.Profit, ', ');
+	END IF;
+	INSERT INTO `LOG` (
+		PositionID,
+		Source,
+		Text
+	)
+	VALUES (
+		OLD.PositionID,
+		'trigger',
+		logText
+	);
+END$$
+
+DELIMITER ;

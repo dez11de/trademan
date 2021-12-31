@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"log"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -35,7 +36,7 @@ func NewDB() (db *Database) {
 			User:     "dennis",
 			Password: "c0d3mysql",
 		},
-		"POSITION",
+		"`POSITION`",
 		"`ORDER`",
 		"`LOG`",
 		nil,
@@ -79,13 +80,32 @@ func (db *Database) AddPosition(p Position) (TradeID int64, err error) {
 	return result.LastInsertId()
 }
 
+func (db *Database) GetPositions() (p []Position, err error) {
+	rows, err := db.database.Query("SELECT Symbol, Status, Size FROM `POSITION`;")
+	if err != nil {
+		log.Printf("Error querying database %v", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var pos Position
+		if err := rows.Scan(&pos.Symbol, &pos.Status, &pos.Size); err != nil {
+			log.Printf("Error querying database %v", err)
+			return nil, err
+		}
+		p = append(p, pos)
+	}
+	return p, nil
+}
+
 func (db *Database) PrepareAddOrderStatement() (err error) {
 	db.addOrderStatement, err = db.database.Prepare(fmt.Sprintf("INSERT %s SET PositionID=?, ExchangeOrderID=?, Status=?, OrderType=?, `Size`=?, TriggerPrice=?, Price=?", db.orderTableName))
 	return err
 }
 
 func (db *Database) AddOrder(o Order) (OrderID int64, err error) {
-	result, err := db.addOrderStatement.Exec(o.TradeID, o.ExchangeOrderID, o.Status.String(), o.OrderType.String(), o.Quantity, o.TakeProfitTrigger, o.Price)
+	result, err := db.addOrderStatement.Exec(o.PositionID, o.ExchangeOrderID, o.Status.String(), o.OrderType.String(), o.Size, o.TriggerPrice, o.Price)
 	if err != nil {
 		return 0, err
 	}

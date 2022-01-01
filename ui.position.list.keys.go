@@ -7,9 +7,8 @@ import (
 )
 
 type listKeyMap struct {
-	toggleStatusBar key.Binding
-	toggleHelpMenu  key.Binding
-	insertItem      key.Binding
+	toggleHelpMenu key.Binding
+	insertItem     key.Binding
 }
 
 func newListKeyMap() *listKeyMap {
@@ -17,10 +16,6 @@ func newListKeyMap() *listKeyMap {
 		insertItem: key.NewBinding(
 			key.WithKeys("a"),
 			key.WithHelp("a", "add item"),
-		),
-		toggleStatusBar: key.NewBinding(
-			key.WithKeys("S"),
-			key.WithHelp("S", "toggle status"),
 		),
 		toggleHelpMenu: key.NewBinding(
 			key.WithKeys("H"),
@@ -44,16 +39,13 @@ func newItemDelegate(keys *delegateKeyMap) list.DefaultDelegate {
 		switch msg := msg.(type) {
 		case tea.KeyMsg:
 			switch {
-			case key.Matches(msg, keys.choose):
-				return m.NewStatusMessage(statusMessageStyle("You chose " + title))
-
 			case key.Matches(msg, keys.remove):
 				index := m.Index()
 				m.RemoveItem(index)
 				if len(m.Items()) == 0 {
 					keys.remove.SetEnabled(false)
 				}
-				return m.NewStatusMessage(statusMessageStyle("Deleted " + title))
+				return m.NewStatusMessage("Deleted " + title)
 			}
 		}
 

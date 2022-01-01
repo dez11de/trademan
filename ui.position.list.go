@@ -16,10 +16,6 @@ var (
 			Foreground(lipgloss.Color("#FFFDF5")).
 			Background(lipgloss.Color("#25A065")).
 			Padding(0, 1)
-
-	statusMessageStyle = lipgloss.NewStyle().
-				Foreground(lipgloss.AdaptiveColor{Light: "#04B575", Dark: "#04B575"}).
-				Render
 )
 
 type item struct {
@@ -50,20 +46,20 @@ func newModel(d *Database) listModel {
 	p, _ := d.GetPositions()
 	items := make([]list.Item, len(p))
 	for i := 0; i < len(p); i++ {
-		items[i] = item{title: p[i].Symbol,
-			description: p[i].Status.String() + "\t" + strconv.FormatFloat(p[i].Size, 'f', 4, 64),
+		items[i] = item{title: p[i].Symbol + " " + p[i].Status.String(),
+			description: "Size: " + strconv.FormatFloat(p[i].Size, 'f', 4, 64),
 		}
 	}
 
 	// Setup list
 	delegate := newItemDelegate(delegateKeys)
 	positionList := list.NewModel(items, delegate, 0, 0)
+	positionList.SetShowStatusBar(false)
 	positionList.Title = "Positions"
 	positionList.Styles.Title = titleStyle
 	positionList.AdditionalFullHelpKeys = func() []key.Binding {
 		return []key.Binding{
 			listKeys.insertItem,
-			listKeys.toggleStatusBar,
 			listKeys.toggleHelpMenu,
 		}
 	}
@@ -96,10 +92,6 @@ func (m listModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 		switch {
-		case key.Matches(msg, m.keys.toggleStatusBar):
-			m.list.SetShowStatusBar(!m.list.ShowStatusBar())
-			return m, nil
-
 		case key.Matches(msg, m.keys.toggleHelpMenu):
 			m.list.SetShowHelp(!m.list.ShowHelp())
 			return m, nil

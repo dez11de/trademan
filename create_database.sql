@@ -2,6 +2,7 @@ USE test_trademan;
 
 SET FOREIGN_KEY_CHECKS = 0;
 
+DROP TABLE IF EXISTS `SYMBOL`;
 DROP TABLE IF EXISTS `POSITION`;
 DROP TABLE IF EXISTS `ORDER`;
 DROP TABLE IF EXISTS `LOG`;
@@ -10,10 +11,33 @@ DROP TRIGGER IF EXISTS positionModifyTrigger;
 
 SET FOREIGN_KEY_CHECKS = 1;
 
+CREATE TABLE `SYMBOL` (
+	SymbolID INT NOT NULL AUTO_INCREMENT,
+	Symbol VARCHAR(15) NOT NULL UNIQUE,
+	BaseCurrency VARCHAR(10),
+	QuoteCurrency VARCHAR(10),
+	PriceScale INT,
+	TakerFee DOUBLE,
+	MakerFee DOUBLE,
+	MinLeverage DOUBLE,
+	MaxLeverage DOUBLE,
+	LeverageStep DOUBLE,
+	MinPrice DOUBLE,
+	MaxPrice DOUBLE,
+	TickSize DOUBLE,
+	MinOrderSize DOUBLE,
+	MaxOrderSize DOUBLE,
+	StepOrderSize DOUBLE,
+
+	INDEX(Symbol),
+	
+	PRIMARY KEY (SymbolID)
+);
+
 CREATE TABLE POSITION (
 	PositionID INT NOT NULL AUTO_INCREMENT,
 	Status ENUM('Planned', 'Ordered', 'Filled', 'Stopped', 'Closed', 'Cancelled', 'Liquidated','Logged'),
-	Symbol VARCHAR(10) NOT NULL,
+	SymbolID INT NOT NULL,
 	`Size` DECIMAL(21,12),
 	Side ENUM('Long', 'Short'),
 	Risk DECIMAL(5,2),
@@ -26,12 +50,13 @@ CREATE TABLE POSITION (
 	EntryTime DATETIME DEFAULT CURRENT_TIMESTAMP,
 	ModifyTime DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
-	INDEX(Symbol),
+	INDEX(SymbolID),
 	INDEX(Status),
 	INDEX(EntryTime),
 	INDEX(ModifyTime),
 
-	PRIMARY KEY (PositionID)
+	PRIMARY KEY (PositionID),
+	FOREIGN KEY (SymbolID) REFERENCES `SYMBOL`(SymbolID)
 );
 
 CREATE TABLE `ORDER` (
@@ -66,6 +91,7 @@ CREATE TABLE `LOG` (
 	PRIMARY KEY (LogID),
 	FOREIGN KEY (PositionID) REFERENCES `POSITION`(PositionID)
 );
+
 
 DELIMITER $$
 

@@ -18,10 +18,12 @@ type databaseConfig struct {
 
 type Database struct {
 	config               databaseConfig
+	symbolTableName      string
 	positionTableName    string
 	orderTableName       string
 	logTableName         string
 	database             *sql.DB
+	addSymbolStatement   *sql.Stmt
 	addPositionStatement *sql.Stmt
 	addOrderStatement    *sql.Stmt
 	addLogStatement      *sql.Stmt
@@ -36,9 +38,11 @@ func NewDB() (db *Database) {
 			User:     "dennis",
 			Password: "c0d3mysql",
 		},
+		"`SYMBOL`",
 		"`POSITION`",
 		"`ORDER`",
 		"`LOG`",
+		nil,
 		nil,
 		nil,
 		nil,
@@ -52,6 +56,11 @@ func (db *Database) Connect() (err error) {
 		return err
 	}
 
+	err = db.PrepareAddSymbolStatement()
+	if err != nil {
+		log.Printf("%v", err)
+		return err
+	}
 	err = db.PrepareAddPositionStatement()
 	if err != nil {
 		return err
@@ -64,60 +73,5 @@ func (db *Database) Connect() (err error) {
 	if err != nil {
 		return err
 	}
-	return nil
-}
-
-func (db *Database) PrepareAddPositionStatement() (err error) {
-	db.addPositionStatement, err = db.database.Prepare(fmt.Sprintf("INSERT %s SET Symbol=?, Status=?, Risk=?, `Size`=?, EntryPrice=?, HardStopLoss=?, Notes=?, TradingViewPlan=?, RewardRiskRatio=?, Profit=?", db.positionTableName))
-	return err
-}
-
-func (db *Database) AddPosition(p Position) (TradeID int64, err error) {
-	result, err := db.addPositionStatement.Exec(p.Symbol, p.Side.String(), p.Risk, p.Size, p.EntryPrice, p.HardStopLoss, p.Notes, p.TradingViewPlan, p.RewardRiskRatio, p.Profit)
-	if err != nil {
-		return 0, err
-	}
-	return result.LastInsertId()
-}
-
-func (db *Database) GetPositions() (p []Position, err error) {
-	rows, err := db.database.Query("SELECT Symbol, Status, Size FROM `POSITION`;")
-	if err != nil {
-		log.Printf("Error querying database %v", err)
-		return nil, err
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var pos Position
-		if err := rows.Scan(&pos.Symbol, &pos.Status, &pos.Size); err != nil {
-			log.Printf("Error querying database %v", err)
-			return nil, err
-		}
-		p = append(p, pos)
-	}
-	return p, nil
-}
-
-func (db *Database) PrepareAddOrderStatement() (err error) {
-	db.addOrderStatement, err = db.database.Prepare(fmt.Sprintf("INSERT %s SET PositionID=?, ExchangeOrderID=?, Status=?, OrderType=?, `Size`=?, TriggerPrice=?, Price=?", db.orderTableName))
-	return err
-}
-
-func (db *Database) AddOrder(o Order) (OrderID int64, err error) {
-	result, err := db.addOrderStatement.Exec(o.PositionID, o.ExchangeOrderID, o.Status.String(), o.OrderType.String(), o.Size, o.TriggerPrice, o.Price)
-	if err != nil {
-		return 0, err
-	}
-	return result.LastInsertId()
-}
-
-func (db *Database) PrepareAddLogStatement() (err error) {
-	db.addLogStatement, err = db.database.Prepare(fmt.Sprintf("INSERT %s SET PositionID=?, Source=?, Text=?", db.logTableName))
-	return err
-}
-
-func (db *Database) AddLog(tradeID int64, source LogSource, text string) (err error) {
-	_, err = db.addLogStatement.Exec(tradeID, source, text)
 	return err
 }

@@ -15,7 +15,7 @@ func main() {
 	db := NewDB()
 	db.Connect()
 
-	if err := tea.NewProgram(newModel(db), tea.WithAltScreen()).Start(); err != nil {
+	if err := tea.NewProgram(newMainUIModel(db), tea.WithAltScreen()).Start(); err != nil {
 		fmt.Println("Error running program:", err)
 		os.Exit(1)
 	}

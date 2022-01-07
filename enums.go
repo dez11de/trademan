@@ -30,7 +30,7 @@ const (
 type LogSource int
 
 const (
-	trigger LogSource = iota
-	software
-	user
+	Trigger LogSource = iota
+	Software
+	User
 )

@@ -81,7 +81,7 @@ CREATE TABLE `ORDER` (
 CREATE TABLE `LOG` (
 	LogID INT NOT NULL AUTO_INCREMENT,
 	PositionID INT NOT NULL,
-	Source ENUM('trigger', 'software', 'user'),
+	Source ENUM('Trigger', 'Software', 'User'),
 	Text TEXT,
 	EntryTime DATETIME DEFAULT CURRENT_TIMESTAMP,
 

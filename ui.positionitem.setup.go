@@ -27,7 +27,7 @@ func newPositionListModel(d *Database, height int) positionListModel {
 	p, _ := d.GetPositions()
 	items := make([]list.Item, len(p))
 	for i := 0; i < len(p); i++ {
-		items[i] = item{title: p[i].Symbol + " " + positionStatusStyle.Render(p[i].Status.String()),
+		items[i] = item{title: p[i].Pair + " " + positionStatusStyle.Render(p[i].Status.String()),
 			description: "Size: " + strconv.FormatFloat(p[i].Size, 'f', 4, 64),
 		}
 	}

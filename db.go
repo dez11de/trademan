@@ -18,18 +18,25 @@ type databaseConfig struct {
 
 type Database struct {
 	config               databaseConfig
-	symbolTableName      string
+	pairTableName        string
+	walletTableName      string
 	positionTableName    string
 	orderTableName       string
 	logTableName         string
 	database             *sql.DB
-	addSymbolStatement   *sql.Stmt
+	addPairStatement     *sql.Stmt
+	addWalletStatement   *sql.Stmt
 	addPositionStatement *sql.Stmt
 	addOrderStatement    *sql.Stmt
 	addLogStatement      *sql.Stmt
+
+	PairCache   map[string]pair
+	WalletCache map[string]balance
 }
 
 func NewDB() (db *Database) {
+	pc := make(map[string]pair)
+	wc := make(map[string]balance)
 	return &Database{
 		databaseConfig{
 			Host:     "192.168.1.250",
@@ -38,7 +45,8 @@ func NewDB() (db *Database) {
 			User:     "dennis",
 			Password: "c0d3mysql",
 		},
-		"`SYMBOL`",
+		"`PAIR`",
+		"`WALLET`",
 		"`POSITION`",
 		"`ORDER`",
 		"`LOG`",
@@ -47,16 +55,24 @@ func NewDB() (db *Database) {
 		nil,
 		nil,
 		nil,
+		nil,
+		pc,
+		wc,
 	}
 }
 
 func (db *Database) Connect() (err error) {
-	db.database, err = sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s)/%s", db.config.User, db.config.Password, db.config.Host, db.config.Database))
+	db.database, err = sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s)/%s?parseTime=true", db.config.User, db.config.Password, db.config.Host, db.config.Database))
 	if err != nil {
 		return err
 	}
 
-	err = db.PrepareAddSymbolStatement()
+	err = db.PrepareAddPairStatement()
+	if err != nil {
+		log.Printf("%v", err)
+		return err
+	}
+	err = db.PrepareAddWalletStatement()
 	if err != nil {
 		log.Printf("%v", err)
 		return err
@@ -73,5 +89,15 @@ func (db *Database) Connect() (err error) {
 	if err != nil {
 		return err
 	}
+
+	db.PairCache, err = db.GetSymbols()
+	if err != nil {
+		return err
+	}
+	db.WalletCache, err = db.GetRecentWallet()
+	if err != nil {
+		return err
+	}
+
 	return err
 }

@@ -82,7 +82,7 @@ CREATE TABLE `ORDER` (
 	OrderID INT NOT NULL AUTO_INCREMENT,
 	PositionID INT NOT NULL, 
 	ExchangeOrderID VARCHAR(50),
-	Status ENUM('planned', 'ordered', 'position', 'stopped', 'closed', 'cancelled', 'logged'),
+	Status ENUM('Planned', 'Ordered', 'Position', 'Stopped', 'Closed', 'Cancelled', 'Logged'),
 	OrderType ENUM('Soft StopLoss', 'Take Profit'),
 	`Size` DECIMAL(21,12),
 	TriggerPrice DECIMAL(21,12),

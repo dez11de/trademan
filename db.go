@@ -90,7 +90,7 @@ func (db *Database) Connect() (err error) {
 		return err
 	}
 
-	db.PairCache, err = db.GetSymbols()
+	db.PairCache, err = db.GetPairs()
 	if err != nil {
 		return err
 	}

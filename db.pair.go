@@ -21,6 +21,7 @@ func (db *Database) AddPair(p pair) (PairID int64, err error) {
 }
 
 func (db *Database) GetPairs() (pairs map[string]pair, err error) {
+	pairs = make(map[string]pair)
 	rows, err := db.database.Query("SELECT * FROM `PAIR`;")
 	if err != nil {
 		return nil, err

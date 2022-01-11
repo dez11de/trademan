@@ -19,7 +19,7 @@ func (db *Database) AddWallet(b balance) (err error) {
 	return err
 }
 
-func (db *Database) GetRecentWallet() (map[string]balance, error) {
+func (db *Database) GetRecentWallet() (wallet map[string]balance, err error) {
 	// Get most recent TimeStamp
 	rows, err := db.database.Query("SELECT EntryTime FROM `WALLET` ORDER BY EntryTime DESC LIMIT 1;")
 	if err != nil {
@@ -40,7 +40,7 @@ func (db *Database) GetRecentWallet() (map[string]balance, error) {
 	}
 	defer rows.Close()
 
-	wallet := make(map[string]balance)
+	wallet = make(map[string]balance)
 	for rows.Next() {
 		if err := rows.Scan(&lastBalance.Symbol, &lastBalance.Equity, &lastBalance.Available, &lastBalance.UsedMargin, &lastBalance.OrderMargin, &lastBalance.PositionMargin, &lastBalance.OCCClosingFee, &lastBalance.OCCFundingFee, &lastBalance.WalletBalance, &lastBalance.DailyPnL, &lastBalance.UnrealisedPnL, &lastBalance.TotalPnL, &lastBalance.EntryTime); err != nil {
 			return nil, err

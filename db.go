@@ -35,8 +35,6 @@ type Database struct {
 }
 
 func NewDB() (db *Database) {
-	pc := make(map[string]pair)
-	wc := make(map[string]balance)
 	return &Database{
 		databaseConfig{
 			Host:     "192.168.1.250",
@@ -56,8 +54,8 @@ func NewDB() (db *Database) {
 		nil,
 		nil,
 		nil,
-		pc,
-		wc,
+		nil,
+		nil,
 	}
 }
 

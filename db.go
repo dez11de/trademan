@@ -60,7 +60,7 @@ func NewDB() (db *Database) {
 }
 
 func (db *Database) Connect() (err error) {
-	db.database, err = sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s)/%s?parseTime=true", db.config.User, db.config.Password, db.config.Host, db.config.Database))
+	db.database, err = sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", db.config.User, db.config.Password, db.config.Host, db.config.Port, db.config.Database))
 	if err != nil {
 		return err
 	}

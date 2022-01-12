@@ -39,10 +39,17 @@ func (db *Database) GetPairs() (pairs map[string]pair, err error) {
 }
 
 func (db *Database) GetPairID(p string) int64 {
-	for symbol, pair := range db.PairCache {
-		if symbol == p {
-			return pair.PairID
-		}
+	if id, ok := db.PairCache[p]; ok {
+		return id.PairID
 	}
 	return -1
+}
+
+func (db *Database) GetPairString(id int64) string {
+	for _, pair := range db.PairCache {
+		if pair.PairID == id {
+			return pair.Pair
+		}
+	}
+	return ""
 }

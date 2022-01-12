@@ -36,32 +36,29 @@ CREATE TABLE `PAIR` (
 );
 
 CREATE TABLE `WALLET` (
-	Symbol VARCHAR(10) NOT NULL,
-	Equity DOUBLE,
-	Available DOUBLE,
-	UsedMargin DOUBLE,
-	OrderMargin DOUBLE,
-	PositionMargin DOUBLE,
-	OCCClosingFee DOUBLE,
-	OCCFundingFee DOUBLE,
-	WalletBalance DOUBLE,
-	DailyPnL DOUBLE,
-	UnrealisedPnL DOUBLE,
-	TotalPnL DOUBLE,
-	EntryTime DATETIME,
+	Symbol         VARCHAR(10) NOT NULL,
+	Equity         DECIMAL(20, 8),
+	Available      DECIMAL(20, 8),
+	UsedMargin     DECIMAL(20, 8),
+	OrderMargin    DECIMAL(20, 8),
+	PositionMargin DECIMAL(20, 8),
+	OCCClosingFee  DECIMAL(20, 8),
+	OCCFundingFee  DECIMAL(20, 8),
+	WalletBalance  DECIMAL(20, 8),
+	DailyPnL       DECIMAL(20, 8),
+	UnrealisedPnL  DECIMAL(20, 8),
+	TotalPnL       DECIMAL(20, 8),
+	EntryTime      DATETIME,
 	
 	PRIMARY KEY (Symbol, EntryTime)
 );
 
 CREATE TABLE POSITION (
 	PositionID INT NOT NULL AUTO_INCREMENT,
-	Status ENUM('Planned', 'Ordered', 'Filled', 'Stopped', 'Closed', 'Cancelled', 'Liquidated','Logged'),
 	PairID INT NOT NULL,
-	`Size` DECIMAL(21,12),
+	Status ENUM('Planned', 'Ordered', 'Filled', 'Stopped', 'Closed', 'Cancelled', 'Liquidated','Logged'),
 	Side ENUM('Long', 'Short'),
 	Risk DECIMAL(5,2),
-	EntryPrice DECIMAL(21,12),
-	HardStopLoss DECIMAL(21,12),
 	Notes TEXT,
 	TradingViewPlan VARCHAR(100),
 	RewardRiskRatio DECIMAL (6,2),
@@ -83,7 +80,7 @@ CREATE TABLE `ORDER` (
 	PositionID INT NOT NULL, 
 	ExchangeOrderID VARCHAR(50),
 	Status ENUM('Planned', 'Ordered', 'Position', 'Stopped', 'Closed', 'Cancelled', 'Logged'),
-	OrderType ENUM('Soft StopLoss', 'Take Profit'),
+	OrderType ENUM('Hard Stoploss', 'Soft StopLoss', 'Entry', 'Take Profit'),
 	`Size` DECIMAL(21,12),
 	TriggerPrice DECIMAL(21,12),
 	Price DECIMAL(21,12),
@@ -124,15 +121,6 @@ BEGIN
 	END IF;
 	IF OLD.Risk <> NEW.Risk THEN
 		SET logText = CONCAT(logText, 'Risk: ', OLD.Risk, '->', NEW.Risk, ', ');
-	END IF;
-	IF OLD.`Size` <> NEW.`Size` THEN
-		SET logText = CONCAT(logText, 'Status: ', OLD.`Size`, '->', NEW.`Size`, ', ');
-	END IF;
-	IF OLD.EntryPrice <> NEW.EntryPrice THEN
-		SET logText = CONCAT(logText, 'EntryPrice: ', OLD.EntryPrice, '->', NEW.EntryPrice, ', ');
-	END IF;
-	IF OLD.HardStopLoss <> NEW.HardStopLoss THEN
-		SET logText = CONCAT(logText, 'HardStopLoss: ', OLD.HardStopLoss, '->', NEW.HardStopLoss, ', ');
 	END IF;
 	IF OLD.Notes <> NEW.Notes THEN
 		SET logText = CONCAT(logText, 'Notes: ', OLD.Notes, '->', NEW.Notes, ', ');

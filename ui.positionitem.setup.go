@@ -1,7 +1,7 @@
 package main
 
 import (
-	"strconv"
+	"fmt"
 
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"
@@ -24,11 +24,16 @@ func newPositionListModel(d *Database, height int) positionListModel {
 	positionStatusStyle := lipgloss.NewStyle().
 		Foreground(lipgloss.Color("9"))
 
-	p, _ := d.GetPositions()
-	items := make([]list.Item, len(p))
-	for i := 0; i < len(p); i++ {
-		items[i] = item{title: p[i].Pair + " " + positionStatusStyle.Render(p[i].Status.String()),
-			description: "Size: " + strconv.FormatFloat(p[i].Size, 'f', 4, 64),
+	p, err := d.GetPositions()
+	items := make([]list.Item, 1)
+	if err != nil {
+		items[0] = item{title: fmt.Sprintf("Error reading positionlist: %v", err)}
+	} else {
+		for i := 0; i < len(p); i++ {
+			items = append(items, item{title: d.GetPairString(p[i].PairID) + " " + positionStatusStyle.Render(p[i].Status.String()),
+				description: "Plan: " + p[i].TradingViewPlan,
+			},
+			)
 		}
 	}
 

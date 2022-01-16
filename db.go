@@ -30,7 +30,7 @@ type Database struct {
 	addOrderStatement    *sql.Stmt
 	addLogStatement      *sql.Stmt
 
-	PairCache   map[string]pair
+	PairCache   map[string]Pair
 	WalletCache map[string]balance
 }
 

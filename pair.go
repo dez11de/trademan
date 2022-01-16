@@ -20,7 +20,7 @@ type pairOrderSize struct {
 	Step decimal.Decimal `json:"qty_step"`
 }
 
-type pair struct {
+type Pair struct {
 	PairID        int64
 	Pair          string          `json:"name"`
 	BaseCurrency  string          `json:"base_currency"`

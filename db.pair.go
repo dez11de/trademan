@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -11,7 +12,7 @@ func (db *Database) PrepareAddPairStatement() (err error) {
 	return err
 }
 
-func (db *Database) AddPair(p pair) (PairID int64, err error) {
+func (db *Database) AddPair(p Pair) (PairID int64, err error) {
 	// TODO: handle updates of existing symbols
 	result, err := db.addPairStatement.Exec(p.Pair, p.BaseCurrency, p.QuoteCurrency, p.PriceScale, p.TakerFee, p.MakerFee, p.Leverage.Min, p.Leverage.Max, p.Leverage.Step, p.Price.Min, p.Price.Max, p.Price.Tick, p.OrderSize.Min, p.OrderSize.Max, p.OrderSize.Step)
 	if err != nil {
@@ -20,15 +21,15 @@ func (db *Database) AddPair(p pair) (PairID int64, err error) {
 	return result.LastInsertId()
 }
 
-func (db *Database) GetPairs() (pairs map[string]pair, err error) {
-	pairs = make(map[string]pair)
-	rows, err := db.database.Query("SELECT * FROM `PAIR`;")
+func (db *Database) GetPairs() (pairs map[string]Pair, err error) {
+	pairs = make(map[string]Pair)
+	rows, err := db.database.Query("SELECT * FROM `PAIR` ORDER BY Pair;")
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var p pair
+	var p Pair
 	for rows.Next() {
 		err = rows.Scan(&p.PairID, &p.Pair, &p.BaseCurrency, &p.QuoteCurrency, &p.PriceScale, &p.TakerFee, &p.MakerFee, &p.Leverage.Min, &p.Leverage.Max, &p.Leverage.Step, &p.Price.Min, &p.Price.Max, &p.Price.Tick, &p.OrderSize.Min, &p.OrderSize.Max, &p.OrderSize.Step)
 		if err != nil {
@@ -52,4 +53,16 @@ func (db *Database) GetPairString(id int64) string {
 		}
 	}
 	return ""
+}
+
+func (db *Database) GetPairFromString(p string) (pair Pair, err error) {
+	pair, ok := db.PairCache[p]
+	if !ok {
+		return Pair{}, errors.New("pair not found in cache")
+	}
+	return pair, nil
+}
+
+func (db *Database) GetPairFromID(i int64) (pair Pair, err error) {
+	return db.GetPairFromString(db.GetPairString(i))
 }

@@ -189,9 +189,9 @@ func (i *Status) Scan(value interface{}) error {
 	return nil
 }
 
-const _OrderTypeName = "SoftStopLossTakeProfit"
+const _OrderTypeName = "HardStopLossSoftStopLossEntryTakeProfit"
 
-var _OrderTypeIndex = [...]uint8{0, 12, 22}
+var _OrderTypeIndex = [...]uint8{0, 12, 24, 29, 39}
 
 func (i OrderType) String() string {
 	if i < 0 || i >= OrderType(len(_OrderTypeIndex)-1) {
@@ -200,11 +200,13 @@ func (i OrderType) String() string {
 	return _OrderTypeName[_OrderTypeIndex[i]:_OrderTypeIndex[i+1]]
 }
 
-var _OrderTypeValues = []OrderType{0, 1}
+var _OrderTypeValues = []OrderType{0, 1, 2, 3}
 
 var _OrderTypeNameToValueMap = map[string]OrderType{
 	_OrderTypeName[0:12]:  0,
-	_OrderTypeName[12:22]: 1,
+	_OrderTypeName[12:24]: 1,
+	_OrderTypeName[24:29]: 2,
+	_OrderTypeName[29:39]: 3,
 }
 
 // OrderTypeString retrieves an enum value from the enum constants string name.
@@ -276,7 +278,7 @@ func (i *OrderType) Scan(value interface{}) error {
 	return nil
 }
 
-const _LogSourceName = "triggersoftwareuser"
+const _LogSourceName = "TriggerSoftwareUser"
 
 var _LogSourceIndex = [...]uint8{0, 7, 15, 19}
 

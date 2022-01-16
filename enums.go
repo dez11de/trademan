@@ -23,7 +23,9 @@ const (
 type OrderType int
 
 const (
-	SoftStopLoss OrderType = iota
+	HardStopLoss OrderType = iota
+	SoftStopLoss
+	Entry
 	TakeProfit
 )
 

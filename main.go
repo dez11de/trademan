@@ -3,6 +3,9 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
+
+	tea "github.com/charmbracelet/bubbletea"
 )
 
 func main() {
@@ -21,27 +24,35 @@ func main() {
 		fmt.Println("Error creating ByBit object")
 	}
 
-	/*
-		err = exchange.Connect()
-		if err != nil {
-			fmt.Println(err)
-		}
-	*/
-
-	for _, pair := range db.PairCache {
-		fmt.Printf("Pair: %s, ID: %d, Quote Currency: %s\n", pair.Pair, pair.PairID, pair.QuoteCurrency)
-	}
-
-	fmt.Println("--------------------------------------------------------------------------------")
-
-	for currency, balance := range db.WalletCache {
-		fmt.Printf("Currency: %s, Available balance: %f\n", currency, balance.Available)
+	err = exchange.Connect()
+	if err != nil {
+		fmt.Println(err)
 	}
 
 	/*
-		if err := tea.NewProgram(newMainUIModel(db), tea.WithAltScreen()).Start(); err != nil {
-			fmt.Println("Error running program:", err)
-			os.Exit(1)
+		currentPairs := exchange.GetPairs()
+		for _, p := range currentPairs {
+			db.AddPair(p)
+		}
+
+		currentBalances, _ := exchange.GetCurrentWallet()
+		for _, b := range currentBalances {
+			db.AddWallet(b)
+		}
+
+		for _, pair := range db.PairCache {
+			fmt.Printf("Pair: %s, ID: %d, Quote Currency: %s\n", pair.Pair, pair.PairID, pair.QuoteCurrency)
+		}
+
+		fmt.Println("--------------------------------------------------------------------------------")
+
+		for currency, balance := range db.WalletCache {
+			fmt.Printf("Currency: %s, Available balance: %f\n", currency, balance.Available)
 		}
 	*/
+
+	if err := tea.NewProgram(newMainUIModel(db), tea.WithAltScreen()).Start(); err != nil {
+		fmt.Println("Error running program:", err)
+		os.Exit(1)
+	}
 }

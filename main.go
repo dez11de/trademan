@@ -3,9 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"os"
-
-	tea "github.com/charmbracelet/bubbletea"
 )
 
 func main() {
@@ -30,29 +27,25 @@ func main() {
 	}
 
 	/*
-		currentPairs := exchange.GetPairs()
-		for _, p := range currentPairs {
-			db.AddPair(p)
-		}
+		    // Might be needed to reload stuff in database
+			currentPairs := exchange.GetPairs()
+			for _, p := range currentPairs {
+				db.AddPair(p)
+			}
 
-		currentBalances, _ := exchange.GetCurrentWallet()
-		for _, b := range currentBalances {
-			db.AddWallet(b)
-		}
+			currentBalances, _ := exchange.GetCurrentWallet()
+			for _, b := range currentBalances {
+				db.AddWallet(b)
+			}
 
-		for _, pair := range db.PairCache {
-			fmt.Printf("Pair: %s, ID: %d, Quote Currency: %s\n", pair.Pair, pair.PairID, pair.QuoteCurrency)
-		}
+			for _, pair := range db.PairCache {
+				fmt.Printf("Pair: %s, ID: %d, Quote Currency: %s\n", pair.Pair, pair.PairID, pair.QuoteCurrency)
+			}
 
-		fmt.Println("--------------------------------------------------------------------------------")
+			fmt.Println("--------------------------------------------------------------------------------")
 
-		for currency, balance := range db.WalletCache {
-			fmt.Printf("Currency: %s, Available balance: %f\n", currency, balance.Available)
-		}
+			for currency, balance := range db.WalletCache {
+				fmt.Printf("Currency: %s, Available balance: %f\n", currency, balance.Available)
+			}
 	*/
-
-	if err := tea.NewProgram(newMainUIModel(db), tea.WithAltScreen()).Start(); err != nil {
-		fmt.Println("Error running program:", err)
-		os.Exit(1)
-	}
 }

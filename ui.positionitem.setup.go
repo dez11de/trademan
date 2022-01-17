@@ -24,7 +24,7 @@ func newPositionListModel(d *Database, height int) positionListModel {
 	positionStatusStyle := lipgloss.NewStyle().
 		Foreground(lipgloss.Color("9"))
 
-	p, err := d.GetPositions()
+	p, err := d.GetPlans()
 	items := make([]list.Item, 1)
 	if err != nil {
 		items[0] = item{title: fmt.Sprintf("Error reading positionlist: %v", err)}

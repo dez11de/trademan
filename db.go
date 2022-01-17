@@ -17,18 +17,18 @@ type databaseConfig struct {
 }
 
 type Database struct {
-	config               databaseConfig
-	pairTableName        string
-	walletTableName      string
-	positionTableName    string
-	orderTableName       string
-	logTableName         string
-	database             *sql.DB
-	addPairStatement     *sql.Stmt
-	addWalletStatement   *sql.Stmt
-	addPositionStatement *sql.Stmt
-	addOrderStatement    *sql.Stmt
-	addLogStatement      *sql.Stmt
+	config             databaseConfig
+	pairTableName      string
+	walletTableName    string
+	planTableName      string
+	orderTableName     string
+	logTableName       string
+	database           *sql.DB
+	addPairStatement   *sql.Stmt
+	addWalletStatement *sql.Stmt
+	addPlanStatement   *sql.Stmt
+	addOrderStatement  *sql.Stmt
+	addLogStatement    *sql.Stmt
 
 	PairCache   map[string]Pair
 	WalletCache map[string]balance
@@ -45,7 +45,7 @@ func NewDB() (db *Database) {
 		},
 		"`PAIR`",
 		"`WALLET`",
-		"`POSITION`",
+		"`PLAN`",
 		"`ORDER`",
 		"`LOG`",
 		nil,
@@ -75,7 +75,7 @@ func (db *Database) Connect() (err error) {
 		log.Printf("%v", err)
 		return err
 	}
-	err = db.PrepareAddPositionStatement()
+	err = db.PrepareAddPlanStatement()
 	if err != nil {
 		return err
 	}

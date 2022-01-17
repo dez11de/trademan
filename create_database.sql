@@ -4,7 +4,7 @@ SET FOREIGN_KEY_CHECKS = 0;
 
 DROP TABLE IF EXISTS `PAIR`;
 DROP TABLE IF EXISTS `WALLET`;
-DROP TABLE IF EXISTS `POSITION`;
+DROP TABLE IF EXISTS `PLAN`;
 DROP TABLE IF EXISTS `ORDER`;
 DROP TABLE IF EXISTS `LOG`;
 
@@ -53,8 +53,8 @@ CREATE TABLE `WALLET` (
 	PRIMARY KEY (Symbol, EntryTime)
 );
 
-CREATE TABLE POSITION (
-	PositionID INT NOT NULL AUTO_INCREMENT,
+CREATE TABLE Plan (
+	PlanID INT NOT NULL AUTO_INCREMENT,
 	PairID INT NOT NULL,
 	Status ENUM('Planned', 'Ordered', 'Filled', 'Stopped', 'Closed', 'Cancelled', 'Liquidated','Logged'),
 	Side ENUM('Long', 'Short'),
@@ -71,13 +71,13 @@ CREATE TABLE POSITION (
 	INDEX(EntryTime),
 	INDEX(ModifyTime),
 
-	PRIMARY KEY (PositionID),
+	PRIMARY KEY (PlanID),
 	FOREIGN KEY (PairID) REFERENCES `PAIR`(PairID)
 );
 
 CREATE TABLE `ORDER` (
 	OrderID INT NOT NULL AUTO_INCREMENT,
-	PositionID INT NOT NULL, 
+	PlanID INT NOT NULL, 
 	ExchangeOrderID VARCHAR(50),
 	Status ENUM('Planned', 'Ordered', 'Position', 'Stopped', 'Closed', 'Cancelled', 'Logged'),
 	OrderType ENUM('Hard Stoploss', 'Soft StopLoss', 'Entry', 'Take Profit'),
@@ -91,12 +91,12 @@ CREATE TABLE `ORDER` (
 	INDEX(ModifyTime),
 
 	PRIMARY KEY (OrderID),
-	FOREIGN KEY (PositionID) REFERENCES `POSITION`(PositionID)
+	FOREIGN KEY (PlanID) REFERENCES `Plan`(PlanID)
 );
 
 CREATE TABLE `LOG` (
 	LogID INT NOT NULL AUTO_INCREMENT,
-	PositionID INT NOT NULL,
+	PlanID INT NOT NULL,
 	Source ENUM('Trigger', 'Software', 'User'),
 	Text TEXT,
 	EntryTime DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -105,14 +105,14 @@ CREATE TABLE `LOG` (
 	INDEX(Source),
 
 	PRIMARY KEY (LogID),
-	FOREIGN KEY (PositionID) REFERENCES `POSITION`(PositionID)
+	FOREIGN KEY (PlanID) REFERENCES `PLAN`(PlanID)
 );
 
 
 DELIMITER $$
 
-CREATE TRIGGER positionModifyTrigger
-AFTER UPDATE ON `POSITION` FOR EACH ROW
+CREATE TRIGGER planModifyTrigger
+AFTER UPDATE ON `PLAN` FOR EACH ROW
 BEGIN
 	DECLARE logText Text;
 	SET logText = "Updated fields: ";
@@ -135,12 +135,12 @@ BEGIN
 		SET logText = CONCAT(logText, 'Profit: ', OLD.Profit, '->', NEW.Profit, ', ');
 	END IF;
 	INSERT INTO `LOG` (
-		PositionID,
+		PlanID,
 		Source,
 		Text
 	)
 	VALUES (
-		OLD.PositionID,
+		OLD.PlanID,
 		'trigger',
 		logText
 	);

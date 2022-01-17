@@ -103,7 +103,7 @@ func (b *ByBit) Subscribe(topic string) error {
 	return nil
 }
 
-func (b *ByBit) ProcessMessages(positionsChannel chan<- Position, executionChannel chan<- Execution, orderChannel chan<- Order) {
+func (b *ByBit) ProcessMessages(positionsChannel chan<- Plan, executionChannel chan<- Execution, orderChannel chan<- Order) {
 	for {
 		_, data, err := b.connection.Read(b.context)
 		if err != nil {
@@ -127,7 +127,7 @@ func (b *ByBit) ProcessMessages(positionsChannel chan<- Position, executionChann
 		}
 
 		if !wsresp.Success {
-			var p []Position
+			var p []Plan
 			var e []Execution
 			var o []Order
 			switch wsresp.Topic {

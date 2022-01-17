@@ -6,8 +6,8 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-type Position struct {
-	PositionID      int64
+type Plan struct {
+	PlanID          int64
 	PairID          int64
 	Status          Status
 	Side            Side `json:"side"`

@@ -8,7 +8,7 @@ import (
 
 type Order struct {
 	OrderID         int64
-	PositionID      int64
+	PlanID          int64
 	ExchangeOrderID string `json:"order_link_id"`
 	Status          Status
 	OrderType       OrderType       `json:"order_type"`
@@ -18,3 +18,5 @@ type Order struct {
 	EntryTime       time.Time
 	ModifyTime      time.Time
 }
+
+type Orders []Order

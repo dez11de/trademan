@@ -20,7 +20,7 @@ func (db *Database) AddPlan(p Plan) (TradeID int64, err error) {
 }
 
 func (db *Database) GetPlans() (p []Plan, err error) {
-	rows, err := db.database.Query("SELECT * FROM `POSITION`;")
+	rows, err := db.database.Query("SELECT * FROM `PLAN`;")
 	if err != nil {
 		return nil, err
 	}

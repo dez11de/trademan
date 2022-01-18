@@ -25,7 +25,7 @@ type Pair struct {
 	Pair          string          `json:"name"`
 	BaseCurrency  string          `json:"base_currency"`
 	QuoteCurrency string          `json:"quote_currency"`
-	PriceScale    int             `json:"price_scale"`
+	PriceScale    int32           `json:"price_scale"`
 	TakerFee      decimal.Decimal `json:"taker_fee,string"`
 	MakerFee      decimal.Decimal `json:"maker_fee,string"`
 	Leverage      pairLeverage    `json:"leverage_filter"`

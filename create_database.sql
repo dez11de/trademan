@@ -8,7 +8,7 @@ DROP TABLE IF EXISTS `PLAN`;
 DROP TABLE IF EXISTS `ORDER`;
 DROP TABLE IF EXISTS `LOG`;
 
-DROP TRIGGER IF EXISTS positionModifyTrigger;
+DROP TRIGGER IF EXISTS planModifyTrigger;
 
 SET FOREIGN_KEY_CHECKS = 1;
 
@@ -53,7 +53,7 @@ CREATE TABLE `WALLET` (
 	PRIMARY KEY (Symbol, EntryTime)
 );
 
-CREATE TABLE Plan (
+CREATE TABLE PLAN (
 	PlanID INT NOT NULL AUTO_INCREMENT,
 	PairID INT NOT NULL,
 	Status ENUM('Planned', 'Ordered', 'Filled', 'Stopped', 'Closed', 'Cancelled', 'Liquidated','Logged'),
@@ -66,7 +66,6 @@ CREATE TABLE Plan (
 	EntryTime DATETIME DEFAULT CURRENT_TIMESTAMP,
 	ModifyTime DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
-	INDEX(PairID),
 	INDEX(Status),
 	INDEX(EntryTime),
 	INDEX(ModifyTime),
@@ -91,7 +90,7 @@ CREATE TABLE `ORDER` (
 	INDEX(ModifyTime),
 
 	PRIMARY KEY (OrderID),
-	FOREIGN KEY (PlanID) REFERENCES `Plan`(PlanID)
+	FOREIGN KEY (PlanID) REFERENCES `PLAN`(PlanID)
 );
 
 CREATE TABLE `LOG` (
@@ -133,6 +132,26 @@ BEGIN
 	END IF;
 	IF OLD.Profit <> NEW.Profit THEN
 		SET logText = CONCAT(logText, 'Profit: ', OLD.Profit, '->', NEW.Profit, ', ');
+	END IF;
+	INSERT INTO `LOG` (
+		PlanID,
+		Source,
+		Text
+	)
+	VALUES (
+		OLD.PlanID,
+		'trigger',
+		logText
+	);
+END$$
+
+CREATE TRIGGER orderModifyTrigger
+AFTER UPDATE ON `ORDER` FOR EACH ROW
+BEGIN
+	DECLARE logText Text;
+	SET logText = "Updated fields: ";
+	IF OLD.Status <> NEW.Status THEN
+		SET logText = CONCAT(logText, 'Status: ', OLD.Status, '->', NEW.Status, ', ');
 	END IF;
 	INSERT INTO `LOG` (
 		PlanID,

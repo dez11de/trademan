@@ -50,6 +50,7 @@ CREATE TABLE `WALLET` (
 	TotalPnL       DECIMAL(20, 8),
 	EntryTime      DATETIME,
 	
+    INDEX(EntryTime),
 	PRIMARY KEY (Symbol, EntryTime)
 );
 

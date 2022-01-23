@@ -29,6 +29,7 @@ func main() {
 		fmt.Println(err)
 	}
 
+    /*
 	// Might be needed to reload stuff in database
 	currentPairs := exchange.GetPairs()
 	for _, p := range currentPairs {
@@ -38,6 +39,7 @@ func main() {
 	for _, b := range currentBalances {
 		db.AddWallet(b)
 	}
+    */
 
 	for _, pair := range db.PairCache {
 		fmt.Printf("Pair: %s, ID: %d, Quote Currency: %s\n", pair.Pair, pair.PairID, pair.QuoteCurrency)
@@ -48,6 +50,7 @@ func main() {
 	}
 
 	app := app.NewWithID("bbtrader")
+    // TODO: come up with a better name that doesn't focus on ByBit cause you never know
 	mainWindow := app.NewWindow("ByBit Trade Manager")
 	// TODO: would it hurt if these are global?
 	mainContent := makeMainContent(db, exchange)

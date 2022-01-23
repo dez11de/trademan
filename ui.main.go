@@ -2,10 +2,20 @@ package main
 
 import (
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/layout"
 )
 
-func SetupMainWindow(db *Database, w fyne.Window) {
-	w.Resize(fyne.Size{Width: 800, Height: 600})
-	w.CenterOnScreen()
-	SetupPlanList(db, w)
+func makeMainContent(db *Database, bb *ByBit) *fyne.Container {
+	performanceContainer := MakePerformanceContainer(db)
+	planListSplitContainer := MakePlanListSplit(db, bb)
+
+	mainContent := container.New(
+		layout.NewBorderLayout(
+			nil, performanceContainer, nil, nil),
+		performanceContainer, planListSplitContainer)
+
+	planListSplitContainer.Refresh()
+	mainContent.Refresh()
+	return mainContent
 }

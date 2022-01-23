@@ -1,19 +1,23 @@
 package main
 
-import "time"
+import (
+	"time"
+
+	"github.com/shopspring/decimal"
+)
 
 type balance struct {
 	Symbol         string
-	Equity         float64 `json:"equity"`
-	Available      float64 `json:"available_balance"`
-	UsedMargin     float64 `json:"used_margin"`
-	OrderMargin    float64 `json:"order_margin"`
-	PositionMargin float64 `json:"position_margin"`
-	OCCClosingFee  float64 `json:"occ_closing_fee"`
-	OCCFundingFee  float64 `json:"occ_funding_fee"`
-	WalletBalance  float64 `json:"wallet_balance"`
-	DailyPnL       float64 `json:"realised_pnl"`
-	UnrealisedPnL  float64 `json:"unrealised_pnl"`
-	TotalPnL       float64 `json:"cum_realised_pnl"`
+	Equity         decimal.Decimal `json:"equity"`
+	Available      decimal.Decimal `json:"available_balance"`
+	UsedMargin     decimal.Decimal `json:"used_margin"`
+	OrderMargin    decimal.Decimal `json:"order_margin"`
+	PositionMargin decimal.Decimal `json:"position_margin"`
+	OCCClosingFee  decimal.Decimal `json:"occ_closing_fee"`
+	OCCFundingFee  decimal.Decimal `json:"occ_funding_fee"`
+	WalletBalance  decimal.Decimal `json:"wallet_balance"`
+	DailyPnL       decimal.Decimal `json:"realised_pnl"`
+	UnrealisedPnL  decimal.Decimal `json:"unrealised_pnl"`
+	TotalPnL       decimal.Decimal `json:"cum_realised_pnl"`
 	EntryTime      time.Time
 }

@@ -1,8 +1,8 @@
 package main
 
 import (
-	"errors"
 	"fmt"
+	"log"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -20,49 +20,44 @@ func (db *Database) AddOrder(o Order) (OrderID int64, err error) {
 	return result.LastInsertId()
 }
 
-func (db *Database) GetPlanOrders(id int64) (o Orders, err error) {
-	rows, err := db.database.Query(fmt.Sprintf("SELECT * FROM `ORDER` where PlanID=%d", id))
+func (db *Database) GetOrders(PlanID int64) (orders Orders, err error) {
+	log.Printf("[db.order.GetOrders] getting orders belonging to PlanID: %d", PlanID)
+	orders = NewOrders()
+	rows, err := db.database.Query(fmt.Sprintf("SELECT * FROM `ORDER` where PlanID=%d", PlanID))
 	if err != nil {
-		return nil, err
+		log.Print(err)
+		return NewOrders(), err
 	}
 	defer rows.Close()
 
+	takeProfitCount := 0
 	for rows.Next() {
 		var order Order
-		if err := rows.Scan(&order.OrderID, &order.PlanID, &order.ExchangeOrderID, &order.Status, &order.OrderType, &order.Size, &order.TriggerPrice, &order.Price, &order.EntryTime, &order.ModifyTime); err != nil {
-			return nil, err
+		err = rows.Scan(&order.OrderID, &order.PlanID, &order.Status, &order.ExchangeOrderID, &order.OrderType, &order.Size, &order.TriggerPrice, &order.Price, &order.EntryTime, &order.ModifyTime)
+		if err != nil {
+			log.Print(err)
+			return Orders{}, err
 		}
-		o = append(o, order)
+		switch order.OrderType {
+		case typeHardStopLoss:
+			orders[typeHardStopLoss] = order
+		case typeSoftStopLoss:
+			orders[typeSoftStopLoss] = order
+		case typeEntry:
+			orders[typeEntry] = order
+		case typeTakeProfit:
+			orders[3+takeProfitCount] = order
+			takeProfitCount++
+		}
 	}
-	return o, nil
+
+	for ; takeProfitCount < MaxTakeProfits; takeProfitCount++ {
+		orders[3+takeProfitCount] = Order{OrderType: typeTakeProfit, PlanID: PlanID}
+	}
+	return orders, nil
 }
 
-func (ol Orders) GetHardStopLoss() (o Order, err error) {
-	for _, order := range ol {
-		if order.OrderType == HardStopLoss {
-			return order, nil
-		}
-	}
-	return Order{}, errors.New("HardStopLoss order not found")
-}
-
-func (ol Orders) GetEntry() (o Order, err error) {
-	for _, order := range ol {
-		if order.OrderType == Entry {
-			return order, nil
-		}
-	}
-	return Order{}, errors.New("Entry order not found")
-}
-
-func (ol Orders) GetTakeProfits() (tps Orders, err error) {
-	for _, o := range ol {
-		if o.OrderType == TakeProfit {
-			tps = append(tps, o)
-		}
-	}
-	if len(tps) != 0 {
-		return tps, nil
-	}
-	return Orders{}, errors.New("Take profits not found")
+func (db *Database) StoreOrders(PlanID int64) (err error) {
+	log.Printf("[StoreOrders] storing orders...")
+	return err
 }

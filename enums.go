@@ -3,36 +3,36 @@ package main
 type Side int
 
 const (
-	Long Side = iota
-	Short
+	sideLong Side = iota
+	sideShort
 )
 
 type Status int
 
 const (
-	Planned Status = iota
-	Ordered
-	Filled
-	Stopped
-	Closed
-	Cancelled
-	Liquidated
-	Logged
+	statusPlanned Status = iota
+	statusOrdered
+	statusFilled
+	statusStopped
+	statusClosed
+	statusCancelled
+	statusLiquidated
+	statusLogged
 )
 
 type OrderType int
 
 const (
-	HardStopLoss OrderType = iota
-	SoftStopLoss
-	Entry
-	TakeProfit
+	typeHardStopLoss OrderType = iota
+	typeSoftStopLoss
+	typeEntry
+	typeTakeProfit
 )
 
 type LogSource int
 
 const (
-	Trigger LogSource = iota
-	Software
-	User
+	sourceTrigger LogSource = iota
+	sourceSoftware
+	sourceUser
 )

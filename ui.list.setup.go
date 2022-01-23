@@ -7,65 +7,102 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/layout"
+	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	"golang.org/x/image/colornames"
 )
 
-func SetupPlanList(d *Database, w fyne.Window) {
-	plans, _ := d.GetPlans()
-	list := widget.NewList(
+type planListUI struct {
+	Plans []Plan
+	List  *widget.List
+
+	addPlanAction    widget.ToolbarItem
+	removePlanAction widget.ToolbarItem
+	actionBar        *widget.Toolbar
+}
+
+func MakePlanListSplit(d *Database, bb *ByBit) *container.Split {
+	planList := &planListUI{}
+	planList.Plans, _ = d.GetPlans()
+	planList.List = widget.NewList(
 		func() int {
-			return len(plans)
+			return len(planList.Plans)
 		},
 		func() fyne.CanvasObject {
+			// TODO: change this to widget.RichText
 			pairText := canvas.NewText("PAIRCUR", colornames.White)
 			pairText.TextStyle = fyne.TextStyle{Bold: true}
 			statusText := canvas.NewText("STATUS", colornames.White)
 			directionText := canvas.NewText("Long", colornames.Green)
-			directionText.Alignment = fyne.TextAlignTrailing
 			return container.NewVBox(
-				pairText,
-				container.NewHBox(statusText, directionText),
+				container.NewHBox(pairText, layout.NewSpacer(), directionText),
+				container.New(layout.NewCenterLayout(), statusText),
 			)
 		},
 		func(i widget.ListItemID, o fyne.CanvasObject) {
-			o.(*fyne.Container).Objects[0].(*canvas.Text).Text = d.GetPairString(plans[i].PairID)
+			o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[0].(*canvas.Text).Text = d.GetPairString(planList.Plans[i].PairID)
+
+			// TODO: use theme colors
+			var directionColor color.Color
+			switch planList.Plans[i].Side {
+			case sideLong:
+				directionColor = colornames.Green
+			case sideShort:
+				directionColor = colornames.Red
+			}
+			o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[2].(*canvas.Text).Color = directionColor
+			o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[2].(*canvas.Text).Text = planList.Plans[i].Side.String()
 
 			var statusColor color.Color
 			// TODO: give all posible statuses a different color
-			switch plans[i].Status {
-			case Planned:
+			switch planList.Plans[i].Status {
+			case statusPlanned:
 				statusColor = colornames.Blue
-			case Ordered:
+			case statusOrdered:
 				statusColor = colornames.Green
-			case Filled:
+			case statusFilled:
 				statusColor = colornames.Purple
 			default:
 				statusColor = colornames.White
 			}
-			o.(*fyne.Container).Objects[1].(*fyne.Container).Objects[0].(*canvas.Text).Text = plans[i].Status.String()
+			o.(*fyne.Container).Objects[1].(*fyne.Container).Objects[0].(*canvas.Text).Text = planList.Plans[i].Status.String()
 			o.(*fyne.Container).Objects[1].(*fyne.Container).Objects[0].(*canvas.Text).Color = statusColor
-
-			var directionColor color.Color
-			switch plans[i].Side {
-			case Long:
-				directionColor = colornames.Green
-			case Short:
-				directionColor = colornames.Red
-			}
-			o.(*fyne.Container).Objects[1].(*fyne.Container).Objects[1].(*canvas.Text).Color = directionColor
-			o.(*fyne.Container).Objects[1].(*fyne.Container).Objects[1].(*canvas.Text).Text = plans[i].Side.String()
-
 		})
 
-	selectedPlanLabel := widget.NewLabel("Select a position from the list.")
-	formBox := container.NewHSplit(list, selectedPlanLabel)
-	formBox.SetOffset(0.15)
-	w.SetContent(formBox)
+	selectPlanLabel := container.New(layout.NewCenterLayout(), canvas.NewText("Select a plan from the list, or press + to make a new plan.", nil))
 
-	list.OnSelected = func(id widget.ListItemID) {
-		log.Printf("Loading form with plan %v", plans[id])
-		formBox.Trailing = makePlanForm(d, plans[id])
-		formBox.Refresh()
+	listAndButtons := container.NewWithoutLayout(widget.NewLabel("nothing to see here"))
+	planListSplit := container.NewHSplit(listAndButtons, container.NewMax(selectPlanLabel))
+	planListSplit.SetOffset(0.20)
+
+	planList.addPlanAction = widget.NewToolbarAction(theme.ContentAddIcon(), func() {
+		log.Print("Add button pressed")
+		f := NewForm(d, bb)
+		f.FillForm(Plan{})
+		planListSplit.Trailing = f.form
+
+		planListSplit.Refresh()
+	})
+	planList.removePlanAction = widget.NewToolbarAction(theme.ContentRemoveIcon(), func() {
+		log.Print("Remove button pressed")
+	})
+
+	planList.actionBar = widget.NewToolbar(widget.NewToolbarSpacer(), planList.addPlanAction, planList.removePlanAction)
+	planList.actionBar.Refresh()
+	listAndButtons = container.New(layout.NewBorderLayout(nil, planList.actionBar, nil, nil), container.NewMax(planList.List), planList.actionBar)
+	planListSplit.Leading = listAndButtons
+	planList.List.Refresh()
+	listAndButtons.Refresh()
+	planListSplit.Leading.Refresh()
+	planListSplit.Refresh()
+
+	planList.List.OnSelected = func(id widget.ListItemID) {
+		f := NewForm(d, bb)
+		f.FillForm(planList.Plans[id])
+		planListSplit.Trailing = f.form
+		planListSplit.Refresh()
 	}
+
+	return planListSplit
 }

@@ -92,10 +92,26 @@ func (db *Database) Connect() (err error) {
 	if err != nil {
 		return err
 	}
+
 	db.WalletCache, err = db.GetRecentWallet()
 	if err != nil {
 		return err
 	}
 
+	return err
+}
+
+func (db *Database) StorePlanAndOrders(plan Plan, orders Orders) (err error) {
+	log.Printf("[db.go] Storing plan and orders")
+
+	plan.PlanID, err = db.AddPlan(plan)
+
+	for _, o := range orders {
+		o.PlanID = plan.PlanID
+		log.Printf("Storing order %v", o)
+		OrderID, err := db.AddOrder(o)
+		o.OrderID = OrderID
+		log.Printf("Stored with PlanID %d, error was %v", OrderID, err)
+	}
 	return err
 }

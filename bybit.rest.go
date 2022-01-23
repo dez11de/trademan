@@ -1,5 +1,8 @@
 package main
 
+// Copied from  https://github.com/frankrap/bybit-api/
+// All credits to him.
+
 import (
 	"bytes"
 	"crypto/hmac"
@@ -113,6 +116,59 @@ func (b *ByBit) PrivateRequest(method string, apiURL string, params map[string]i
 		log.Printf("SignedRequest: %v", string(resp))
 	}
 
+	err = json.Unmarshal(resp, result)
+	return
+}
+
+func (b *ByBit) SignedRequest(method string, apiURL string, params map[string]interface{}, result interface{}) (fullURL string, resp []byte, err error) {
+	timestamp := time.Now().UnixNano() / 1e6
+
+	params["api_key"] = b.apiKey
+	params["timestamp"] = timestamp
+
+	var keys []string
+	for k := range params {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	var p []string
+	for _, k := range keys {
+		p = append(p, fmt.Sprintf("%v=%v", k, params[k]))
+	}
+
+	param := strings.Join(p, "&")
+	signature := b.getSigned(param)
+	param += "&sign=" + signature
+
+	fullURL = b.RESTHost + apiURL + "?" + param
+	if b.debugMode {
+		log.Printf("SignedRequest: %v", fullURL)
+	}
+	var binBody = bytes.NewReader(make([]byte, 0))
+
+	// get a http request
+	var request *http.Request
+	request, err = http.NewRequest(method, fullURL, binBody)
+	if err != nil {
+		return
+	}
+
+	var response *http.Response
+	response, err = b.RESTClient.Do(request)
+	if err != nil {
+		return
+	}
+	defer response.Body.Close()
+
+	resp, err = ioutil.ReadAll(response.Body)
+	if err != nil {
+		return
+	}
+
+	if b.debugMode {
+		log.Printf("SignedRequest: %v", string(resp))
+	}
 	err = json.Unmarshal(resp, result)
 	return
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 
+	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 )
 
@@ -28,31 +29,31 @@ func main() {
 		fmt.Println(err)
 	}
 
-	/*
-		// Might be needed to reload stuff in database
-		currentPairs := exchange.GetPairs()
-		for _, p := range currentPairs {
-			db.AddPair(p)
-		}
+	// Might be needed to reload stuff in database
+	currentPairs := exchange.GetPairs()
+	for _, p := range currentPairs {
+		db.AddPair(p)
+	}
+	currentBalances, _ := exchange.GetCurrentWallet()
+	for _, b := range currentBalances {
+		db.AddWallet(b)
+	}
 
-		currentBalances, _ := exchange.GetCurrentWallet()
-		for _, b := range currentBalances {
-			db.AddWallet(b)
-		}
+	for _, pair := range db.PairCache {
+		fmt.Printf("Pair: %s, ID: %d, Quote Currency: %s\n", pair.Pair, pair.PairID, pair.QuoteCurrency)
+	}
 
-		for _, pair := range db.PairCache {
-			fmt.Printf("Pair: %s, ID: %d, Quote Currency: %s\n", pair.Pair, pair.PairID, pair.QuoteCurrency)
-		}
+	for currency, balance := range db.WalletCache {
+		fmt.Printf("Currency: %s, Available balance: %s\n", currency, balance.Available.String())
+	}
 
-		fmt.Println("--------------------------------------------------------------------------------")
-
-		for currency, balance := range db.WalletCache {
-			fmt.Printf("Currency: %s, Available balance: %f\n", currency, balance.Available)
-		}
-	*/
-
-	app := app.New()
+	app := app.NewWithID("bbtrader")
 	mainWindow := app.NewWindow("ByBit Trade Manager")
-	SetupMainWindow(db, mainWindow)
+	// TODO: would it hurt if these are global?
+	mainContent := makeMainContent(db, exchange)
+	// TODO: store and restore size and position settings
+	mainWindow.Resize(fyne.Size{Width: 800, Height: 600})
+	mainWindow.CenterOnScreen()
+	mainWindow.SetContent(mainContent)
 	mainWindow.ShowAndRun()
 }

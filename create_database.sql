@@ -56,8 +56,8 @@ CREATE TABLE `WALLET` (
 CREATE TABLE PLAN (
 	PlanID INT NOT NULL AUTO_INCREMENT,
 	PairID INT NOT NULL,
-	Status ENUM('Planned', 'Ordered', 'Filled', 'Stopped', 'Closed', 'Cancelled', 'Liquidated','Logged'),
-	Side ENUM('Long', 'Short'),
+	Status ENUM('statusPlanned', 'statusOrdered', 'statusFilled', 'statusStopped', 'statusClosed', 'statusCancelled', 'statusLiquidated', 'statusLogged'),
+	Side ENUM('sideLong', 'sideShort'),
 	Risk DECIMAL(5,2),
 	Notes TEXT,
 	TradingViewPlan VARCHAR(100),
@@ -77,15 +77,17 @@ CREATE TABLE PLAN (
 CREATE TABLE `ORDER` (
 	OrderID INT NOT NULL AUTO_INCREMENT,
 	PlanID INT NOT NULL, 
+	Status ENUM('statusPlanned', 'statusOrdered', 'statusFilled', 'statusStopped', 'statusClosed', 'statusCancelled', 'statusLiquidated', 'statusLogged'),
 	ExchangeOrderID VARCHAR(50),
-	Status ENUM('Planned', 'Ordered', 'Position', 'Stopped', 'Closed', 'Cancelled', 'Logged'),
-	OrderType ENUM('Hard Stoploss', 'Soft StopLoss', 'Entry', 'Take Profit'),
+	OrderType ENUM('typeHardStopLoss', 'typeSoftStopLoss', 'typeEntry', 'typeTakeProfit'),
 	`Size` DECIMAL(21,12),
 	TriggerPrice DECIMAL(21,12),
 	Price DECIMAL(21,12),
 	EntryTime DATETIME DEFAULT CURRENT_TIMESTAMP,
 	ModifyTime DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
+	INDEX(Status),
+	INDEX(ExchangeOrderID),
 	INDEX(EntryTime),
 	INDEX(ModifyTime),
 
@@ -96,7 +98,7 @@ CREATE TABLE `ORDER` (
 CREATE TABLE `LOG` (
 	LogID INT NOT NULL AUTO_INCREMENT,
 	PlanID INT NOT NULL,
-	Source ENUM('Trigger', 'Software', 'User'),
+	Source ENUM('sourceTrigger', 'sourceSoftware', 'sourceUser'),
 	Text TEXT,
 	EntryTime DATETIME DEFAULT CURRENT_TIMESTAMP,
 
@@ -140,7 +142,7 @@ BEGIN
 	)
 	VALUES (
 		OLD.PlanID,
-		'trigger',
+		'sourceTrigger',
 		logText
 	);
 END$$
@@ -160,7 +162,7 @@ BEGIN
 	)
 	VALUES (
 		OLD.PlanID,
-		'trigger',
+		'sourceTrigger',
 		logText
 	);
 END$$

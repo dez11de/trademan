@@ -2,8 +2,11 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/shopspring/decimal"
 )
 
 func (db *Database) PrepareAddWalletStatement() (err error) {
@@ -49,4 +52,17 @@ func (db *Database) GetRecentWallet() (wallet map[string]balance, err error) {
 	}
 
 	return wallet, nil
+}
+
+func (db *Database) GetPerformance(p time.Duration) decimal.Decimal {
+	periodStart := time.Now().Add(-p)
+	result, err := db.database.Query(fmt.Sprintf("SELECT Equity FROM WALLET WHERE Symbol='USDT' ORDER BY abs(TIMESTAMPDIFF(second, EntryTime, '%s')) LIMIT 1", periodStart.Format("2006-01-02 15:04:05")))
+	if err != nil {
+		log.Print(err)
+	}
+	result.Next()
+	var balanceAtPeriodStart decimal.Decimal
+	result.Scan(&balanceAtPeriodStart)
+	currentBalance := db.WalletCache["USDT"].Equity
+	return (currentBalance.Sub(balanceAtPeriodStart).Div(currentBalance)).Mul(decimal.NewFromInt(100))
 }

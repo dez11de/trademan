@@ -12,7 +12,7 @@ func (db *Database) PrepareAddPlanStatement() (err error) {
 }
 
 func (db *Database) AddPlan(p Plan) (TradeID int64, err error) {
-	result, err := db.addPlanStatement.Exec(p.PlanID, p.Status.String(), p.Side.String(), p.Risk, p.Notes, p.TradingViewPlan, p.RewardRiskRatio, p.Profit)
+	result, err := db.addPlanStatement.Exec(p.PairID, p.Status.String(), p.Side.String(), p.Risk, p.Notes, p.TradingViewPlan, p.RewardRiskRatio, p.Profit)
 	if err != nil {
 		return 0, err
 	}
@@ -26,12 +26,13 @@ func (db *Database) GetPlans() (p []Plan, err error) {
 	}
 	defer rows.Close()
 
+	var plan Plan
 	for rows.Next() {
-		var plan Plan
 		if err := rows.Scan(&plan.PlanID, &plan.PairID, &plan.Status, &plan.Side, &plan.Risk, &plan.Notes, &plan.TradingViewPlan, &plan.RewardRiskRatio, &plan.Profit, &plan.EntryTime, &plan.ModifyTime); err != nil {
 			return nil, err
 		}
 		p = append(p, plan)
 	}
+
 	return p, nil
 }

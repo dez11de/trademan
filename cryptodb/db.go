@@ -1,4 +1,4 @@
-package main
+package cryptoDB
 
 import (
 	"database/sql"
@@ -31,7 +31,7 @@ type Database struct {
 	addLogStatement    *sql.Stmt
 
 	PairCache   map[string]Pair
-	WalletCache map[string]balance
+	WalletCache map[string]Balance
 }
 
 func NewDB() (db *Database) {

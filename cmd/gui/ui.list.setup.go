@@ -11,10 +11,12 @@ import (
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	"golang.org/x/image/colornames"
+    "github.com/dez11de/cryptodb"
+    "github.com/dez11de/exchange"
 )
 
 type planListUI struct {
-	Plans []Plan
+	Plans []cryptoDB.Plan
 	List  *widget.List
 
 	addPlanAction    widget.ToolbarItem
@@ -22,7 +24,7 @@ type planListUI struct {
 	actionBar        *widget.Toolbar
 }
 
-func MakePlanListSplit(d *Database, bb *ByBit) *container.Split {
+func MakePlanListSplit(d *cryptoDB.Database, bb *exchange.ByBit) *container.Split {
 	planList := &planListUI{}
 	planList.Plans, _ = d.GetPlans()
 	planList.List = widget.NewList(
@@ -46,9 +48,9 @@ func MakePlanListSplit(d *Database, bb *ByBit) *container.Split {
 			// TODO: use theme colors
 			var directionColor color.Color
 			switch planList.Plans[i].Side {
-			case sideLong:
+			case cryptoDB.SideLong:
 				directionColor = colornames.Green
-			case sideShort:
+			case cryptoDB.SideShort:
 				directionColor = colornames.Red
 			}
 			o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[2].(*canvas.Text).Color = directionColor
@@ -57,11 +59,11 @@ func MakePlanListSplit(d *Database, bb *ByBit) *container.Split {
 			var statusColor color.Color
 			// TODO: give all posible statuses a different color
 			switch planList.Plans[i].Status {
-			case statusPlanned:
+			case cryptoDB.StatusPlanned:
 				statusColor = colornames.Blue
-			case statusOrdered:
+			case cryptoDB.StatusOrdered:
 				statusColor = colornames.Green
-			case statusFilled:
+			case cryptoDB.StatusFilled:
 				statusColor = colornames.Purple
 			default:
 				statusColor = colornames.White
@@ -79,7 +81,7 @@ func MakePlanListSplit(d *Database, bb *ByBit) *container.Split {
 	planList.addPlanAction = widget.NewToolbarAction(theme.ContentAddIcon(), func() {
 		log.Print("Add button pressed")
 		f := NewForm(d, bb)
-		f.FillForm(Plan{})
+		f.FillForm(cryptoDB.Plan{})
 		planListSplit.Trailing = f.form
 
 		planListSplit.Refresh()

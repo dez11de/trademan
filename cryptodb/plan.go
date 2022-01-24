@@ -1,4 +1,4 @@
-package main
+package cryptoDB
 
 import (
 	"time"
@@ -23,16 +23,16 @@ type Plan struct {
 func (p *Plan) SetEntrySize(activePair Pair, equity decimal.Decimal, o *Orders) (positionSize decimal.Decimal) {
 	// TODO take into account transaction fees, see ByBit site for formula
 	maxRisk := equity.Mul(p.Risk.Div(decimal.NewFromInt(100)))
-	entryStopLossDistance := o[typeHardStopLoss].Price.Sub(o[typeEntry].Price).Abs()
+	entryStopLossDistance := o[TypeHardStopLoss].Price.Sub(o[TypeEntry].Price).Abs()
 	positionSize = maxRisk.Div(entryStopLossDistance).Round(activePair.PriceScale)
-	o[typeHardStopLoss].Size = positionSize
-	o[typeSoftStopLoss].Size = positionSize
-	o[typeEntry].Size = positionSize
+	o[TypeHardStopLoss].Size = positionSize
+	o[TypeSoftStopLoss].Size = positionSize
+	o[TypeEntry].Size = positionSize
 	return positionSize
 }
 
 func (p *Plan) SetTakeProfitSizes(a Pair, o *Orders) {
-	totalSize := o[typeEntry].Size
+	totalSize := o[TypeEntry].Size
 	takeProfitsCount := 0
 	for i := 1; i < MaxTakeProfits; i++ {
 		if !o[2+i].Price.IsZero() {
@@ -61,11 +61,11 @@ func (p *Plan) SetTakeProfitSizes(a Pair, o *Orders) {
 }
 
 func (p *Plan) SetRewardRiskRatio(o Orders) (rrr float64) {
-	maxRisk := (o[typeEntry].Price.Mul(o[typeEntry].Size)).Sub(o[typeHardStopLoss].Price.Mul(o[typeHardStopLoss].Size))
+	maxRisk := (o[TypeEntry].Price.Mul(o[TypeEntry].Size)).Sub(o[TypeHardStopLoss].Price.Mul(o[TypeHardStopLoss].Size))
 	maxProfit := decimal.Zero
 	for _, order := range o {
-		if order.OrderType == typeTakeProfit {
-			maxProfit = maxProfit.Add(order.Price.Sub(o[typeEntry].Price).Mul(order.Size))
+		if order.OrderType == TypeTakeProfit {
+			maxProfit = maxProfit.Add(order.Price.Sub(o[TypeEntry].Price).Mul(order.Size))
 		}
 	}
 	rrr = maxProfit.Div(maxRisk).InexactFloat64()

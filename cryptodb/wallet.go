@@ -1,4 +1,4 @@
-package main
+package cryptoDB
 
 import (
 	"time"
@@ -6,7 +6,7 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-type balance struct {
+type Balance struct {
 	Symbol         string
 	Equity         decimal.Decimal `json:"equity"`
 	Available      decimal.Decimal `json:"available_balance"`

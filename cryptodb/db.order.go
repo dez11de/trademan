@@ -1,4 +1,4 @@
-package main
+package cryptoDB
 
 import (
 	"fmt"
@@ -39,20 +39,20 @@ func (db *Database) GetOrders(PlanID int64) (orders Orders, err error) {
 			return Orders{}, err
 		}
 		switch order.OrderType {
-		case typeHardStopLoss:
-			orders[typeHardStopLoss] = order
-		case typeSoftStopLoss:
-			orders[typeSoftStopLoss] = order
-		case typeEntry:
-			orders[typeEntry] = order
-		case typeTakeProfit:
+		case TypeHardStopLoss:
+			orders[TypeHardStopLoss] = order
+		case TypeSoftStopLoss:
+			orders[TypeSoftStopLoss] = order
+		case TypeEntry:
+			orders[TypeEntry] = order
+		case TypeTakeProfit:
 			orders[3+takeProfitCount] = order
 			takeProfitCount++
 		}
 	}
 
 	for ; takeProfitCount < MaxTakeProfits; takeProfitCount++ {
-		orders[3+takeProfitCount] = Order{OrderType: typeTakeProfit, PlanID: PlanID}
+		orders[3+takeProfitCount] = Order{OrderType: TypeTakeProfit, PlanID: PlanID}
 	}
 	return orders, nil
 }

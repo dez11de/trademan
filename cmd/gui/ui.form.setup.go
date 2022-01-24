@@ -10,14 +10,16 @@ import (
 	"fyne.io/fyne/v2/widget"
 	xwidget "fyne.io/x/fyne/widget"
 	"github.com/shopspring/decimal"
+    "github.com/dez11de/cryptodb"
+    "github.com/dez11de/exchange"
 )
 
 type planForm struct {
-	db *Database
+	db *cryptoDB.Database
 
-	plan       Plan
-	activePair Pair
-	orders     Orders
+	plan       cryptoDB.Plan
+	activePair cryptoDB.Pair
+	orders     cryptoDB.Orders
 
 	form *widget.Form
 
@@ -26,7 +28,7 @@ type planForm struct {
 	riskItem                *widget.FormItem
 	stopLossItem            *widget.FormItem
 	entryItem               *widget.FormItem
-	takeProfitItems         [MaxTakeProfits]*widget.FormItem
+	takeProfitItems         [cryptoDB.MaxTakeProfits]*widget.FormItem
 	notesMultilineEntryItem *widget.FormItem
 	tradingViewPlanItem     *widget.FormItem
 }
@@ -149,9 +151,9 @@ func (pf *planForm) makeNotesMultilineItem() *widget.FormItem {
 	return widget.NewFormItem("Notes", notesMultiLineEntry)
 }
 
-func NewForm(d *Database, bb *ByBit) *planForm {
+func NewForm(d *cryptoDB.Database, bb *exchange.ByBit) *planForm {
 	pf := &planForm{db: d}
-	pf.orders = NewOrders()
+	pf.orders = cryptoDB.NewOrders()
 
 	pf.form = widget.NewForm()
 	pf.form.SubmitText = "OK"
@@ -162,9 +164,9 @@ func NewForm(d *Database, bb *ByBit) *planForm {
 		pf.plan.PairID = pf.activePair.PairID
 		// pf.plan.Side.Scan = pf.sideItem.Widget.(*widget.RadioGroup).Selected
 		pf.plan.Risk = decimal.RequireFromString(pf.riskItem.Widget.(*widget.Entry).Text)
-		pf.orders[typeHardStopLoss].Price = decimal.RequireFromString(pf.stopLossItem.Widget.(*widget.Entry).Text)
-		pf.orders[typeEntry].Price = decimal.RequireFromString(pf.entryItem.Widget.(*widget.Entry).Text)
-		for i := 0; i < MaxTakeProfits-1; i++ {
+		pf.orders[cryptoDB.TypeHardStopLoss].Price = decimal.RequireFromString(pf.stopLossItem.Widget.(*widget.Entry).Text)
+		pf.orders[cryptoDB.TypeEntry].Price = decimal.RequireFromString(pf.entryItem.Widget.(*widget.Entry).Text)
+		for i := 0; i < cryptoDB.MaxTakeProfits-1; i++ {
 			tempPrice, err := decimal.NewFromString(pf.takeProfitItems[i].Widget.(*widget.Entry).Text)
 			if err == nil {
 				pf.orders[3+i].Price = tempPrice
@@ -203,7 +205,7 @@ func NewForm(d *Database, bb *ByBit) *planForm {
 
 	takeProfitCount := 0
 	for _, order := range pf.orders {
-		if order.OrderType == typeTakeProfit {
+		if order.OrderType == cryptoDB.TypeTakeProfit {
 			pf.takeProfitItems[takeProfitCount] = pf.makeTakeProfitItem(takeProfitCount)
 			pf.form.AppendItem(pf.takeProfitItems[takeProfitCount])
 			takeProfitCount++
@@ -218,7 +220,7 @@ func NewForm(d *Database, bb *ByBit) *planForm {
 	return pf
 }
 
-func (pf *planForm) FillForm(p Plan) {
+func (pf *planForm) FillForm(p cryptoDB.Plan) {
 	pf.plan = p
 	pf.orders, _ = pf.db.GetOrders(pf.plan.PlanID)
 	for i, o := range pf.orders {
@@ -236,9 +238,9 @@ func (pf *planForm) FillForm(p Plan) {
 	// TODO: make better use of enumer options, see TODO.txt
 	if pf.plan.PlanID != 0 {
 		switch pf.plan.Side {
-		case sideLong:
+		case cryptoDB.SideLong:
 			pf.sideItem.Widget.(*widget.RadioGroup).SetSelected("Long")
-		case sideShort:
+		case cryptoDB.SideShort:
 			pf.sideItem.Widget.(*widget.RadioGroup).SetSelected("Short")
 		}
 		pf.sideItem.Widget.(*widget.RadioGroup).Disable()
@@ -250,19 +252,19 @@ func (pf *planForm) FillForm(p Plan) {
 	}
 
 	// TODO: think about in which statusses changing is allowed
-	if pf.orders[typeHardStopLoss].Price.Cmp(decimal.Zero) != 0 {
-		pf.stopLossItem.Widget.(*widget.Entry).SetText(pf.orders[typeHardStopLoss].Price.StringFixed(pf.activePair.PriceScale))
+	if pf.orders[cryptoDB.TypeHardStopLoss].Price.Cmp(decimal.Zero) != 0 {
+		pf.stopLossItem.Widget.(*widget.Entry).SetText(pf.orders[cryptoDB.TypeHardStopLoss].Price.StringFixed(pf.activePair.PriceScale))
 	}
 
 	// TODO: think about in which statusses changing is allowed, disable editting if required
-	if pf.orders[typeEntry].Price.Cmp(decimal.Zero) != 0 {
-		pf.entryItem.Widget.(*widget.Entry).SetText(pf.orders[typeEntry].Price.StringFixed(pf.activePair.PriceScale))
+	if pf.orders[cryptoDB.TypeEntry].Price.Cmp(decimal.Zero) != 0 {
+		pf.entryItem.Widget.(*widget.Entry).SetText(pf.orders[cryptoDB.TypeEntry].Price.StringFixed(pf.activePair.PriceScale))
 	}
 
 	// TODO: think about in which statusses changing is allowed, disable editting if required
 	takeProfitCount := 0
 	for _, o := range pf.orders {
-		if o.OrderType == typeTakeProfit && o.Price.Cmp(decimal.Zero) != 0 {
+		if o.OrderType == cryptoDB.TypeTakeProfit && o.Price.Cmp(decimal.Zero) != 0 {
 			pf.takeProfitItems[takeProfitCount].Widget.(*widget.Entry).SetText(o.Price.StringFixed(pf.activePair.PriceScale))
 			takeProfitCount++
 		}

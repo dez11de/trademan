@@ -1,4 +1,4 @@
-package main
+package exchange
 
 // Copied from  https://github.com/frankrap/bybit-api/
 // All credits to him.

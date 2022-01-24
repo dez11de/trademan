@@ -1,4 +1,4 @@
-package main
+package cryptoDB
 
 import "github.com/shopspring/decimal"
 

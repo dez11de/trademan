@@ -4,9 +4,11 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/layout"
+    "github.com/dez11de/cryptodb"
+    "github.com/dez11de/exchange"
 )
 
-func makeMainContent(db *Database, bb *ByBit) *fyne.Container {
+func makeMainContent(db *cryptoDB.Database, bb *exchange.ByBit) *fyne.Container {
 	performanceContainer := MakePerformanceContainer(db)
 	planListSplitContainer := MakePlanListSplit(db, bb)
 

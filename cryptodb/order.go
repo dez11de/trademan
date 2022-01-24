@@ -1,4 +1,4 @@
-package main
+package cryptoDB
 
 import (
 	"time"
@@ -42,14 +42,15 @@ type OrderResponse struct {
 }
 
 func NewOrders() Orders {
-	return Orders{{OrderType: typeHardStopLoss},
-		{OrderType: typeSoftStopLoss},
-		{OrderType: typeEntry},
-		{OrderType: typeTakeProfit},
-		{OrderType: typeTakeProfit},
-		{OrderType: typeTakeProfit},
-		{OrderType: typeTakeProfit},
-		{OrderType: typeTakeProfit},
+	return Orders{
+        {OrderType: TypeHardStopLoss},
+		{OrderType: TypeSoftStopLoss},
+		{OrderType: TypeEntry},
+		{OrderType: TypeTakeProfit},
+		{OrderType: TypeTakeProfit},
+		{OrderType: TypeTakeProfit},
+		{OrderType: TypeTakeProfit},
+		{OrderType: TypeTakeProfit},
 	}
 }
 

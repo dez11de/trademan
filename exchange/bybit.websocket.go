@@ -1,4 +1,4 @@
-package main
+package exchange
 
 import (
 	"context"
@@ -13,6 +13,7 @@ import (
 
 	"nhooyr.io/websocket"
 	"nhooyr.io/websocket/wsjson"
+    "github.com/dez11de/cryptodb"
 )
 
 type websocketCmd struct {
@@ -103,7 +104,7 @@ func (b *ByBit) Subscribe(topic string) error {
 	return nil
 }
 
-func (b *ByBit) ProcessMessages(positionsChannel chan<- Plan, executionChannel chan<- Execution, orderChannel chan<- Order) {
+func (b *ByBit) ProcessMessages(positionsChannel chan<- cryptoDB.Plan, executionChannel chan<- cryptoDB.Execution, orderChannel chan<- cryptoDB.Order) {
 	for {
 		_, data, err := b.connection.Read(b.context)
 		if err != nil {
@@ -127,9 +128,9 @@ func (b *ByBit) ProcessMessages(positionsChannel chan<- Plan, executionChannel c
 		}
 
 		if !wsresp.Success {
-			var p []Plan
-			var e []Execution
-			var o []Order
+			var p []cryptoDB.Plan
+			var e []cryptoDB.Execution
+			var o []cryptoDB.Order
 			switch wsresp.Topic {
 			case "position":
 				err = json.Unmarshal(rawData, &p)

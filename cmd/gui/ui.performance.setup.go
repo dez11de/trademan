@@ -11,7 +11,7 @@ import (
     "github.com/dez11de/cryptodb"
 )
 
-func MakePerformanceContainer(db *cryptoDB.Database) *fyne.Container {
+func MakePerformanceContainer(db *cryptodb.Database) *fyne.Container {
     // TODO: also show winrate and average rrr over time, maybe as a toggle?
 	dailyPerformance := canvas.NewText(fmt.Sprintf("Daily: %s%%", db.GetPerformance(1*24*time.Hour).StringFixed(2)), nil)
 	dailyPerformance.TextStyle = fyne.TextStyle{Monospace: true}

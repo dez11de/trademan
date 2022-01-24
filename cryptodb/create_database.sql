@@ -57,8 +57,8 @@ CREATE TABLE `WALLET` (
 CREATE TABLE PLAN (
 	PlanID INT NOT NULL AUTO_INCREMENT,
 	PairID INT NOT NULL,
-	Status ENUM('statusPlanned', 'statusOrdered', 'statusFilled', 'statusStopped', 'statusClosed', 'statusCancelled', 'statusLiquidated', 'statusLogged'),
-	Side ENUM('sideLong', 'sideShort'),
+	Status ENUM('StatusPlanned', 'StatusOrdered', 'StatusFilled', 'StatusStopped', 'StatusClosed', 'StatusCancelled', 'StatusLiquidated', 'StatusLogged'),
+	Side ENUM('SideLong', 'SideShort'),
 	Risk DECIMAL(5,2),
 	Notes TEXT,
 	TradingViewPlan VARCHAR(100),
@@ -78,9 +78,9 @@ CREATE TABLE PLAN (
 CREATE TABLE `ORDER` (
 	OrderID INT NOT NULL AUTO_INCREMENT,
 	PlanID INT NOT NULL, 
-	Status ENUM('statusPlanned', 'statusOrdered', 'statusFilled', 'statusStopped', 'statusClosed', 'statusCancelled', 'statusLiquidated', 'statusLogged'),
+	Status ENUM('StatusPlanned', 'StatusOrdered', 'StatusFilled', 'StatusStopped', 'StatusClosed', 'StatusCancelled', 'StatusLiquidated', 'StatusLogged'),
 	ExchangeOrderID VARCHAR(50),
-	OrderType ENUM('typeHardStopLoss', 'typeSoftStopLoss', 'typeEntry', 'typeTakeProfit'),
+	OrderType ENUM('TypeHardStopLoss', 'TypeSoftStopLoss', 'TypeEntry', 'TypeTakeProfit'),
 	`Size` DECIMAL(21,12),
 	TriggerPrice DECIMAL(21,12),
 	Price DECIMAL(21,12),
@@ -99,7 +99,7 @@ CREATE TABLE `ORDER` (
 CREATE TABLE `LOG` (
 	LogID INT NOT NULL AUTO_INCREMENT,
 	PlanID INT NOT NULL,
-	Source ENUM('sourceTrigger', 'sourceSoftware', 'sourceUser'),
+	Source ENUM('SourceTrigger', 'SourceSoftware', 'SourceUser'),
 	Text TEXT,
 	EntryTime DATETIME DEFAULT CURRENT_TIMESTAMP,
 

@@ -104,7 +104,7 @@ func (b *ByBit) Subscribe(topic string) error {
 	return nil
 }
 
-func (b *ByBit) ProcessMessages(positionsChannel chan<- cryptoDB.Plan, executionChannel chan<- cryptoDB.Execution, orderChannel chan<- cryptoDB.Order) {
+func (b *ByBit) ProcessMessages(positionsChannel chan<- cryptodb.Plan, executionChannel chan<- cryptodb.Execution, orderChannel chan<- cryptodb.Order) {
 	for {
 		_, data, err := b.connection.Read(b.context)
 		if err != nil {
@@ -128,9 +128,9 @@ func (b *ByBit) ProcessMessages(positionsChannel chan<- cryptoDB.Plan, execution
 		}
 
 		if !wsresp.Success {
-			var p []cryptoDB.Plan
-			var e []cryptoDB.Execution
-			var o []cryptoDB.Order
+			var p []cryptodb.Plan
+			var e []cryptodb.Execution
+			var o []cryptodb.Order
 			switch wsresp.Topic {
 			case "position":
 				err = json.Unmarshal(rawData, &p)

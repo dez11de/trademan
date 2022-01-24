@@ -1,4 +1,4 @@
-package cryptoDB
+package cryptodb
 
 type Side int
 

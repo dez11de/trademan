@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	db := cryptoDB.NewDB()
+	db := cryptodb.NewDB()
 	err := db.Connect()
 	if err != nil {
 		log.Printf("Error connecting to database: %s", err)

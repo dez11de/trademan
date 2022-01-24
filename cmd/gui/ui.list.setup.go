@@ -2,7 +2,7 @@ package main
 
 import (
 	"image/color"
-	"log"
+    "log"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
@@ -12,11 +12,10 @@ import (
 	"fyne.io/fyne/v2/widget"
 	"golang.org/x/image/colornames"
     "github.com/dez11de/cryptodb"
-    "github.com/dez11de/exchange"
 )
 
 type planListUI struct {
-	Plans []cryptoDB.Plan
+	Plans []cryptodb.Plan
 	List  *widget.List
 
 	addPlanAction    widget.ToolbarItem
@@ -24,9 +23,9 @@ type planListUI struct {
 	actionBar        *widget.Toolbar
 }
 
-func MakePlanListSplit(d *cryptoDB.Database, bb *exchange.ByBit) *container.Split {
+func MakePlanListSplit(d *cryptodb.Database) *container.Split {
 	planList := &planListUI{}
-	planList.Plans, _ = d.GetPlans()
+    planList.Plans, _ = d.GetPlans()
 	planList.List = widget.NewList(
 		func() int {
 			return len(planList.Plans)
@@ -48,9 +47,9 @@ func MakePlanListSplit(d *cryptoDB.Database, bb *exchange.ByBit) *container.Spli
 			// TODO: use theme colors
 			var directionColor color.Color
 			switch planList.Plans[i].Side {
-			case cryptoDB.SideLong:
+			case cryptodb.SideLong:
 				directionColor = colornames.Green
-			case cryptoDB.SideShort:
+			case cryptodb.SideShort:
 				directionColor = colornames.Red
 			}
 			o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[2].(*canvas.Text).Color = directionColor
@@ -59,11 +58,11 @@ func MakePlanListSplit(d *cryptoDB.Database, bb *exchange.ByBit) *container.Spli
 			var statusColor color.Color
 			// TODO: give all posible statuses a different color
 			switch planList.Plans[i].Status {
-			case cryptoDB.StatusPlanned:
+			case cryptodb.StatusPlanned:
 				statusColor = colornames.Blue
-			case cryptoDB.StatusOrdered:
+			case cryptodb.StatusOrdered:
 				statusColor = colornames.Green
-			case cryptoDB.StatusFilled:
+			case cryptodb.StatusFilled:
 				statusColor = colornames.Purple
 			default:
 				statusColor = colornames.White
@@ -80,8 +79,8 @@ func MakePlanListSplit(d *cryptoDB.Database, bb *exchange.ByBit) *container.Spli
 
 	planList.addPlanAction = widget.NewToolbarAction(theme.ContentAddIcon(), func() {
 		log.Print("Add button pressed")
-		f := NewForm(d, bb)
-		f.FillForm(cryptoDB.Plan{})
+		f := NewForm(d)
+		f.FillForm(cryptodb.Plan{})
 		planListSplit.Trailing = f.form
 
 		planListSplit.Refresh()
@@ -100,7 +99,7 @@ func MakePlanListSplit(d *cryptoDB.Database, bb *exchange.ByBit) *container.Spli
 	planListSplit.Refresh()
 
 	planList.List.OnSelected = func(id widget.ListItemID) {
-		f := NewForm(d, bb)
+		f := NewForm(d)
 		f.FillForm(planList.Plans[id])
 		planListSplit.Trailing = f.form
 		planListSplit.Refresh()

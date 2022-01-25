@@ -1,15 +1,19 @@
 Properly configure enumer
 	maybe make a makefile
 	make use of transforme and/or trim options
+
 Split into server and client
 	log actions/errors to database and file
 	regurlaly UPDATE wallet and pairs
+
 Unit testing for 
 	database
 	exchange
 	gui
 	the rest
+
 Auto rejection trading based on fibonnaci?
+
 Mail executed changes
 	respond to further actions via mail
 	or mobile client

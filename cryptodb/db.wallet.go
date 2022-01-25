@@ -10,7 +10,7 @@ import (
 )
 
 func (db *Database) PrepareAddWalletStatement() (err error) {
-	db.addWalletStatement, err = db.database.Prepare(fmt.Sprintf("INSERT %s SET Symbol=?, Equity=?, Available=?, UsedMargin=?, OrderMargin=?, PositionMargin=?, OCCClosingFee=?, OCCFundingFee=?, WalletBalance=?, DailyPnL=?, UnrealisedPnL=?, TotalPnL=?, EntryTime=?", db.walletTableName))
+	db.addWalletStatement, err = db.database.Prepare(fmt.Sprintf("INSERT %s SET Symbol=?, Equity=?, Available=?, UsedMargin=?, OrderMargin=?, PositionMargin=?, OCCClosingFee=?, OCCFundingFee=?, WalletBalance=?, DailyPnL=?, UnrealisedPnL=?, TotalPnL=?, EntryTime=?", db.config.walletTableName))
 	return err
 }
 

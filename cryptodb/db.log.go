@@ -7,7 +7,7 @@ import (
 )
 
 func (db *Database) PrepareAddLogStatement() (err error) {
-	db.addLogStatement, err = db.database.Prepare(fmt.Sprintf("INSERT %s SET PlanID=?, Source=?, Text=?", db.logTableName))
+	db.addLogStatement, err = db.database.Prepare(fmt.Sprintf("INSERT %s SET PlanID=?, Source=?, Text=?", db.config.logTableName))
 	return err
 }
 

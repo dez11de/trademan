@@ -14,15 +14,16 @@ type databaseConfig struct {
 	Database string
 	User     string
 	Password string
+
+	pairTableName   string
+	walletTableName string
+	planTableName   string
+	orderTableName  string
+	logTableName    string
 }
 
 type Database struct {
 	config             databaseConfig
-	pairTableName      string
-	walletTableName    string
-	planTableName      string
-	orderTableName     string
-	logTableName       string
 	database           *sql.DB
 	addPairStatement   *sql.Stmt
 	addWalletStatement *sql.Stmt
@@ -42,12 +43,13 @@ func NewDB() (db *Database) {
 			Database: "test_trademan",
 			User:     "dennis",
 			Password: "c0d3mysql",
+
+			pairTableName:   "`PAIR`",
+			walletTableName: "`WALLET`",
+			planTableName:   "`PLAN`",
+			orderTableName:  "`ORDER`",
+			logTableName:    "`LOG`",
 		},
-		"`PAIR`",
-		"`WALLET`",
-		"`PLAN`",
-		"`ORDER`",
-		"`LOG`",
 		nil,
 		nil,
 		nil,
@@ -60,7 +62,8 @@ func NewDB() (db *Database) {
 }
 
 func (db *Database) Connect() (err error) {
-	db.database, err = sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", db.config.User, db.config.Password, db.config.Host, db.config.Port, db.config.Database))
+	db.database, err = sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true",
+		db.config.User, db.config.Password, db.config.Host, db.config.Port, db.config.Database))
 	if err != nil {
 		return err
 	}
@@ -106,11 +109,11 @@ func (db *Database) StorePlanAndOrders(plan Plan, orders Orders) (err error) {
 
 	plan.PlanID, err = db.AddPlan(plan)
 
-	for _, o := range orders {
-		o.PlanID = plan.PlanID
-		log.Printf("Storing order %v", o)
-		OrderID, err := db.AddOrder(o)
-		o.OrderID = OrderID
+	for _, order := range orders {
+		order.PlanID = plan.PlanID
+		log.Printf("Storing order %v", order)
+		OrderID, err := db.AddOrder(order)
+		order.OrderID = OrderID
 		log.Printf("Stored with PlanID %d, error was %v", OrderID, err)
 	}
 	return err

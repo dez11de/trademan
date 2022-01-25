@@ -7,7 +7,7 @@ import (
 )
 
 func (db *Database) PrepareAddPlanStatement() (err error) {
-	db.addPlanStatement, err = db.database.Prepare(fmt.Sprintf("INSERT %s SET PairID=?, Status=?, Side=?, Risk=?, Notes=?, TradingViewPlan=?, RewardRiskRatio=?, Profit=?", db.planTableName))
+	db.addPlanStatement, err = db.database.Prepare(fmt.Sprintf("INSERT %s SET PairID=?, Status=?, Side=?, Risk=?, Notes=?, TradingViewPlan=?, RewardRiskRatio=?, Profit=?", db.config.planTableName))
 	return err
 }
 

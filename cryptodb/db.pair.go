@@ -8,7 +8,7 @@ import (
 )
 
 func (db *Database) PrepareAddPairStatement() (err error) {
-	db.addPairStatement, err = db.database.Prepare(fmt.Sprintf("INSERT %s SET Pair=?, BaseCurrency=?, QuoteCurrency=?, PriceScale=?, TakerFee=?, MakerFee=?, MinLeverage=?, MaxLeverage=?, LeverageStep=?, MinPrice=?, MaxPrice=?, TickSize=?, MinOrderSize=?, MaxOrderSize=?, StepOrderSize=?", db.pairTableName))
+	db.addPairStatement, err = db.database.Prepare(fmt.Sprintf("INSERT %s SET Pair=?, BaseCurrency=?, QuoteCurrency=?, PriceScale=?, TakerFee=?, MakerFee=?, MinLeverage=?, MaxLeverage=?, LeverageStep=?, MinPrice=?, MaxPrice=?, TickSize=?, MinOrderSize=?, MaxOrderSize=?, StepOrderSize=?", db.config.pairTableName))
 	return err
 }
 

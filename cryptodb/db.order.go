@@ -8,7 +8,7 @@ import (
 )
 
 func (db *Database) PrepareAddOrderStatement() (err error) {
-	db.addOrderStatement, err = db.database.Prepare(fmt.Sprintf("INSERT %s SET PlanID=?, ExchangeOrderID=?, Status=?, OrderType=?, `Size`=?, TriggerPrice=?, Price=?", db.orderTableName))
+	db.addOrderStatement, err = db.database.Prepare(fmt.Sprintf("INSERT %s SET PlanID=?, ExchangeOrderID=?, Status=?, OrderType=?, `Size`=?, TriggerPrice=?, Price=?", db.config.orderTableName))
 	return err
 }
 

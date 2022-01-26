@@ -6,15 +6,14 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-
 func (db *api) AddPair(p Pair) (PairID int64, err error) {
 	// TODO: handle updates of existing symbols
-    addStmt, err := db.database.Prepare("INSERT INTO `PAIR` (Pair, BaseCurrency, QuoteCurrency, PriceScale, TakerFee, MakerFee, MinLeverage, MaxLeverage, LeverageStep, MinPrice, MaxPrice, TickSize, MinOrderSize, MaxOrderSize, StepOrderSize) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+	result, err := db.database.Exec(
+		`INSERT INTO 'PAIR' (Pair, BaseCurrency, QuoteCurrency, PriceScale, TakerFee, MakerFee, MinLeverage, MaxLeverage, LeverageStep, MinPrice, MaxPrice, TickSize, MinOrderSize, MaxOrderSize, StepOrderSize) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		p.Pair, p.BaseCurrency, p.QuoteCurrency, p.PriceScale, p.TakerFee, p.MakerFee, p.Leverage.Min, p.Leverage.Max, p.Leverage.Step, p.Price.Min, p.Price.Max, p.Price.Tick, p.OrderSize.Min, p.OrderSize.Max, p.OrderSize.Step)
 	if err != nil {
 		return 0, err
 	}
-
-    result, err := addStmt.Exec(p.Pair, p.BaseCurrency, p.QuoteCurrency, p.PriceScale, p.TakerFee, p.MakerFee, p.Leverage.Min, p.Leverage.Max, p.Leverage.Step, p.Price.Min, p.Price.Max, p.Price.Tick, p.OrderSize.Min, p.OrderSize.Max, p.OrderSize.Step)
 
 	return result.LastInsertId()
 }
@@ -40,21 +39,21 @@ func (db *api) GetPairs() (pairs map[string]Pair, err error) {
 }
 
 func (db *api) GetPairID(p string) int64 {
-    //TODO: reimplement as database query
+	//TODO: reimplement as database query
 	return -1
 }
 
 func (db *api) GetPairString(id int64) string {
-    //TODO: reimplement as database query
+	//TODO: reimplement as database query
 	return ""
 }
 
 func (db *api) GetPairFromString(p string) (pair Pair, err error) {
-    //TODO: reimplement as database query
+	//TODO: reimplement as database query
 	return pair, nil
 }
 
 func (db *api) GetPairFromID(i int64) (pair Pair, err error) {
-    //TODO: reimplement as database query
+	//TODO: reimplement as database query
 	return db.GetPairFromString(db.GetPairString(i))
 }

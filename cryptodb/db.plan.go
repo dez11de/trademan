@@ -7,7 +7,6 @@ import (
 )
 
 func (db *api) AddPlan(p Plan) (planID int64, err error) {
-
 	result, err := db.database.Exec(
 		`INSERT INTO 'PLAN' (PairID, Status, Side, Risk, Notes, TradingViewPlan, RewardRiskRatio, Profit) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
 		p.PairID, p.Status, p.Side, p.Risk, p.Notes, p.TradingViewPlan, p.RewardRiskRatio, p.Profit)

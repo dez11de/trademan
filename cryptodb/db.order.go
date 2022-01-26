@@ -8,19 +8,17 @@ import (
 )
 
 func (db *api) AddOrder(o Order) (OrderID int64, err error) {
-
-    addStmt, err := db.database.Prepare("INSERT INTO `ORDER` (PlanID, ExchangeOrderID, Status, OrderType, `Size`, TriggerPrice, Price) VALUES (?, ?, ?, ?, ?, ?, ?)")
+    result, err := db.database.Exec(
+        `INSERT INTO 'ORDER' (PlanID, ExchangeOrderID, Status, OrderType, 'Size', TriggerPrice, Price) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        o.PlanID, o.ExchangeOrderID, o.Status, o.OrderType, o.Size, o.TriggerPrice, o.Price)
 	if err != nil {
-        log.Printf("error preparing Statement %v", err)
-		return 0, err
+		log.Printf("[AddOrder] error occured executing statement: %v", err)
 	}
-    result, err := addStmt.Exec(o.PlanID, o.ExchangeOrderID, o.Status, o.OrderID, o.Size, o.TriggerPrice, o.Price)
 
 	return result.LastInsertId()
 }
 
 func (db *api) GetOrders(PlanID int64) (orders Orders, err error) {
-
 	orders = NewOrders()
 
 	rows, err := db.database.Query(fmt.Sprintf("SELECT * FROM `ORDER` where PlanID=%d", PlanID))

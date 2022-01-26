@@ -1,25 +1,25 @@
 package cryptodb
 
 import (
-	"fmt"
+	"log"
 
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func (db *Database) PrepareAddPlanStatement() (err error) {
-	db.addPlanStatement, err = db.database.Prepare(fmt.Sprintf("INSERT %s SET PairID=?, Status=?, Side=?, Risk=?, Notes=?, TradingViewPlan=?, RewardRiskRatio=?, Profit=?", db.config.planTableName))
-	return err
-}
+func (db *api) AddPlan(p Plan) (planID int64, err error) {
 
-func (db *Database) AddPlan(p Plan) (TradeID int64, err error) {
-	result, err := db.addPlanStatement.Exec(p.PairID, p.Status.String(), p.Side.String(), p.Risk, p.Notes, p.TradingViewPlan, p.RewardRiskRatio, p.Profit)
+	result, err := db.database.Exec(
+		`INSERT INTO 'PLAN' (PairID, Status, Side, Risk, Notes, TradingViewPlan, RewardRiskRatio, Profit) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+		p.PairID, p.Status, p.Side, p.Risk, p.Notes, p.TradingViewPlan, p.RewardRiskRatio, p.Profit)
 	if err != nil {
-		return 0, err
+		log.Printf("[AddPlan] error occured executing statement: %v", err)
 	}
+
 	return result.LastInsertId()
 }
 
-func (db *Database) GetPlans() (p []Plan, err error) {
+func (db *api) GetPlans() (p []Plan, err error) {
+
 	rows, err := db.database.Query("SELECT * FROM `PLAN`;")
 	if err != nil {
 		return nil, err

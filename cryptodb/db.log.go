@@ -1,17 +1,19 @@
 package cryptodb
 
 import (
-	"fmt"
+	"log"
 
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func (db *Database) PrepareAddLogStatement() (err error) {
-	db.addLogStatement, err = db.database.Prepare(fmt.Sprintf("INSERT %s SET PlanID=?, Source=?, Text=?", db.config.logTableName))
-	return err
-}
+func (db *api) AddLog(planID int64, source LogSource, text string) (err error) {
+    
+    addStmt, err := db.database.Prepare("INSERT INTO `LOG` (PlanID, Source, Text) VALUES (?, ?, ?)")
+    if err != nil {
+        log.Printf("error preparing Statement %v", err)
+        return err 
+    }
+    _, err = addStmt.Exec(planID, source, text)
 
-func (db *Database) AddLog(tradeID int64, source LogSource, text string) (err error) {
-	_, err = db.addLogStatement.Exec(tradeID, source, text)
 	return err
 }

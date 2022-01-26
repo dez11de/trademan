@@ -7,22 +7,22 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func (db *Database) PrepareAddOrderStatement() (err error) {
-	db.addOrderStatement, err = db.database.Prepare(fmt.Sprintf("INSERT %s SET PlanID=?, ExchangeOrderID=?, Status=?, OrderType=?, `Size`=?, TriggerPrice=?, Price=?", db.config.orderTableName))
-	return err
-}
+func (db *api) AddOrder(o Order) (OrderID int64, err error) {
 
-func (db *Database) AddOrder(o Order) (OrderID int64, err error) {
-	result, err := db.addOrderStatement.Exec(o.PlanID, o.ExchangeOrderID, o.Status.String(), o.OrderType.String(), o.Size, o.TriggerPrice, o.Price)
+    addStmt, err := db.database.Prepare("INSERT INTO `ORDER` (PlanID, ExchangeOrderID, Status, OrderType, `Size`, TriggerPrice, Price) VALUES (?, ?, ?, ?, ?, ?, ?)")
 	if err != nil {
+        log.Printf("error preparing Statement %v", err)
 		return 0, err
 	}
+    result, err := addStmt.Exec(o.PlanID, o.ExchangeOrderID, o.Status, o.OrderID, o.Size, o.TriggerPrice, o.Price)
+
 	return result.LastInsertId()
 }
 
-func (db *Database) GetOrders(PlanID int64) (orders Orders, err error) {
-	log.Printf("[db.order.GetOrders] getting orders belonging to PlanID: %d", PlanID)
+func (db *api) GetOrders(PlanID int64) (orders Orders, err error) {
+
 	orders = NewOrders()
+
 	rows, err := db.database.Query(fmt.Sprintf("SELECT * FROM `ORDER` where PlanID=%d", PlanID))
 	if err != nil {
 		log.Print(err)
@@ -55,9 +55,4 @@ func (db *Database) GetOrders(PlanID int64) (orders Orders, err error) {
 		orders[3+takeProfitCount] = Order{OrderType: TypeTakeProfit, PlanID: PlanID}
 	}
 	return orders, nil
-}
-
-func (db *Database) StoreOrders(PlanID int64) (err error) {
-	log.Printf("[StoreOrders] storing orders...")
-	return err
 }

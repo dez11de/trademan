@@ -9,21 +9,19 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-func (db *Database) PrepareAddWalletStatement() (err error) {
-	db.addWalletStatement, err = db.database.Prepare(fmt.Sprintf("INSERT %s SET Symbol=?, Equity=?, Available=?, UsedMargin=?, OrderMargin=?, PositionMargin=?, OCCClosingFee=?, OCCFundingFee=?, WalletBalance=?, DailyPnL=?, UnrealisedPnL=?, TotalPnL=?, EntryTime=?", db.config.walletTableName))
-	return err
-}
+func (db *api) AddWallet(b Balance) (err error) {
 
-func (db *Database) AddWallet(b Balance) (err error) {
-	_, err = db.addWalletStatement.Exec(b.Symbol, b.Equity, b.Available, b.UsedMargin, b.OrderMargin, b.PositionMargin, b.OCCClosingFee, b.OCCFundingFee, b.WalletBalance, b.DailyPnL, b.UnrealisedPnL, b.TotalPnL, b.EntryTime.Format("2006-01-02 15:04:05"))
+    addStmt, err := db.database.Prepare("INSERT INTO `WALLET` (Symbol, Equity, Available, UsedMargin, OrderMargin, PositionMargin, OCCClosingFee, OCCFundingFee, WalletBalance, DailyPnL, UnrealisedPnL, TotalPnL) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?")
 	if err != nil {
 		return err
 	}
+    _, err = addStmt.Exec(b.Symbol, b.Equity, b.Available, b.UsedMargin, b.OrderMargin, b.PositionMargin, b.OCCClosingFee, b.OCCFundingFee, b.WalletBalance, b.DailyPnL, b.UnrealisedPnL, b.TotalPnL)
+
 	return err
 }
 
-func (db *Database) GetRecentWallet() (wallet map[string]Balance, err error) {
-	// Get most recent TimeStamp
+func (db *api) GetRecentWallet() (wallet map[string]Balance, err error) {
+    // Get most recent TimeStamp TODO: this can probably be simplified if we assume fixed number of Symbols in wallet
 	rows, err := db.database.Query("SELECT EntryTime FROM `WALLET` ORDER BY EntryTime DESC LIMIT 1;")
 	if err != nil {
 		return nil, err
@@ -37,7 +35,7 @@ func (db *Database) GetRecentWallet() (wallet map[string]Balance, err error) {
 	}
 	rows.Close()
 
-	rows, err = db.database.Query(fmt.Sprintf("SELECT * FROM `WALLET` WHERE EntryTime='%s';", lastBalance.EntryTime.Format("2006-01-02 15:04:05")))
+	rows, err = db.database.Query("SELECT * FROM `WALLET` ORDER BY EntryTime DESC LIMIT 1;")
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +52,7 @@ func (db *Database) GetRecentWallet() (wallet map[string]Balance, err error) {
 	return wallet, nil
 }
 
-func (db *Database) GetPerformance(p time.Duration) decimal.Decimal {
+func (db *api) GetPerformance(p time.Duration) decimal.Decimal {
 	periodStart := time.Now().Add(-p)
 	result, err := db.database.Query(fmt.Sprintf("SELECT Equity FROM WALLET WHERE Symbol='USDT' ORDER BY abs(TIMESTAMPDIFF(second, EntryTime, '%s')) LIMIT 1", periodStart.Format("2006-01-02 15:04:05")))
 	if err != nil {
@@ -63,6 +61,8 @@ func (db *Database) GetPerformance(p time.Duration) decimal.Decimal {
 	result.Next()
 	var balanceAtPeriodStart decimal.Decimal
 	result.Scan(&balanceAtPeriodStart)
-	currentBalance := db.WalletCache["USDT"].Equity
-	return (currentBalance.Sub(balanceAtPeriodStart).Div(currentBalance)).Mul(decimal.NewFromInt(100))
+    // TODO: see GetRecentWallet()
+	// currentBalance := db.WalletCache["USDT"].Equity
+    // return (currentBalance.Sub(balanceAtPeriodStart).Div(currentBalance)).Mul(decimal.NewFromInt(100))
+    return decimal.Zero
 }

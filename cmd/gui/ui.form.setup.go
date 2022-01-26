@@ -4,19 +4,18 @@ import (
 	"fmt"
 	"log"
 	"net/url"
-	"strings"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/widget"
 	xwidget "fyne.io/x/fyne/widget"
+	"github.com/dez11de/cryptodb"
 	"github.com/shopspring/decimal"
-    "github.com/dez11de/cryptodb"
 )
 
 type planForm struct {
-	db *cryptodb.Database
-
 	plan       cryptodb.Plan
+	PairCache  map[string]cryptodb.Pair
+    CurrentWallet map[string]cryptodb.Balance
 	activePair cryptodb.Pair
 	orders     cryptodb.Orders
 
@@ -36,8 +35,10 @@ func (pf *planForm) makePairItem() *widget.FormItem {
 	CompletionEntry := xwidget.NewCompletionEntry([]string{})
 
 	CompletionEntry.OnChanged = func(s string) {
+        // TODO: figure this out
+        /*
 		s = strings.ToUpper(s)
-		possiblePairs, _ := pf.db.SearchPairs(s)
+		pairList := pf.PairCache
 		if len(possiblePairs) > 1 {
 			CompletionEntry.SetOptions(possiblePairs)
 			CompletionEntry.ShowCompletion()
@@ -45,11 +46,12 @@ func (pf *planForm) makePairItem() *widget.FormItem {
 			CompletionEntry.SetText(possiblePairs[0])
 			CompletionEntry.HideCompletion()
 		}
+        */
 	}
 
 	CompletionEntry.OnSubmitted = func(s string) {
 		var ok bool
-		pf.activePair, ok = pf.db.PairCache[s]
+		pf.activePair, ok = pf.PairCache[s]
 		if ok {
 			pf.stopLossItem.Text = fmt.Sprintf("Stop Loss (%s)", pf.activePair.QuoteCurrency)
 			pf.stopLossItem.Widget.(*widget.Entry).SetPlaceHolder(decimal.Zero.StringFixed(pf.activePair.PriceScale))
@@ -150,8 +152,9 @@ func (pf *planForm) makeNotesMultilineItem() *widget.FormItem {
 	return widget.NewFormItem("Notes", notesMultiLineEntry)
 }
 
-func NewForm(d *cryptodb.Database) *planForm {
-	pf := &planForm{db: d}
+func NewForm() *planForm {
+    // TODO: Load pairCache, plan and it's orders
+	pf := &planForm{}
 	pf.orders = cryptodb.NewOrders()
 
 	pf.form = widget.NewForm()
@@ -173,11 +176,13 @@ func NewForm(d *cryptodb.Database) *planForm {
 				pf.orders[3+i].Price = decimal.Zero
 			}
 		}
-			pf.plan.SetEntrySize(pf.activePair, d.WalletCache[pf.activePair.QuoteCurrency].Equity, &pf.orders)
-			pf.plan.SetTakeProfitSizes(pf.activePair, &pf.orders)
-			pf.plan.SetRewardRiskRatio(pf.orders)
-			log.Printf("[Form] Storing to database...")
-			pf.db.StorePlanAndOrders(pf.plan, pf.orders)
+        /*
+		pf.plan.SetEntrySize(pf.activePair, d.WalletCache[pf.activePair.QuoteCurrency].Equity, &pf.orders)
+		pf.plan.SetTakeProfitSizes(pf.activePair, &pf.orders)
+		pf.plan.SetRewardRiskRatio(pf.orders)
+		log.Printf("[Form] Storing to database...")
+		pf.db.StorePlanAndOrders(pf.plan, pf.orders)
+        */
 	}
 
 	pf.form.OnCancel = func() {
@@ -215,11 +220,15 @@ func NewForm(d *cryptodb.Database) *planForm {
 
 func (pf *planForm) FillForm(p cryptodb.Plan) {
 	pf.plan = p
+    /* TODO: figure this out
 	pf.orders, _ = pf.db.GetOrders(pf.plan.PlanID)
+    */
 	for i, o := range pf.orders {
 		log.Printf("[%d] %v", i, o)
 	}
+    /* TODO: figure this out
 	pf.activePair, _ = pf.db.GetPairFromID(pf.plan.PairID)
+    */
 
 	if pf.plan.PlanID != 0 {
 		pf.pairItem.Widget.(*xwidget.CompletionEntry).SetText(pf.activePair.Pair)

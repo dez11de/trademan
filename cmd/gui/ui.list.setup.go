@@ -16,6 +16,7 @@ import (
 
 type planListUI struct {
 	Plans []cryptodb.Plan
+    PairCache map[string]cryptodb.Pair
 	List  *widget.List
 
 	addPlanAction    widget.ToolbarItem
@@ -23,9 +24,10 @@ type planListUI struct {
 	actionBar        *widget.Toolbar
 }
 
-func MakePlanListSplit(d *cryptodb.Database) *container.Split {
+func MakePlanListSplit() *container.Split {
 	planList := &planListUI{}
-    planList.Plans, _ = d.GetPlans()
+    // TODO read plans from server
+    planList.Plans = make([]cryptodb.Plan, 3)
 	planList.List = widget.NewList(
 		func() int {
 			return len(planList.Plans)
@@ -42,7 +44,8 @@ func MakePlanListSplit(d *cryptodb.Database) *container.Split {
 			)
 		},
 		func(i widget.ListItemID, o fyne.CanvasObject) {
-			o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[0].(*canvas.Text).Text = d.GetPairString(planList.Plans[i].PairID)
+            // TODO: Support other pairs as well...
+			o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[0].(*canvas.Text).Text = planList.PairCache["BTCUSDT"].Pair
 
 			// TODO: use theme colors
 			var directionColor color.Color
@@ -73,13 +76,13 @@ func MakePlanListSplit(d *cryptodb.Database) *container.Split {
 
 	selectPlanLabel := container.New(layout.NewCenterLayout(), canvas.NewText("Select a plan from the list, or press + to make a new plan.", nil))
 
-	listAndButtons := container.NewWithoutLayout(widget.NewLabel("nothing to see here"))
+	listAndButtons := container.NewWithoutLayout(widget.NewLabel("Error loading plans.\nCheck internet connection."))
 	planListSplit := container.NewHSplit(listAndButtons, container.NewMax(selectPlanLabel))
 	planListSplit.SetOffset(0.20)
 
 	planList.addPlanAction = widget.NewToolbarAction(theme.ContentAddIcon(), func() {
 		log.Print("Add button pressed")
-		f := NewForm(d)
+		f := NewForm()
 		f.FillForm(cryptodb.Plan{})
 		planListSplit.Trailing = f.form
 
@@ -99,7 +102,7 @@ func MakePlanListSplit(d *cryptodb.Database) *container.Split {
 	planListSplit.Refresh()
 
 	planList.List.OnSelected = func(id widget.ListItemID) {
-		f := NewForm(d)
+		f := NewForm()
 		f.FillForm(planList.Plans[id])
 		planListSplit.Trailing = f.form
 		planListSplit.Refresh()

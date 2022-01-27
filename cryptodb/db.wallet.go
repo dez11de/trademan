@@ -11,7 +11,7 @@ import (
 
 func (db *api) AddWallet(b Balance) (err error) {
 	_, err = db.database.Exec(
-		`INSERT INTO 'WALLET' (Symbol, Equity, Available, UsedMargin, OrderMargin, PositionMargin, OCCClosingFee, OCCFundingFee, WalletBalance, DailyPnL, UnrealisedPnL, TotalPnL) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		`INSERT INTO WALLET (Symbol, Equity, Available, UsedMargin, OrderMargin, PositionMargin, OCCClosingFee, OCCFundingFee, WalletBalance, DailyPnL, UnrealisedPnL, TotalPnL) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		b.Symbol, b.Equity, b.Available, b.UsedMargin, b.OrderMargin, b.PositionMargin, b.OCCClosingFee, b.OCCFundingFee, b.WalletBalance, b.DailyPnL, b.UnrealisedPnL, b.TotalPnL)
 	if err != nil {
 		log.Printf("[AddWallet] error occured executing statement: %v", err)
@@ -22,7 +22,7 @@ func (db *api) AddWallet(b Balance) (err error) {
 
 func (db *api) GetRecentWallet() (wallet map[string]Balance, err error) {
 	// Get most recent TimeStamp TODO: this can probably be simplified if we assume fixed number of Symbols in wallet
-	rows, err := db.database.Query("SELECT EntryTime FROM `WALLET` ORDER BY EntryTime DESC LIMIT 1;")
+	rows, err := db.database.Query("SELECT EntryTime FROM WALLET ORDER BY EntryTime DESC LIMIT 1;")
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +35,7 @@ func (db *api) GetRecentWallet() (wallet map[string]Balance, err error) {
 	}
 	rows.Close()
 
-	rows, err = db.database.Query("SELECT * FROM `WALLET` ORDER BY EntryTime DESC LIMIT 1;")
+	rows, err = db.database.Query("SELECT * FROM WALLET ORDER BY EntryTime DESC LIMIT 1;")
 	if err != nil {
 		return nil, err
 	}

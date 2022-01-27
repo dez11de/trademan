@@ -28,7 +28,7 @@ func TestShouldAddWallet(t *testing.T) {
 			Equity: decimal.NewFromFloat(123.45),
 		},
 	}
-	mock.ExpectExec(`INSERT INTO 'WALLET' (.+) VALUES (.+)`).
+	mock.ExpectExec(`INSERT INTO WALLET (.+) VALUES (.+)`).
 		WithArgs( mockWallet["BTC"].Symbol,
 			mockWallet["BTC"].Equity,
 			mockWallet["BTC"].Available,

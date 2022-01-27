@@ -48,7 +48,7 @@ CREATE TABLE `WALLET` (
 	DailyPnL       DECIMAL(20, 8),
 	UnrealisedPnL  DECIMAL(20, 8),
 	TotalPnL       DECIMAL(20, 8),
-	EntryTime      DATETIME,
+	EntryTime      DATETIME DEFAULT CURRENT_TIMESTAMP,
 	
     INDEX(EntryTime),
 	PRIMARY KEY (Symbol, EntryTime)

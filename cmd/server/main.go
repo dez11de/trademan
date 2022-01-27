@@ -3,9 +3,10 @@ package main
 import (
 	"fmt"
 	"log"
+	"time"
 
-    "github.com/dez11de/cryptodb"
-    "github.com/dez11de/exchange"
+	"github.com/dez11de/cryptodb"
+	"github.com/dez11de/exchange"
 )
 
 func main() {
@@ -15,6 +16,7 @@ func main() {
 		log.Printf("Error connecting to database: %s", err)
 	}
 
+	// TODO: read these from config or envvar
 	exchange := exchange.NewByBit("https://api-testnet.bybit.com",
 		"wss://stream-testnet.bybit.com/realtime_private",
 		"rLot58Xxaj4Kdb3pog",
@@ -30,20 +32,46 @@ func main() {
 	}
 
 	// Might be needed to reload stuff in database
-	currentPairs := exchange.GetPairs()
-	for _, p := range currentPairs {
-		db.AddPair(p)
-	}
-	currentBalances, _ := exchange.GetCurrentWallet()
-	for _, b := range currentBalances {
-		db.AddWallet(b)
-	}
+	/*
+		currentPairs := exchange.GetPairs()
+		for _, p := range currentPairs {
+			db.AddPair(p)
+		}
+	*/
 
-	for _, pair := range db.PairCache {
-		fmt.Printf("Pair: %s, ID: %d, Quote Currency: %s\n", pair.Pair, pair.PairID, pair.QuoteCurrency)
-	}
+	refreshWalletTicker := time.NewTicker(1 * time.Hour)
+	refreshPairsTicker := time.NewTicker(24 * time.Hour)
+	quit := make(chan struct{})
 
-	for currency, balance := range db.WalletCache {
-		fmt.Printf("Currency: %s, Available balance: %s\n", currency, balance.Available.String())
+	for {
+		select {
+		case <-refreshWalletTicker.C:
+			currentBalances, err := exchange.GetCurrentWallet()
+			if err != nil {
+				log.Printf("error getting current wallet from exchange %v", err)
+			} else {
+				for _, b := range currentBalances {
+					err = db.AddWallet(b)
+					if err != nil {
+						log.Printf("error writing wallet to database %v", err)
+					}
+				}
+			}
+		case <-refreshPairsTicker.C:
+			currentPairs, err := exchange.GetPairs()
+			if err != nil {
+				log.Printf("error getting current pairs %v", err)
+			} else {
+				for _, p := range currentPairs {
+					_, err = db.WritePair(p)
+					if err != nil {
+						log.Printf("error writing pair to database %v", err)
+					}
+				}
+			}
+		case <-quit:
+			refreshWalletTicker.Stop()
+			return
+		}
 	}
 }

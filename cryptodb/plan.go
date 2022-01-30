@@ -18,6 +18,7 @@ type Plan struct {
 	Profit          decimal.Decimal `json:"realised_pnl"`
 	EntryTime       time.Time
 	ModifyTime      time.Time
+	Orders          Orders
 }
 
 func (p *Plan) SetEntrySize(activePair Pair, equity decimal.Decimal, o *Orders) (positionSize decimal.Decimal) {
@@ -31,11 +32,11 @@ func (p *Plan) SetEntrySize(activePair Pair, equity decimal.Decimal, o *Orders) 
 	return positionSize
 }
 
-func (p *Plan) SetTakeProfitSizes(a Pair, o *Orders) {
-	totalSize := o[TypeEntry].Size
+func (p *Plan) SetTakeProfitSizes(a Pair) {
+	totalSize := p.Orders[TypeEntry].Size
 	takeProfitsCount := 0
 	for i := 1; i < MaxTakeProfits; i++ {
-		if !o[2+i].Price.IsZero() {
+		if !p.Orders[2+i].Price.IsZero() {
 			takeProfitsCount++
 		}
 	}
@@ -49,23 +50,23 @@ func (p *Plan) SetTakeProfitSizes(a Pair, o *Orders) {
 	// TODO: it feels like this could be much simpler, but i'm tired and it works so....
 	// TODO: special case if there is only one TakeProfit
 	if takeProfitsCount == 1 {
-		o[3].Size = takeProfitSize
+		p.Orders[3].Size = takeProfitSize
 	} else {
 		for i := 1; i <= takeProfitsCount-1; i++ {
-			o[2+i].Size = takeProfitSize
+			p.Orders[2+i].Size = takeProfitSize
 			remainingSize = remainingSize.Sub(takeProfitSize)
 		}
 		// Set last take profit to the remainder
-		o[2+i+2].Size = remainingSize.Round(a.PriceScale)
+		p.Orders[2+i+2].Size = remainingSize.Round(a.PriceScale)
 	}
 }
 
-func (p *Plan) SetRewardRiskRatio(o Orders) (rrr float64) {
-	maxRisk := (o[TypeEntry].Price.Mul(o[TypeEntry].Size)).Sub(o[TypeHardStopLoss].Price.Mul(o[TypeHardStopLoss].Size))
+func (p *Plan) SetRewardRiskRatio() (rrr float64) {
+	maxRisk := (p.Orders[TypeEntry].Price.Mul(p.Orders[TypeEntry].Size)).Sub(p.Orders[TypeHardStopLoss].Price.Mul(p.Orders[TypeHardStopLoss].Size))
 	maxProfit := decimal.Zero
-	for _, order := range o {
+	for _, order := range p.Orders {
 		if order.OrderType == TypeTakeProfit {
-			maxProfit = maxProfit.Add(order.Price.Sub(o[TypeEntry].Price).Mul(order.Size))
+			maxProfit = maxProfit.Add(order.Price.Sub(p.Orders[TypeEntry].Price).Mul(order.Size))
 		}
 	}
 	rrr = maxProfit.Div(maxRisk).InexactFloat64()

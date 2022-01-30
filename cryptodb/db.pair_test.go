@@ -1,6 +1,7 @@
 package cryptodb
 
 import (
+	"regexp"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
@@ -75,7 +76,8 @@ func TestShouldGetPairs(t *testing.T) {
 	api := NewDB()
 	api.database = db
 
-	mock.ExpectQuery("SELECT * FROM PAIR ORDER BY Pair")
+    // TODO: this seems to expect results, and i have to supply the possible results? Or something.
+	mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM PAIR ORDER BY Pair`))
 	_, err = api.GetPairs()
 	if err != nil {
 		t.Errorf("received unexpected error %s", err)

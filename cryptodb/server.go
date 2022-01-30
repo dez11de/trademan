@@ -110,7 +110,7 @@ func (db *api) pairsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 	case "POST":
-		// TODO: this shouldn't be even possible?
+		// TODO: this shouldn't be even supported?
 		log.Print("POST request received, add/updating pair?")
 	}
 }
@@ -167,6 +167,7 @@ func (db *api) HandleRequests() {
 	http.HandleFunc("/plan", db.planHandler)
 	http.HandleFunc("/pairs", db.pairsHandler)
 	http.HandleFunc("/setup", db.setupHandler)
+
 	// TODO make at least port configurable
 	log.Fatal(http.ListenAndServe(":8888", nil))
 }

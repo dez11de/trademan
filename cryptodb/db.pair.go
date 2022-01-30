@@ -83,6 +83,7 @@ func (db *api) GetPair(p string) (pair Pair, err error) {
 	return pair, err
 }
 
+/*
 func (db *api) GetPairString(id int64) string {
 	//TODO: reimplement as database query
 	return ""
@@ -97,6 +98,7 @@ func (db *api) GetPairFromID(i int64) (pair Pair, err error) {
 	//TODO: reimplement as database query
 	return db.GetPairFromString(db.GetPairString(i))
 }
+*/ 
 
 func (db *api) SearchPairs(s string) (pairs []string, err error) {
     rows, err := db.database.Query("SELECT Pair FROM PAIR WHERE Pair LIKE ? ORDER BY Pair ASC", "%"+s+"%")

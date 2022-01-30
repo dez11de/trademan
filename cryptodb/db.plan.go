@@ -7,6 +7,7 @@ import (
 )
 
 func (db *api) AddPlan(p Plan) (planID int64, err error) {
+    // TODO: also add/update orders as a transaction, and rollback if anything fails
 	result, err := db.database.Exec(
 		`INSERT INTO PLAN (PairID, Status, Side, Risk, Notes, TradingViewPlan, RewardRiskRatio, Profit) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
 		p.PairID, p.Status, p.Side, p.Risk, p.Notes, p.TradingViewPlan, p.RewardRiskRatio, p.Profit)
@@ -18,6 +19,7 @@ func (db *api) AddPlan(p Plan) (planID int64, err error) {
 }
 
 func (db *api) GetPlans() (p []Plan, err error) {
+    // TODO: also read orders
 	rows, err := db.database.Query("SELECT * FROM `PLAN`;")
 	if err != nil {
 		return nil, err
@@ -36,6 +38,7 @@ func (db *api) GetPlans() (p []Plan, err error) {
 }
 
 func (db *api) GetPlan(id int64) (p Plan, err error) {
+    // TODO: also read orders
 	row := db.database.QueryRow("SELECT * FROM `PLAN` WHERE PlanID=?;", id)
 
 	err = row.Scan(&p.PlanID, &p.PairID, &p.Status, &p.Side, &p.Risk, &p.Notes, &p.TradingViewPlan, &p.RewardRiskRatio, &p.Profit, &p.EntryTime, &p.ModifyTime)

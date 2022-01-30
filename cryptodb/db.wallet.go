@@ -8,7 +8,7 @@ import (
 )
 
 func (db *api) AddBalance(b Balance) (err error) {
-	// TODO: should be posible to not expect a result right?
+	// TODO: should be posible to not expect a result right
 	_, err = db.database.Exec(
 		`INSERT INTO WALLET (Symbol, Equity, Available, UsedMargin, OrderMargin, PositionMargin, OCCClosingFee, OCCFundingFee, WalletBalance, DailyPnL, UnrealisedPnL, TotalPnL) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		b.Symbol, b.Equity, b.Available, b.UsedMargin, b.OrderMargin, b.PositionMargin, b.OCCClosingFee, b.OCCFundingFee, b.WalletBalance, b.DailyPnL, b.UnrealisedPnL, b.TotalPnL)
@@ -22,7 +22,7 @@ func (db *api) AddBalance(b Balance) (err error) {
 // TODO: rewrite this into a GetBalance (symbol string) Balance, err function
 func (db *api) GetRecentWallet() (wallet map[string]Balance, err error) {
 	// Get most recent TimeStamp
-	// TODO: this can probably be simplified if we assume fixed number of Symbols in wallet
+	// TODO: simplify to one query, see below
 	rows, err := db.database.Query("SELECT EntryTime FROM WALLET ORDER BY EntryTime DESC LIMIT 1;")
 	if err != nil {
 		return nil, err
@@ -55,7 +55,6 @@ func (db *api) GetRecentWallet() (wallet map[string]Balance, err error) {
 }
 
 func (db *api) GetPerformance(symbol string, periodStart time.Time) (performance float64, err error) {
-	// TODO: Seems to work, but need more data. Maybe it's better to use TIMESTAMPDIFF? I don't really understand the query anyway.
 	// TODO: reformat query so it's a bit easier on the eyes
 	row := db.database.QueryRow("SELECT (RecentEquity - PreviousEquity) / PreviousEquity * 100 AS Performance "+
 		"FROM ( SELECT ( SELECT Equity "+

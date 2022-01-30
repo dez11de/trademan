@@ -26,7 +26,7 @@ func TestShouldAddOrder(t *testing.T) {
 		Size:      decimal.NewFromFloat(45.0),
 		Price:     decimal.NewFromFloat(1.0263),
 	}
-	mock.ExpectExec("INSERT INTO 'ORDER' (.+) VALUES (.+)").
+	mock.ExpectExec("INSERT INTO `ORDER` (.+) VALUES (.+)").
 		WithArgs(mockOrder.PlanID, mockOrder.ExchangeOrderID, mockOrder.Status, mockOrder.OrderType, mockOrder.Size, mockOrder.TriggerPrice, mockOrder.Price).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 

@@ -10,10 +10,11 @@ import (
 )
 
 func main() {
+    // TODO: read and pass config from env/commandline/configfile
 	db := cryptodb.NewDB()
 	err := db.Connect()
 	if err != nil {
-		log.Printf("Error connecting to database: %s", err)
+		log.Fatalf("Error connecting to database: %s", err)
 	}
 
 	// TODO: read these from config or envvar
@@ -22,8 +23,10 @@ func main() {
 		"rLot58Xxaj4Kdb3pog",
 		"0a3GihYe3CfFkLbYsE41wWoNTtofwY2WPkwi",
 		false)
+    // TODO: read and pass config from env/commandline/configfile
+    // TODO: return err if connecting failed
 	if exchange == nil {
-		fmt.Println("Error creating ByBit object")
+		log.Fatalf("Error creating ByBit object")
 	}
 
 	err = exchange.Connect()
@@ -39,9 +42,12 @@ func main() {
 		}
 	*/
 
+    // TODO: add exchange.Ping() to keep connection alive
 	refreshWalletTicker := time.NewTicker(1 * time.Hour)
 	refreshPairsTicker := time.NewTicker(24 * time.Hour)
 	quit := make(chan struct{})
+
+    go db.HandleRequests()
 
 	for {
 		select {
@@ -51,7 +57,7 @@ func main() {
 				log.Printf("error getting current wallet from exchange %v", err)
 			} else {
 				for _, b := range currentBalances {
-					err = db.AddWallet(b)
+					err = db.AddBalance(b)
 					if err != nil {
 						log.Printf("error writing wallet to database %v", err)
 					}
@@ -75,3 +81,4 @@ func main() {
 		}
 	}
 }
+

@@ -7,6 +7,8 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
+const MySQLTimestampFormat = "2006-01-02 15:04:05"
+
 type databaseConfig struct {
 	Host     string
 	Port     string
@@ -20,6 +22,8 @@ type databaseConfig struct {
 	orderTableName  string
 	logTableName    string
 }
+
+// TODO: this is just a comment
 
 type api struct {
 	config             databaseConfig

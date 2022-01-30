@@ -6,8 +6,22 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
+func (db *api) WritePair(pair Pair) (RowsAffected int64, err error) {
+    existingPair, err := db.GetPair(pair.Pair)
+    if err != nil {
+        log.Printf("Error getting pair: %v", err)
+        return 0, err
+    }
+    if existingPair.Pair != pair.Pair {
+        log.Printf("Adding NEW pair")
+		return db.AddPair(pair)
+	} else {
+        log.Printf("Updating EXISTING pair")
+		return db.UpdatePair(pair)
+	}
+}
+
 func (db *api) AddPair(p Pair) (PairID int64, err error) {
-	// TODO: handle updates of existing symbols
 	result, err := db.database.Exec(
 		`INSERT INTO PAIR (Pair, BaseCurrency, QuoteCurrency, PriceScale, TakerFee, MakerFee, MinLeverage, MaxLeverage, LeverageStep, MinPrice, MaxPrice, TickSize, MinOrderSize, MaxOrderSize, StepOrderSize) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		p.Pair, p.BaseCurrency, p.QuoteCurrency, p.PriceScale, p.TakerFee, p.MakerFee, p.Leverage.Min, p.Leverage.Max, p.Leverage.Step, p.Price.Min, p.Price.Max, p.Price.Tick, p.OrderSize.Min, p.OrderSize.Max, p.OrderSize.Step)
@@ -28,21 +42,6 @@ func (db *api) UpdatePair(p Pair) (RowsAffected int64, err error) {
 	}
 
 	return result.RowsAffected()
-}
-
-func (db *api) WritePair(pair Pair) (RowsAffected int64, err error) {
-    existingPair, err := db.GetPair(pair.Pair)
-    if err != nil {
-        log.Printf("Error getting pair: %v", err)
-        return 0, err
-    }
-    if existingPair.Pair != pair.Pair {
-        log.Printf("Adding NEW pair")
-		return db.AddPair(pair)
-	} else {
-        log.Printf("Updating EXISTING pair")
-		return db.UpdatePair(pair)
-	}
 }
 
 func (db *api) GetPairs() (pairs map[string]Pair, err error) {

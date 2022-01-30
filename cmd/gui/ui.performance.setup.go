@@ -53,7 +53,6 @@ func getPerformance(symbol string, period time.Duration) float64 {
 	}
 
 	return performance.Performance
-
 }
 
 func MakePerformanceContainer() *fyne.Container {

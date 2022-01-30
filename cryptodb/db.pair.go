@@ -46,7 +46,7 @@ func (db *api) UpdatePair(p Pair) (RowsAffected int64, err error) {
 
 func (db *api) GetPairs() (pairs map[string]Pair, err error) {
 	pairs = make(map[string]Pair)
-	rows, err := db.database.Query("SELECT * FROM PAIR ORDER BY Pair;")
+	rows, err := db.database.Query("SELECT * FROM PAIR ORDER BY Pair")
 	if err != nil {
 		return nil, err
 	}
@@ -96,4 +96,24 @@ func (db *api) GetPairFromString(p string) (pair Pair, err error) {
 func (db *api) GetPairFromID(i int64) (pair Pair, err error) {
 	//TODO: reimplement as database query
 	return db.GetPairFromString(db.GetPairString(i))
+}
+
+func (db *api) SearchPairs(s string) (pairs []string, err error) {
+    rows, err := db.database.Query("SELECT Pair FROM PAIR WHERE Pair LIKE ? ORDER BY Pair ASC", "%"+s+"%")
+    if err != nil {
+        log.Printf("No pairs found? %v", err)
+    }
+	defer rows.Close()
+
+	var p Pair
+	for rows.Next() {
+		err = rows.Scan(&p.Pair)
+		if err != nil {
+			// TODO: shouldn't i be doing something?
+			log.Print(err)
+		}
+        log.Printf("Returning pair %s", p.Pair)
+        pairs = append(pairs, p.Pair)
+	}
+	return pairs, nil
 }

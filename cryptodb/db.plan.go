@@ -8,7 +8,7 @@ import (
 
 func (db *api) AddPlan(p Plan) (planID int64, err error) {
 	result, err := db.database.Exec(
-		`INSERT INTO 'PLAN' (PairID, Status, Side, Risk, Notes, TradingViewPlan, RewardRiskRatio, Profit) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+		`INSERT INTO PLAN (PairID, Status, Side, Risk, Notes, TradingViewPlan, RewardRiskRatio, Profit) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
 		p.PairID, p.Status, p.Side, p.Risk, p.Notes, p.TradingViewPlan, p.RewardRiskRatio, p.Profit)
 	if err != nil {
 		log.Printf("[AddPlan] error occured executing statement: %v", err)
@@ -18,7 +18,6 @@ func (db *api) AddPlan(p Plan) (planID int64, err error) {
 }
 
 func (db *api) GetPlans() (p []Plan, err error) {
-
 	rows, err := db.database.Query("SELECT * FROM `PLAN`;")
 	if err != nil {
 		return nil, err
@@ -31,6 +30,18 @@ func (db *api) GetPlans() (p []Plan, err error) {
 			return nil, err
 		}
 		p = append(p, plan)
+	}
+
+	return p, nil
+}
+
+func (db *api) GetPlan(id int64) (p Plan, err error) {
+	row := db.database.QueryRow("SELECT * FROM `PLAN` WHERE PlanID=?;", id)
+
+	err = row.Scan(&p.PlanID, &p.PairID, &p.Status, &p.Side, &p.Risk, &p.Notes, &p.TradingViewPlan, &p.RewardRiskRatio, &p.Profit, &p.EntryTime, &p.ModifyTime)
+
+    if err != nil {
+		return Plan{}, err
 	}
 
 	return p, nil

@@ -1,3 +1,6 @@
+Investigate 
+    Gorilla to help with all the routing
+    sqlx to save writing some loops to process the query results
 Properly configure enumer
 	maybe make a makefile
 	make use of transforme and/or trim options

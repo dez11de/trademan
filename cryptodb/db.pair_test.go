@@ -52,13 +52,34 @@ func TestShouldWritePair(t *testing.T) {
 	t.Run("Should UPDATE Pairs", func(t *testing.T) {
 		mock.ExpectExec("UPDATE PAIR SET (.+) WHERE PairID=.").
 			WithArgs(mockPairs["ETHUSDT"].BaseCurrency, mockPairs["ETHUSDT"].QuoteCurrency, mockPairs["ETHUSDT"].PriceScale, mockPairs["ETHUSDT"].TakerFee, mockPairs["ETHUSDT"].MakerFee, mockPairs["ETHUSDT"].Leverage.Min, mockPairs["ETHUSDT"].Leverage.Max, mockPairs["ETHUSDT"].Leverage.Step, mockPairs["ETHUSDT"].Price.Min, mockPairs["ETHUSDT"].Price.Max, mockPairs["ETHUSDT"].Price.Tick, mockPairs["ETHUSDT"].OrderSize.Min, mockPairs["ETHUSDT"].OrderSize.Max, mockPairs["ETHUSDT"].OrderSize.Step, mockPairs["ETHUSDT"].PairID).
-            WillReturnResult(sqlmock.NewResult(1, 1))
+			WillReturnResult(sqlmock.NewResult(1, 1))
 
 		_, err := api.UpdatePair(mockPairs["ETHUSDT"])
 		if err != nil {
 			t.Errorf("received unexpected error %s", err)
 		}
 	})
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unmet expectations: %s", err)
+	}
+}
+func TestShouldGetPairs(t *testing.T) {
+	db, mock, err := sqlmock.New()
+
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a mock database connection", err)
+	}
+	defer db.Close()
+
+	api := NewDB()
+	api.database = db
+
+	mock.ExpectQuery("SELECT * FROM PAIR ORDER BY Pair")
+	_, err = api.GetPairs()
+	if err != nil {
+		t.Errorf("received unexpected error %s", err)
+	}
 
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("there were unmet expectations: %s", err)

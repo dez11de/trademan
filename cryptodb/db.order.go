@@ -9,7 +9,7 @@ import (
 
 func (db *api) AddOrder(o Order) (OrderID int64, err error) {
     result, err := db.database.Exec(
-        `INSERT INTO 'ORDER' (PlanID, ExchangeOrderID, Status, OrderType, 'Size', TriggerPrice, Price) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        "INSERT INTO `ORDER` (PlanID, ExchangeOrderID, Status, OrderType, `Size`, TriggerPrice, Price) VALUES (?, ?, ?, ?, ?, ?, ?)",
         o.PlanID, o.ExchangeOrderID, o.Status, o.OrderType, o.Size, o.TriggerPrice, o.Price)
 	if err != nil {
 		log.Printf("[AddOrder] error occured executing statement: %v", err)
@@ -21,7 +21,7 @@ func (db *api) AddOrder(o Order) (OrderID int64, err error) {
 func (db *api) GetOrders(PlanID int64) (orders Orders, err error) {
 	orders = NewOrders()
 
-	rows, err := db.database.Query(fmt.Sprintf("SELECT * FROM `ORDER` where PlanID=%d", PlanID))
+	rows, err := db.database.Query(fmt.Sprintf("SELECT * FROM 'ORDER' where PlanID=%d", PlanID))
 	if err != nil {
 		log.Print(err)
 		return NewOrders(), err

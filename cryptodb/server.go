@@ -63,10 +63,9 @@ func (db *api) planHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (db *api) pairsHandler(w http.ResponseWriter, r *http.Request) {
-    // TODO: Maybe use Gorilla for this kind of stuff?
-	log.Println("Endpoint hit: pair")
+	// TODO: Maybe use Gorilla for this kind of stuff?
 	var err error
-	var pairs map[string]Pair
+	var pairs map[int64]Pair
 	var pairNames []string
 	switch r.Method {
 	case "GET":
@@ -104,7 +103,6 @@ func (db *api) pairsHandler(w http.ResponseWriter, r *http.Request) {
 				}
 				w.Write(jsonResp)
 			}
-			log.Printf("Pairs found! %v", pairs)
 		}
 		if err != nil {
 			log.Printf("error getting pairs from database: %v", err)
@@ -117,8 +115,19 @@ func (db *api) pairsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (db *api) plansHandler(w http.ResponseWriter, r *http.Request) {
-	log.Println("Endpoint hit: plans")
+func (db *api) listHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("Endpoint hit: list")
+	plans, err := db.GetPlans()
+	if err != nil {
+		log.Printf("error getting plans from database %s", err)
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+	w.WriteHeader(http.StatusOK)
+	jsonResp, err := json.Marshal(plans)
+	if err != nil {
+		log.Printf("Error marshalling Pairs %v", err)
+	}
+	w.Write(jsonResp)
 }
 
 type NewSetup struct {
@@ -127,34 +136,34 @@ type NewSetup struct {
 }
 
 func (db *api) setupHandler(w http.ResponseWriter, r *http.Request) {
-    log.Printf("Endpoing hit: setup")
-    r.ParseForm()
+	log.Printf("Endpoing hit: setup")
+	r.ParseForm()
 
-    newSetup := NewSetup{}
+	newSetup := NewSetup{}
 
-    err := json.NewDecoder(r.Body).Decode(&newSetup)
-    if err != nil {
-        log.Printf("error decoding response body")
-    }
-    log.Printf("received plan: %+v", newSetup.Plan)
-    newPlanID, err := db.AddPlan(newSetup.Plan)
-    if err != nil {
-        log.Printf("error writing plan to database %s", err)
-    }
+	err := json.NewDecoder(r.Body).Decode(&newSetup)
+	if err != nil {
+		log.Printf("error decoding response body")
+	}
+	log.Printf("received plan: %+v", newSetup.Plan)
+	newPlanID, err := db.AddPlan(newSetup.Plan)
+	if err != nil {
+		log.Printf("error writing plan to database %s", err)
+	}
 
-    for _, o := range newSetup.Orders {
-        o.PlanID = newPlanID
-        _, err := db.AddOrder(o)
-        if err != nil {
-            log.Printf("error adding order to database %s", err)
-        }
-    }
-} 
+	for _, o := range newSetup.Orders {
+		o.PlanID = newPlanID
+		_, err := db.AddOrder(o)
+		if err != nil {
+			log.Printf("error adding order to database %s", err)
+		}
+	}
+}
 
 func (db *api) HandleRequests() {
 	log.Printf("Routing HTTP handler functions")
 	http.HandleFunc("/performance", db.performanceHandler)
-	http.HandleFunc("/plans", db.plansHandler)
+	http.HandleFunc("/list", db.listHandler)
 	http.HandleFunc("/plan", db.planHandler)
 	http.HandleFunc("/pairs", db.pairsHandler)
 	http.HandleFunc("/setup", db.setupHandler)

@@ -44,8 +44,8 @@ func (db *api) UpdatePair(p Pair) (RowsAffected int64, err error) {
 	return result.RowsAffected()
 }
 
-func (db *api) GetPairs() (pairs map[string]Pair, err error) {
-	pairs = make(map[string]Pair)
+func (db *api) GetPairs() (pairs map[int64]Pair, err error) {
+    pairs = make(map[int64]Pair)
 	rows, err := db.database.Query("SELECT * FROM PAIR ORDER BY Pair")
 	if err != nil {
 		return nil, err
@@ -59,7 +59,7 @@ func (db *api) GetPairs() (pairs map[string]Pair, err error) {
 			// TODO: shouldn't i be doing something?
 			log.Print(err)
 		}
-		pairs[p.Pair] = p
+		pairs[p.PairID] = p
 	}
 	return pairs, nil
 }

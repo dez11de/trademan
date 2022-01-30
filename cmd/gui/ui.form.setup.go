@@ -20,7 +20,7 @@ import (
 
 type planForm struct {
 	plan          cryptodb.Plan
-	PairCache     map[string]cryptodb.Pair
+	PairCache     map[int64]cryptodb.Pair
 	CurrentWallet map[string]cryptodb.Balance
 	activePair    cryptodb.Pair
 	orders        cryptodb.Orders
@@ -57,9 +57,16 @@ func (pf *planForm) makePairItem() *widget.FormItem {
 	}
 
 	CompletionEntry.OnSubmitted = func(s string) {
-		var ok bool
+        log.Printf("pair submitted")
+        ok := false
 		s = strings.ToUpper(s)
-		pf.activePair, ok = pf.PairCache[s]
+		for _, p := range pf.PairCache {
+			if s == p.Pair {
+				pf.activePair = p
+                ok = true
+				break // No need to look further
+			}
+		}
 		if ok {
 			log.Printf("active pair set to %v", pf.activePair)
 			pf.plan.PairID = pf.activePair.PairID
@@ -147,9 +154,7 @@ func (pf *planForm) makeTakeProfitItem(n int) *widget.FormItem {
 
 func (pf *planForm) makeTradingViewLinkItem() *widget.FormItem {
 	var tvurl url.URL
-	log.Printf("TV Url: %v", pf.plan.TradingViewPlan)
 	tvurl.Parse(pf.plan.TradingViewPlan)
-	log.Printf("TV Url: %v", tvurl)
 	tradingViewLink := widget.NewHyperlink("Open", &tvurl)
 
 	return widget.NewFormItem("TradingView", tradingViewLink)
@@ -164,7 +169,7 @@ func (pf *planForm) makeNotesMultilineItem() *widget.FormItem {
 	return widget.NewFormItem("Notes", notesMultiLineEntry)
 }
 
-func getPairs() (pairs map[string]cryptodb.Pair, err error) {
+func getPairs() (pairs map[int64]cryptodb.Pair, err error) {
 	client := http.Client{Timeout: time.Second * 2}
 	// TODO: make host configurable in env/param/file
 	req, err := http.NewRequest(http.MethodGet, "http://localhost:8888/pairs", nil)
@@ -233,7 +238,7 @@ type NewSetup struct {
 func sendPlanAndOrders(p cryptodb.Plan, o cryptodb.Orders) (err error) {
 	client := http.Client{Timeout: time.Second * 2}
 
-    newSetup := NewSetup{p, o}
+	newSetup := NewSetup{p, o}
 	fmt.Printf("Going to send %+v", newSetup)
 
 	newSetupBuffer := new(bytes.Buffer)
@@ -299,7 +304,6 @@ func NewForm() *planForm {
 			log.Printf("[Form] Storing to database...")
 			pf.db.StorePlanAndOrders(pf.plan, pf.orders)
 		*/
-		log.Printf("Sending plan: %+v", pf.plan)
 		sendPlanAndOrders(pf.plan, pf.orders)
 	}
 
@@ -341,9 +345,6 @@ func (pf *planForm) FillForm(p cryptodb.Plan) {
 	/* TODO: figure this out
 	pf.orders, _ = pf.db.GetOrders(pf.plan.PlanID)
 	*/
-	for i, o := range pf.orders {
-		log.Printf("[%d] %v", i, o)
-	}
 	/* TODO: figure this out
 	pf.activePair, _ = pf.db.GetPairFromID(pf.plan.PairID)
 	*/

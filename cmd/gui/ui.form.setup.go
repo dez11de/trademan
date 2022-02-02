@@ -60,7 +60,7 @@ func (pf *planForm) makePairItem() *widget.FormItem {
         ok := false
 		s = strings.ToUpper(s)
 		for _, p := range pf.PairCache {
-			if s == p.Pair {
+			if s == p.Name {
 				pf.activePair = p
                 ok = true
 				break // No need to look further
@@ -68,14 +68,14 @@ func (pf *planForm) makePairItem() *widget.FormItem {
 		}
 		if ok {
 			log.Printf("active pair set to %v", pf.activePair)
-			pf.plan.PairID = pf.activePair.PairID
+			pf.plan.PairID = pf.activePair.ID
 			pf.stopLossItem.Text = fmt.Sprintf("Stop Loss (%s)", pf.activePair.QuoteCurrency)
-			pf.stopLossItem.Widget.(*widget.Entry).SetPlaceHolder(decimal.Zero.StringFixed(pf.activePair.PriceScale))
+			pf.stopLossItem.Widget.(*widget.Entry).SetPlaceHolder(decimal.Zero.StringFixed(int32(pf.activePair.PriceScale)))
 			pf.entryItem.Text = fmt.Sprintf("Entry (%s)", pf.activePair.QuoteCurrency)
-			pf.entryItem.Widget.(*widget.Entry).SetPlaceHolder(decimal.Zero.StringFixed(pf.activePair.PriceScale))
+			pf.entryItem.Widget.(*widget.Entry).SetPlaceHolder(decimal.Zero.StringFixed(int32(pf.activePair.PriceScale)))
 			for i, takeProfitItem := range pf.takeProfitItems {
 				takeProfitItem.Text = fmt.Sprintf("Take Profit #%d (%s)", i+1, pf.activePair.QuoteCurrency)
-				takeProfitItem.Widget.(*widget.Entry).SetPlaceHolder(decimal.Zero.StringFixed(pf.activePair.PriceScale))
+				takeProfitItem.Widget.(*widget.Entry).SetPlaceHolder(decimal.Zero.StringFixed(int32(pf.activePair.PriceScale)))
 			}
 			pf.sideItem.Widget.(*widget.RadioGroup).Enable()
 			pf.form.Refresh()
@@ -273,9 +273,10 @@ func NewForm() *planForm {
 
 	pf.form.OnSubmit = func() {
 		log.Printf("Submit button pressed.")
-		pf.plan.PairID = pf.activePair.PairID
+		pf.plan.PairID = pf.activePair.ID
 		// pf.plan.Side.Scan = pf.sideItem.Widget.(*widget.RadioGroup).Selected
 		pf.plan.Risk = decimal.RequireFromString(pf.riskItem.Widget.(*widget.Entry).Text)
+        /*
 		pf.plan.Orders[cryptodb.TypeHardStopLoss].Price = decimal.RequireFromString(pf.stopLossItem.Widget.(*widget.Entry).Text)
 		pf.plan.Orders[cryptodb.TypeEntry].Price = decimal.RequireFromString(pf.entryItem.Widget.(*widget.Entry).Text)
 		for i := 0; i < cryptodb.MaxTakeProfits-1; i++ {
@@ -286,6 +287,7 @@ func NewForm() *planForm {
 				pf.plan.Orders[3+i].Price = decimal.Zero
 			}
 		}
+        */
 		/*
 			pf.plan.SetEntrySize(pf.activePair, d.WalletCache[pf.activePair.QuoteCurrency].Equity, &pf.orders)
 			pf.plan.SetTakeProfitSizes(pf.activePair, &pf.orders)
@@ -312,6 +314,7 @@ func NewForm() *planForm {
 	pf.entryItem = pf.makeEntryItem()
 	pf.form.AppendItem(pf.entryItem)
 
+    /*
 	takeProfitCount := 0
 	for _, order := range pf.plan.Orders {
 		if order.OrderType == cryptodb.TypeTakeProfit {
@@ -320,6 +323,7 @@ func NewForm() *planForm {
 			takeProfitCount++
 		}
 	}
+    */
 
 	pf.tradingViewPlanItem = pf.makeTradingViewLinkItem()
 	pf.form.AppendItem(pf.tradingViewPlanItem)
@@ -338,15 +342,15 @@ func (pf *planForm) FillForm(p cryptodb.Plan) {
 	pf.activePair, _ = pf.db.GetPairFromID(pf.plan.PairID)
 	*/
 
-	if pf.plan.PlanID != 0 {
-		pf.pairItem.Widget.(*xwidget.CompletionEntry).SetText(pf.activePair.Pair)
+	if pf.plan.ID != 0 {
+		pf.pairItem.Widget.(*xwidget.CompletionEntry).SetText(pf.activePair.Name)
 		pf.pairItem.Widget.(*xwidget.CompletionEntry).Disable()
 	}
 
 	// TODO: consider adding a .Help line
 
 	// TODO: make better use of enumer options, see TODO.txt
-	if pf.plan.PlanID != 0 {
+	if pf.plan.ID != 0 {
 		switch pf.plan.Side {
 		case cryptodb.SideLong:
 			pf.sideItem.Widget.(*widget.RadioGroup).SetSelected("Long")
@@ -361,6 +365,7 @@ func (pf *planForm) FillForm(p cryptodb.Plan) {
 		pf.riskItem.Widget.(*widget.Entry).SetText(pf.plan.Risk.StringFixed(2))
 	}
 
+    /*
 	// TODO: think about in which statusses changing is allowed
 	if pf.plan.Orders[cryptodb.TypeHardStopLoss].Price.Cmp(decimal.Zero) != 0 {
 		pf.stopLossItem.Widget.(*widget.Entry).SetText(pf.plan.Orders[cryptodb.TypeHardStopLoss].Price.StringFixed(pf.activePair.PriceScale))
@@ -379,6 +384,7 @@ func (pf *planForm) FillForm(p cryptodb.Plan) {
 			takeProfitCount++
 		}
 	}
+    */
 
 	// TODO: think about in which statusses changing is allowed
 	if p.Notes != "" {

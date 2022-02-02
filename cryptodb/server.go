@@ -7,7 +7,8 @@ import (
 	"strconv"
 )
 
-func (db *api) performanceHandler(w http.ResponseWriter, r *http.Request) {
+/*
+func (db *Database) performanceHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	var pReq Performance
 	err := json.NewDecoder(r.Body).Decode(&pReq)
@@ -30,8 +31,9 @@ func (db *api) performanceHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write(jsonResp)
 	}
 }
+*/
 
-func (db *api) planHandler(w http.ResponseWriter, r *http.Request) {
+func (db *Database) planHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("Endpoint hit: plan")
 	switch r.Method {
 	case "GET":
@@ -44,7 +46,7 @@ func (db *api) planHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		PlanID, err := strconv.Atoi(PlanIDs[0])
-		PlanID64 := int64(PlanID)
+		PlanID64 := uint(PlanID)
 		if err != nil {
 			log.Printf("Invalid ID? %s", err)
 			// TODO: set http error
@@ -62,17 +64,17 @@ func (db *api) planHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (db *api) pairsHandler(w http.ResponseWriter, r *http.Request) {
+func (db *Database) pairsHandler(w http.ResponseWriter, r *http.Request) {
 	// TODO: Maybe use Gorilla for this kind of stuff?
 	var err error
-	var pairs map[int64]Pair
+	var pairs []Pair
 	var pairNames []string
 	switch r.Method {
 	case "GET":
 		search, ok := r.URL.Query()["search"]
 		if ok {
 			log.Printf("Searching for pair like %s", search[0])
-			pairNames, err = db.SearchPairs(search[0])
+			pairNames, err = db.FindPairNames(search[0])
 			if err != nil {
 				log.Printf("Error searching pairsNames: %s", err)
 				w.WriteHeader(http.StatusInternalServerError)
@@ -115,7 +117,7 @@ func (db *api) pairsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (db *api) listHandler(w http.ResponseWriter, r *http.Request) {
+func (db *Database) listHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("Endpoint hit: list")
 	plans, err := db.GetPlans()
 	if err != nil {
@@ -130,43 +132,12 @@ func (db *api) listHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsonResp)
 }
 
-type NewSetup struct {
-	Plan   Plan   `json:"plan"`
-	Orders Orders `json:"orders"`
-}
 
-func (db *api) setupHandler(w http.ResponseWriter, r *http.Request) {
-	log.Printf("Endpoing hit: setup")
-	r.ParseForm()
-
-	newSetup := NewSetup{}
-
-	err := json.NewDecoder(r.Body).Decode(&newSetup)
-	if err != nil {
-		log.Printf("error decoding response body")
-	}
-	log.Printf("received plan: %+v", newSetup.Plan)
-	newPlanID, err := db.AddPlan(newSetup.Plan)
-	if err != nil {
-		log.Printf("error writing plan to database %s", err)
-	}
-
-	for _, o := range newSetup.Orders {
-		o.PlanID = newPlanID
-		_, err := db.AddOrder(o)
-		if err != nil {
-			log.Printf("error adding order to database %s", err)
-		}
-	}
-}
-
-func (db *api) HandleRequests() {
+func (db *Database) HandleRequests() {
 	log.Printf("Routing HTTP handler functions")
-	http.HandleFunc("/performance", db.performanceHandler)
 	http.HandleFunc("/list", db.listHandler)
 	http.HandleFunc("/plan", db.planHandler)
 	http.HandleFunc("/pairs", db.pairsHandler)
-	http.HandleFunc("/setup", db.setupHandler)
 
 	// TODO make at least port configurable
 	log.Fatal(http.ListenAndServe(":8888", nil))

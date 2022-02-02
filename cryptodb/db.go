@@ -1,13 +1,14 @@
 package cryptodb
 
 import (
-	"database/sql"
 	"fmt"
+	"log"
+	"os"
 
-	_ "github.com/go-sql-driver/mysql"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
-
-const MySQLTimestampFormat = "2006-01-02 15:04:05"
 
 type databaseConfig struct {
 	Host     string
@@ -15,43 +16,52 @@ type databaseConfig struct {
 	Database string
 	User     string
 	Password string
-
-	pairTableName   string
-	walletTableName string
-	planTableName   string
-	orderTableName  string
-	logTableName    string
 }
 
-// TODO: this is just a comment
-
-type api struct {
-	config             databaseConfig
-	database           *sql.DB
+type Database struct {
+	gorm *gorm.DB
 }
 
-func NewDB() (db *api) {
-	return &api{
-		databaseConfig{
-			Host:     "192.168.1.250",
-			Port:     "3306",
-			Database: "test_trademan",
-			User:     "dennis",
-			Password: "c0d3mysql",
+func makeDSN(c databaseConfig) string {
+	return fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", c.User, c.Password, c.Host, c.Port, "gorm_"+c.Database)
+}
 
-			pairTableName:   "`PAIR`",
-			walletTableName: "`WALLET`",
-			planTableName:   "`PLAN`",
-			orderTableName:  "`ORDER`",
-			logTableName:    "`LOG`",
-		},
-        nil,
+func Connect() (db *Database, err error) {
+	// TODO: read this from env/file/cli
+	dbCfg := databaseConfig{
+		Host:     "192.168.1.250",
+		Port:     "3306",
+        //TODO: make a switch for test/production/dev?
+		Database: "test_trademan",
+		User:     "dennis",
+		Password: "c0d3mysql",
 	}
+
+	newLogger := logger.New(
+		log.New(os.Stdout, "\n", log.LstdFlags),
+		logger.Config{
+			Colorful: false,
+		},
+	)
+
+    db = &Database{}
+
+	dsn := makeDSN(dbCfg)
+    db.gorm, err = gorm.Open(mysql.Open(dsn), &gorm.Config{Logger: newLogger})
+    return db, err
 }
 
-func (db *api) Connect() (err error) {
-	db.database, err = sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true",
-		db.config.User, db.config.Password, db.config.Host, db.config.Port, db.config.Database))
-
-	return err
+func (db *Database) RecreateTables() (err error) {
+    db.gorm.Migrator().DropTable(&Pair{})
+	db.gorm.Migrator().CreateTable(&Pair{})
+	db.gorm.Migrator().DropTable(Plan{})
+	db.gorm.Migrator().CreateTable(Plan{})
+	db.gorm.Migrator().DropTable(Order{})
+	db.gorm.Migrator().CreateTable(Order{})
+	db.gorm.Migrator().DropTable(Log{})
+	db.gorm.Migrator().CreateTable(Log{})
+	db.gorm.Migrator().DropTable(Balance{})
+	db.gorm.Migrator().CreateTable(Balance{})
+    // TODO: handle errors
+    return nil
 }

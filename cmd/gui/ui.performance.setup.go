@@ -1,23 +1,17 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"log"
-	"net/http"
 	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/layout"
-
-	"github.com/dez11de/cryptodb"
 )
 
 func getPerformance(symbol string, period time.Duration) float64 {
+    /*
 	jsonRequest, err := json.Marshal(cryptodb.Performance{Symbol: symbol,
 		Since: time.Now().Add(-period),
 	})
@@ -51,8 +45,9 @@ func getPerformance(symbol string, period time.Duration) float64 {
 	if err != nil {
 		log.Printf("Error unmarshalling performance %v", err)
 	}
+    */
 
-	return performance.Performance
+	return 0.0 
 }
 
 func MakePerformanceContainer() *fyne.Container {

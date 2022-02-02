@@ -1,8 +1,6 @@
 package exchange
 
 import (
-	"time"
-
 	"github.com/dez11de/cryptodb"
 )
 
@@ -24,10 +22,8 @@ func (b *ByBit) GetCurrentWallet() (map[string]cryptodb.Balance, error) {
 	b.PrivateRequest("GET", "/v2/private/wallet/balance", params, &wr)
 
 	wallet := make(map[string]cryptodb.Balance)
-	t := time.Now()
 	for s, b := range wr.Results {
 		b.Symbol = s
-		b.EntryTime = t
 		wallet[s] = b
 	}
 	return wallet, nil // TODO: return an actual error on all the things that can go wrong

@@ -3,9 +3,9 @@ package cryptodb
 import "time"
 
 type Log struct {
-	LogID     int64
-	PlanID    int64
+	ID        uint `gorm:"autoIncrement;primaryKey"`
+    PlanID    uint `gorm:"index"`
 	Source    LogSource
-	EntryTime time.Time
+	CreatedAt time.Time `gorm:"autoCreateTime;index"`
 	Text      string
 }

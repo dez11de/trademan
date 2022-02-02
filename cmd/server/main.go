@@ -11,8 +11,7 @@ import (
 
 func main() {
     // TODO: read and pass config from env/commandline/configfile
-	db := cryptodb.NewDB()
-	err := db.Connect()
+	db, err := cryptodb.Connect()
 	if err != nil {
 		log.Fatalf("Error connecting to database: %s", err)
 	}
@@ -69,7 +68,7 @@ func main() {
 				log.Printf("error getting current pairs %v", err)
 			} else {
 				for _, p := range currentPairs {
-					_, err = db.WritePair(p)
+					err = db.SavePair(&p)
 					if err != nil {
 						log.Printf("error writing pair to database %v", err)
 					}

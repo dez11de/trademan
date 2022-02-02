@@ -19,11 +19,5 @@ type Balance struct {
 	DailyPnL       decimal.Decimal `json:"realised_pnl"`
 	UnrealisedPnL  decimal.Decimal `json:"unrealised_pnl"`
 	TotalPnL       decimal.Decimal `json:"cum_realised_pnl"`
-	EntryTime      time.Time
-}
-
-type Performance struct {
-	Symbol      string    `json:"Symbol"`
-	Since       time.Time `json:"PeriodStart"`
-	Performance float64   `json:"Performance"`
+	CreatedAt      time.Time
 }

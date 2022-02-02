@@ -1,19 +1,17 @@
 package cryptodb
 
 import (
-	"log"
-
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func (db *api) AddLog(planID int64, source LogSource, text string) (err error) {
-    
-    addStmt, err := db.database.Prepare("INSERT INTO `LOG` (PlanID, Source, Text) VALUES (?, ?, ?)")
-    if err != nil {
-        log.Printf("error preparing Statement %v", err)
-        return err 
-    }
-    _, err = addStmt.Exec(planID, source, text)
+func (db *Database) SaveLog(l *Log) (err error) {
+	result := db.gorm.Save(l)
 
-	return err
+	return result.Error
+}
+
+func (db *Database) GetLogs(PlanID uint) (logs []Log, err error) {
+	result := db.gorm.Where("PlanID = ?", PlanID).Find(&logs)
+
+	return logs, result.Error
 }

@@ -1,4 +1,4 @@
-package cryptodb
+package exchange
 
 import "time"
 

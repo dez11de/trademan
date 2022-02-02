@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/dez11de/cryptodb"
 	"github.com/dez11de/exchange"
@@ -32,45 +31,32 @@ func main() {
 		fmt.Println(err)
 	}
 
-	db.RecreateTables()
-
 	exchangePairs, err := exchange.GetPairs()
-
+	db.RecreateTables()
 	for _, exchangePair := range exchangePairs {
-		db.SavePair(&exchangePair)
+		db.CreatePair(&exchangePair)
 	}
 
-    var orders  []cryptodb.Order
-    var dbPlan cryptodb.Plan
+	currentPair, err := db.GetPairByName("ADAUSDT")
+	if err != nil {
+		log.Printf("error GetPairByName: %s", err)
+	}
+	fmt.Printf("Pair name: %s\nPair status: %s\n\n", currentPair.Name, currentPair.Status)
 
-	dbPair, err := db.GetPairByName("ADAUSDT")
-    dbPlan.PairID = dbPair.ID
+    currentPlan := cryptodb.Plan{}
+    currentPlan.PairID = currentPair.ID
+    currentPlan.Notes = "This is just a test plan."
+    db.CreatePlan(&currentPlan)
+    fmt.Printf("Plan #: %d\nPair name: %s\nPlan status: %s\n", currentPlan.ID, currentPair.Name, currentPlan.Notes)
 
-	orders = append(orders, cryptodb.Order{OrderType: cryptodb.TypeHardStopLoss, Price: decimal.NewFromFloat(1.0003)})
-	orders = append(orders, cryptodb.Order{OrderType: cryptodb.TypeSoftStopLoss, Price: decimal.NewFromFloat(1.0004)})
-	orders = append(orders, cryptodb.Order{OrderType: cryptodb.TypeEntry, Price: decimal.NewFromFloat(1.0263)})
-	orders = append(orders, cryptodb.Order{OrderType: cryptodb.TypeTakeProfit, Price: decimal.NewFromFloat(1.202)})
-	orders = append(orders, cryptodb.Order{OrderType: cryptodb.TypeTakeProfit, Price: decimal.NewFromFloat(1.3166)})
+    currentPlan.Notes = currentPlan.Notes + " And this is an update."
+    db.SavePlan(&currentPlan)
+    fmt.Printf("Plan #: %d\nPair name: %s\nPlan status: %s\n", currentPlan.ID, currentPair.Name, currentPlan.Notes)
 
-	db.SavePlan(&dbPlan)
-    log.Printf("Saved plan: %v", dbPlan)
-    for _, o := range orders {
-        o.PlanID = dbPlan.ID
-        db.SaveOrder(&o)
-    }
-
-	testPlan, err := db.GetPlan(dbPlan.ID)
-    testPair, err := db.GetPair(dbPlan.PairID)
-    testOrders, err := db.GetOrders(dbPlan.ID)
-
-	fmt.Printf("Initial plan #%d\nPair name: %s\nEntry price: %s\n\n", testPlan.ID, testPair.Name, testOrders[cryptodb.TypeEntry].Price.StringFixed(4))
-
-	orders[cryptodb.TypeEntry].Price = decimal.NewFromFloat(1.2)
-	db.SavePlan(&testPlan)
-
-    time.Sleep(2* time.Second)
-
-	newPlan, err := db.GetPlan(dbPlan.ID)
-    orders, err = db.GetOrders(dbPlan.ID)
-	fmt.Printf("Updated plan #%d\nPair name: %s\nEntry price: %s\n\n", newPlan.ID, testPair.Name, orders[cryptodb.TypeEntry].Price.StringFixed(4))
+    orders := cryptodb.NewOrders(currentPlan.ID)
+    orders[cryptodb.TypeHardStopLoss].Price = decimal.NewFromFloat(1.0003)
+    orders[cryptodb.TypeEntry].Price = decimal.NewFromFloat(1.0263)
+    orders[cryptodb.TypeTakeProfit+0].Price = decimal.NewFromFloat(1.202)
+    orders[cryptodb.TypeTakeProfit+1].Price = decimal.NewFromFloat(1.3166)
+    db.CreateOrders(&orders)
 }

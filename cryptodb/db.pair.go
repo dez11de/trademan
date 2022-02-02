@@ -4,7 +4,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func (db *Database) SavePair(p *Pair) (err error) {
+func (db *Database) CreatePair(p *Pair) (err error) {
 	result := db.gorm.Create(p)
 
 	return result.Error

@@ -1,16 +1,14 @@
 package cryptodb
 
 import (
-	//	"time"
+	"time"
 
 	"github.com/shopspring/decimal"
-	"gorm.io/gorm"
 )
 
 type Plan struct {
-	gorm.Model
-	//	ID              uint            `gorm:"primaryKey"`
-	PairID          uint            //            `gorm:"foreignKey:PairID"`
+	ID              uint
+	PairID          uint
 	Status          Status          `gorm:"index"`
 	Side            Side            `json:"side"`
 	Risk            decimal.Decimal `gorm:"type:decimal(20, 8)"`
@@ -18,8 +16,8 @@ type Plan struct {
 	TradingViewPlan string
 	RewardRiskRatio float64
 	Profit          decimal.Decimal `json:"realised_pnl"`
-	//	CreatedAt       time.Time
-	//	UpdatedAt       time.Time
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
 }
 
 func (p *Plan) SetEntrySize() {

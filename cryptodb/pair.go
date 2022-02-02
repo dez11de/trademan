@@ -1,15 +1,13 @@
 package cryptodb
 
 import (
-	//	"time"
+	"time"
 
 	"github.com/shopspring/decimal"
-	"gorm.io/gorm"
 )
 
 type Pair struct {
-	gorm.Model
-	//	ID            uint            `gorm:"primaryKey"`
+	ID            uint
 	Name          string          `gorm:"uniqueIndex; size:15; unique; not null" json:"name"`
 	Alias         string          `gorm:"size:15; unique;" json:"alias"`
 	Status        string          `gorm:"index; size:15" json:"status"` // TODO: make enum
@@ -36,7 +34,6 @@ type Pair struct {
 		Max  decimal.Decimal `gorm:"type:decimal(20, 8)" json:"max_trading_qty,number"`
 		Step decimal.Decimal `gorm:"type:decimal(20, 8)" json:"qty_step,number"`
 	} `gorm:"embedded;embeddedPrefix:order_" json:"lot_size_filter"`
-
-	//	CreatedAt time.Time
-	//	UpdatedAt time.Time
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }

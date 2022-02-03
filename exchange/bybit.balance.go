@@ -16,6 +16,7 @@ type WalletResponse struct {
 	RateLimit        int                         `json:"rate_limit"`
 }
 
+// TODO: return an actual error on all the things that can go wrong
 func (b *ByBit) GetCurrentWallet() (map[string]cryptodb.Balance, error) {
 	var wr WalletResponse
 	params := make(map[string]interface{})
@@ -26,5 +27,5 @@ func (b *ByBit) GetCurrentWallet() (map[string]cryptodb.Balance, error) {
 		b.Symbol = s
 		wallet[s] = b
 	}
-	return wallet, nil // TODO: return an actual error on all the things that can go wrong
+	return wallet, nil
 }

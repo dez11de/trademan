@@ -12,12 +12,12 @@ type Plan struct {
 	Status          Status          `gorm:"index"`
 	Side            Side            `json:"side"`
 	Risk            decimal.Decimal `gorm:"type:decimal(20, 8)"`
-	Notes           string
-	TradingViewPlan string
+	Notes           string          `gorm:"type:text"`
+	TradingViewPlan string          `gorm:"type:tinytext"`
 	RewardRiskRatio float64
 	Profit          decimal.Decimal `json:"realised_pnl"`
-	CreatedAt       time.Time
-	UpdatedAt       time.Time
+	CreatedAt       time.Time       `gorm:"index"`
+	UpdatedAt       time.Time       `gorm:"index"`
 }
 
 func (p *Plan) SetEntrySize() {

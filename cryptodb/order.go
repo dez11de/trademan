@@ -8,7 +8,7 @@ import (
 
 type Order struct {
 	ID              uint
-	PlanID          uint
+	PlanID          uint `gorm:"index"`
 	Status          Status
 	ExchangeOrderID string          `json:"order_link_id"`
 	OrderType       OrderType       `json:"order_type"`
@@ -19,17 +19,17 @@ type Order struct {
 	UpdatedAt       time.Time
 }
 
-const MaxTakeProfits = 5
+// const MaxTakeProfits = 5
 
 func NewOrders(PlanID uint) []Order {
 	return []Order{
-        {PlanID: PlanID, OrderType: TypeHardStopLoss},
-        {PlanID: PlanID, OrderType: TypeSoftStopLoss},
-        {PlanID: PlanID, OrderType: TypeEntry},
-        {PlanID: PlanID, OrderType: TypeTakeProfit},
-        {PlanID: PlanID, OrderType: TypeTakeProfit},
-        {PlanID: PlanID, OrderType: TypeTakeProfit},
-        {PlanID: PlanID, OrderType: TypeTakeProfit},
-        {PlanID: PlanID, OrderType: TypeTakeProfit},
+		{PlanID: PlanID, OrderType: TypeHardStopLoss},
+		{PlanID: PlanID, OrderType: TypeSoftStopLoss},
+		{PlanID: PlanID, OrderType: TypeEntry},
+		{PlanID: PlanID, OrderType: TypeTakeProfit},
+		{PlanID: PlanID, OrderType: TypeTakeProfit},
+		{PlanID: PlanID, OrderType: TypeTakeProfit},
+		{PlanID: PlanID, OrderType: TypeTakeProfit},
+		{PlanID: PlanID, OrderType: TypeTakeProfit},
 	}
 }

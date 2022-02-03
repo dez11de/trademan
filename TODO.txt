@@ -1,8 +1,9 @@
 Investigate 
-    Gorilla to help with all the routing
-    sqlx to save writing some loops to process the query results
+    httprouter
+    gorm, althougj i have implemented it, i'm not to happy with it
+
 Properly configure enumer
-	maybe make a makefile
+    go generate 
 	make use of transforme and/or trim options
 
 Split into server and client

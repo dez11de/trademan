@@ -58,12 +58,10 @@ func (db *Database) RecreateTables() (err error) {
 	db.gorm.Debug().Migrator().CreateTable(Plan{})
 	db.gorm.Debug().Migrator().DropTable(Order{})
 	db.gorm.Debug().Migrator().CreateTable(Order{})
-    /*
-	db.gorm.Migrator().DropTable(Log{})
-	db.gorm.Migrator().CreateTable(Log{})
-	db.gorm.Migrator().DropTable(Balance{})
-	db.gorm.Migrator().CreateTable(Balance{})
-    */
+	db.gorm.Debug().Migrator().DropTable(Log{})
+	db.gorm.Debug().Migrator().CreateTable(Log{})
+	db.gorm.Debug().Migrator().DropTable(Balance{})
+	db.gorm.Debug().Migrator().CreateTable(Balance{})
     // TODO: handle errors
     return nil
 }

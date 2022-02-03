@@ -1,17 +1,19 @@
-package cryptodb
+package main
 
 import (
 	"encoding/json"
 	"log"
 	"net/http"
 	"strconv"
+
+	"github.com/dez11de/cryptodb"
 )
 
 /*
-func (db *Database) performanceHandler(w http.ResponseWriter, r *http.Request) {
+func performanceHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
-	var pReq Performance
-	err := json.NewDecoder(r.Body).Decode(&pReq)
+    var symbolPerformance string
+	err := json.NewDecoder(r.Body).Decode(&symbolPerformance)
 	if err != nil {
 		log.Printf("error decoding body: %v", err)
 	}
@@ -33,7 +35,7 @@ func (db *Database) performanceHandler(w http.ResponseWriter, r *http.Request) {
 }
 */
 
-func (db *Database) planHandler(w http.ResponseWriter, r *http.Request) {
+func  planHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("Endpoint hit: plan")
 	switch r.Method {
 	case "GET":
@@ -64,10 +66,10 @@ func (db *Database) planHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (db *Database) pairsHandler(w http.ResponseWriter, r *http.Request) {
+func pairsHandler(w http.ResponseWriter, r *http.Request) {
 	// TODO: Maybe use Gorilla for this kind of stuff?
 	var err error
-	var pairs []Pair
+	var pairs map[uint]cryptodb.Pair
 	var pairNames []string
 	switch r.Method {
 	case "GET":
@@ -117,7 +119,7 @@ func (db *Database) pairsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (db *Database) listHandler(w http.ResponseWriter, r *http.Request) {
+func listHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("Endpoint hit: list")
 	plans, err := db.GetPlans()
 	if err != nil {
@@ -133,11 +135,11 @@ func (db *Database) listHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 
-func (db *Database) HandleRequests() {
+func HandleRequests() {
 	log.Printf("Routing HTTP handler functions")
-	http.HandleFunc("/list", db.listHandler)
-	http.HandleFunc("/plan", db.planHandler)
-	http.HandleFunc("/pairs", db.pairsHandler)
+	http.HandleFunc("/list", listHandler)
+	http.HandleFunc("/plan", planHandler)
+	http.HandleFunc("/pairs", pairsHandler)
 
 	// TODO make at least port configurable
 	log.Fatal(http.ListenAndServe(":8888", nil))

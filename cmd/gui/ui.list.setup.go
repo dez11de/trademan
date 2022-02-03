@@ -86,7 +86,7 @@ func MakePlanListSplit() *container.Split {
 			)
 		},
 		func(i widget.ListItemID, o fyne.CanvasObject) {
-			o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[0].(*canvas.Text).Text = planList.Plans[i].Pair.Name
+			o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[0].(*canvas.Text).Text = planList.Plans[i].PairID
 
 			// TODO: use theme colors
 			var directionColor color.Color

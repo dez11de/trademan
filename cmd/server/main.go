@@ -9,8 +9,10 @@ import (
 	"github.com/dez11de/exchange"
 )
 
+var db cryptodb.Database
+
 func main() {
-    // TODO: read and pass config from env/commandline/configfile
+	// TODO: read and pass config from env/commandline/configfile
 	db, err := cryptodb.Connect()
 	if err != nil {
 		log.Fatalf("Error connecting to database: %s", err)
@@ -22,8 +24,8 @@ func main() {
 		"rLot58Xxaj4Kdb3pog",
 		"0a3GihYe3CfFkLbYsE41wWoNTtofwY2WPkwi",
 		false)
-    // TODO: read and pass config from env/commandline/configfile
-    // TODO: return err if connecting failed
+	// TODO: read and pass config from env/commandline/configfile
+	// TODO: return err if connecting failed
 	if exchange == nil {
 		log.Fatalf("Error creating ByBit object")
 	}
@@ -33,30 +35,24 @@ func main() {
 		fmt.Println(err)
 	}
 
-	// Might be needed to reload stuff in database
-	/*
-		currentPairs := exchange.GetPairs()
-		for _, p := range currentPairs {
-			db.AddPair(p)
-		}
-	*/
-
-    // TODO: add exchange.Ping() to keep connection alive
-	refreshWalletTicker := time.NewTicker(1 * time.Hour)
+	// TODO: add exchange.Ping() to keep connection alive
+	pingExchangeTicker := time.NewTicker(1 * time.Minute)
+	refreshWalletTicker := time.NewTicker(2 * time.Hour)
 	refreshPairsTicker := time.NewTicker(24 * time.Hour)
 	quit := make(chan struct{})
 
-    go db.HandleRequests()
+	go HandleRequests()
 
 	for {
 		select {
 		case <-refreshWalletTicker.C:
+			log.Print("Getting balance from exchange")
 			currentBalances, err := exchange.GetCurrentWallet()
 			if err != nil {
 				log.Printf("error getting current wallet from exchange %v", err)
 			} else {
 				for _, b := range currentBalances {
-					err = db.AddBalance(b)
+					err = db.CreateBalance(&b)
 					if err != nil {
 						log.Printf("error writing wallet to database %v", err)
 					}
@@ -68,16 +64,18 @@ func main() {
 				log.Printf("error getting current pairs %v", err)
 			} else {
 				for _, p := range currentPairs {
-					err = db.SavePair(&p)
+					err = db.CreatePair(&p)
 					if err != nil {
 						log.Printf("error writing pair to database %v", err)
 					}
 				}
 			}
+		case <-pingExchangeTicker.C:
+			log.Print("Pinging exchange...")
+			exchange.Ping()
 		case <-quit:
 			refreshWalletTicker.Stop()
 			return
 		}
 	}
 }
-

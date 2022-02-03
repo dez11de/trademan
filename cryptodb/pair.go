@@ -9,8 +9,8 @@ import (
 type Pair struct {
 	ID            uint
 	Name          string          `gorm:"uniqueIndex; size:15; unique; not null" json:"name"`
-	Alias         string          `gorm:"size:15; unique;" json:"alias"`
-	Status        string          `gorm:"index; size:15" json:"status"` // TODO: make enum
+	Alias         string          `gorm:"size:15" json:"alias"`
+	Status        string          `gorm:"size:15" json:"status"` // TODO: make enum
 	BaseCurrency  string          `gorm:"size:10" json:"base_currency"`
 	QuoteCurrency string          `gorm:"size:10" json:"quote_currency"`
 	PriceScale    int             `json:"price_scale,number"`

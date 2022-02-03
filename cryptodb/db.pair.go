@@ -10,7 +10,7 @@ func (db *Database) CreatePair(p *Pair) (err error) {
 	return result.Error
 }
 
-func (db *Database) GetPairs() (pairs []Pair, err error) {
+func (db *Database) GetPairs() (pairs map[uint]Pair, err error) {
 	result := db.gorm.Find(&pairs)
 
 	return pairs, result.Error

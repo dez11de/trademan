@@ -31,8 +31,9 @@ func main() {
 		fmt.Println(err)
 	}
 
-	exchangePairs, err := exchange.GetPairs()
 	db.RecreateTables()
+
+	exchangePairs, err := exchange.GetPairs()
 	for _, exchangePair := range exchangePairs {
 		db.CreatePair(&exchangePair)
 	}

@@ -1,14 +1,12 @@
 package cryptodb
 
 import (
-	"log"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 )
 
 func (db *Database) CreateBalance(b *Balance) (err error) {
-    log.Printf("Creating new balance for %s", b.Symbol)
 	result := db.gorm.Create(b)
 
 	return result.Error

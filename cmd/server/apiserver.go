@@ -66,28 +66,10 @@ func allPlansHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 	w.Write(jsonResp)
 }
 
-/*
-func getPlanHandler(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	planID, err := strconv.Atoi(p.ByName("PlanID"))
-	plan, err := db.GetPlan(uint(planID))
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-	}
-	jsonResp, err := json.Marshal(plan)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-	}
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.Write(jsonResp)
-}
-*/
-
 func getOrdersHandler(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	planID, err := strconv.Atoi(p.ByName("PlanID"))
-    log.Printf("Getting orderes for plan %d", planID)
 	orders, err := db.GetOrders(uint(planID))
 	if err != nil {
-        log.Printf("Unable to get orders: %s", err)
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 	jsonResp, err := json.Marshal(orders)
@@ -99,21 +81,17 @@ func getOrdersHandler(w http.ResponseWriter, r *http.Request, p httprouter.Param
 }
 
 func setupHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	setup :=cryptodb.NewSetup()
+	setup := cryptodb.NewSetup()
 
 	err := json.NewDecoder(r.Body).Decode(&setup)
 	if err != nil {
-		log.Printf("error decoding body: %s", err)
 	}
-	log.Printf("received setup: %v", setup)
 
-    if setup.Plan.ID == 0 {
-        db.CreateSetup(&setup)
-    } else {
-        db.SaveSetup(&setup)
-    }
-
-	log.Printf("stored setup: %v", setup)
+	if setup.Plan.ID == 0 {
+		db.CreateSetup(&setup)
+	} else {
+		db.SaveSetup(cryptodb.SourceUser, &setup)
+	}
 
 	// TODO: return statusOK or something
 }
@@ -129,7 +107,6 @@ func HandleRequests() {
 	router.GET(APIv1Base+"pairs_search/:part", searchPairsHandler)
 
 	router.GET(APIv1Base+"plans", allPlansHandler)
-//	router.GET(APIv1Base+"plan/:PlanID", getPlanHandler)
 
 	router.GET(APIv1Base+"orders/:PlanID", getOrdersHandler)
 

@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/url"
 	"strings"
 
@@ -41,7 +40,6 @@ func (pf *planForm) makePairItem() *widget.FormItem {
 		}
 		possiblePairs, err := searchPairs(strings.ToUpper(s))
 		if err != nil {
-			log.Printf("error receiving pairs")
 			return
 		}
 		if len(possiblePairs) == 1 {
@@ -54,7 +52,6 @@ func (pf *planForm) makePairItem() *widget.FormItem {
 	}
 
 	CompletionEntry.OnSubmitted = func(s string) {
-		log.Printf("pair submitted")
 		ok := false
 		s = strings.ToUpper(s)
 		for _, p := range pf.PairCache {
@@ -78,9 +75,6 @@ func (pf *planForm) makePairItem() *widget.FormItem {
 			}
 			pf.sideItem.Widget.(*widget.RadioGroup).Enable()
 			pf.form.Refresh()
-		} else {
-			// TODO: set .Help?
-			log.Printf("pair for plan not found in cache %s", s)
 		}
 	}
 	return widget.NewFormItem("Pair", CompletionEntry)
@@ -98,7 +92,6 @@ func (pf *planForm) makeSideItem() *widget.FormItem {
 }
 
 func (pf *planForm) makeRiskItem() *widget.FormItem {
-	// TODO: validate input
 	riskEntry := widget.NewEntry()
 	riskEntry.Disable()
 	riskEntry.SetPlaceHolder(pf.plan.Risk.StringFixed(2))
@@ -122,7 +115,9 @@ func (pf *planForm) makeStopLossItem() *widget.FormItem {
 		pf.entryItem.Widget.(*widget.Entry).Enable()
 		pf.form.Refresh()
 	}
-	return widget.NewFormItem(fmt.Sprintf("Stop Loss (%s)", pf.activePair.QuoteCurrency), StopLossEntry)
+    item := widget.NewFormItem(fmt.Sprintf("Stop Loss (%s)", pf.activePair.QuoteCurrency), StopLossEntry)
+    item.HintText = "poepjesvla hahahahaha viess"
+    return item
 }
 
 func (pf *planForm) makeEntryItem() *widget.FormItem {
@@ -173,7 +168,6 @@ func NewForm() *planForm {
 	var err error
 	pf.PairCache, err = getPairs()
 	if err != nil {
-		log.Printf("Error retreiving paircache")
 		return pf
 	}
 
@@ -182,7 +176,6 @@ func NewForm() *planForm {
 	pf.form.CancelText = "Cancel"
 
 	pf.form.OnSubmit = func() {
-		log.Printf("Submit button pressed.")
 		pf.plan.PairID = pf.activePair.ID
 		// pf.plan.Side.Scan = pf.sideItem.Widget.(*widget.RadioGroup).Selected
 		pf.plan.Risk = decimal.RequireFromString(pf.riskItem.Widget.(*widget.Entry).Text)
@@ -201,7 +194,7 @@ func NewForm() *planForm {
 	}
 
 	pf.form.OnCancel = func() {
-		log.Printf("Cancel button pressed.")
+        return 
 	}
 	//pf.form.Disable()
 
@@ -239,11 +232,9 @@ func (pf *planForm) FillForm(p cryptodb.Plan) {
 	pf.plan = p
 	pf.activePair, err = getPair(pf.plan.PairID)
 	if err != nil {
-		log.Printf("error getting pair: %s", err)
 	}
 	pf.orders, err = getOrders(pf.plan.ID)
 	if err != nil {
-		log.Printf("error getting orders: %s", err)
 	}
 
 	if pf.plan.ID != 0 {

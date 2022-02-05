@@ -5,19 +5,13 @@ import (
 )
 
 func (db *Database) CreatePlan(p *Plan) (err error) {
-	result := db.gorm.Create(p)
-	if result.Error != nil {
-		return result.Error
-	}
+	result := db.gorm.Create(&p)
 
 	return result.Error
 }
 
 func (db *Database) SavePlan(p *Plan) (err error) {
 	result := db.gorm.Save(&p)
-	if result.Error != nil {
-		return result.Error
-	}
 
 	return result.Error
 }

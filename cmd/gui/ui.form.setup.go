@@ -270,7 +270,7 @@ func (pf *planForm) FillForm(p cryptodb.Plan) {
 	}
 
 	// TODO: think about in which statusses changing is allowed
-	if pf.orders[cryptodb.TypeHardStopLoss].Price.Cmp(decimal.Zero) != 0 {
+	if !pf.orders[cryptodb.TypeHardStopLoss].Price.Equal(decimal.Zero) {
 		pf.stopLossItem.Widget.(*widget.Entry).SetText(pf.orders[cryptodb.TypeHardStopLoss].Price.StringFixed(int32(pf.activePair.PriceScale)))
 	}
 

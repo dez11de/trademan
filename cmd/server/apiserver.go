@@ -40,7 +40,6 @@ func pairHandler(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 
 func searchPairsHandler(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	part := p.ByName("part")
-	log.Printf("Searching for Pairs containing: %s", part)
 	pair, err := db.FindPairNames(part)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -67,6 +66,7 @@ func allPlansHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 	w.Write(jsonResp)
 }
 
+/*
 func getPlanHandler(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	planID, err := strconv.Atoi(p.ByName("PlanID"))
 	plan, err := db.GetPlan(uint(planID))
@@ -80,6 +80,7 @@ func getPlanHandler(w http.ResponseWriter, r *http.Request, p httprouter.Params)
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.Write(jsonResp)
 }
+*/
 
 func getOrdersHandler(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	planID, err := strconv.Atoi(p.ByName("PlanID"))
@@ -97,34 +98,23 @@ func getOrdersHandler(w http.ResponseWriter, r *http.Request, p httprouter.Param
 	w.Write(jsonResp)
 }
 
-type completeSetup struct {
-	Plan   cryptodb.Plan
-	Orders []cryptodb.Order
-}
-
 func setupHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	setup := completeSetup{Orders: cryptodb.NewOrders(0)}
+	setup :=cryptodb.NewSetup()
 
 	err := json.NewDecoder(r.Body).Decode(&setup)
 	if err != nil {
 		log.Printf("error decoding body: %s", err)
 	}
-
 	log.Printf("received setup: %v", setup)
 
-	if setup.Plan.ID == 0 {
-		db.CreatePlan(&setup.Plan)
-	} else {
-		db.SavePlan(&setup.Plan)
-	}
-	if setup.Orders[0].PlanID == 0 {
-		for i := range setup.Orders {
-			setup.Orders[i].PlanID = setup.Plan.ID
-		}
-		db.CreateOrders(&setup.Orders)
-	} else {
-		db.SaveOrders(&setup.Orders)
-	}
+    if setup.Plan.ID == 0 {
+        db.CreateSetup(&setup)
+    } else {
+        db.SaveSetup(&setup)
+    }
+
+	log.Printf("stored setup: %v", setup)
+
 	// TODO: return statusOK or something
 }
 
@@ -139,7 +129,7 @@ func HandleRequests() {
 	router.GET(APIv1Base+"pairs_search/:part", searchPairsHandler)
 
 	router.GET(APIv1Base+"plans", allPlansHandler)
-	router.GET(APIv1Base+"plan/:PlanID", getPlanHandler)
+//	router.GET(APIv1Base+"plan/:PlanID", getPlanHandler)
 
 	router.GET(APIv1Base+"orders/:PlanID", getOrdersHandler)
 

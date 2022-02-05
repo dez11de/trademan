@@ -31,20 +31,20 @@ func main() {
 		fmt.Println(err)
 	}
 
-	// db.RecreateTables()
+    db.RecreateTables()
 
 	exchangePairs, err := exchange.GetPairs()
 	for _, exchangePair := range exchangePairs {
 		db.CreatePair(&exchangePair)
 	}
 
+    /*
     pairNames, err := db.FindPairNames("BT")
 
     for _, n := range pairNames {
         fmt.Printf("Possible: %s\n", n)
     }
 
-    /*
     newPairs, err := db.GetPairs()
 
     for i, p := range newPairs {

@@ -30,7 +30,7 @@ func (db *Database) GetPairByName(s string) (pair Pair, err error) {
 
 // find Pair.Name containing s
 func (db *Database) FindPairNames(s string) (pairs []string, err error) {
-	result := db.gorm.Debug().Model(&Pair{}).Select("name").Where("name LIKE ?", "%"+s+"%").Find(&pairs)
+	result := db.gorm.Model(&Pair{}).Select("name").Where("name LIKE ?", "%"+s+"%").Find(&pairs)
 
 	return pairs, result.Error
 }

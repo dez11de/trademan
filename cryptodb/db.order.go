@@ -10,8 +10,17 @@ func (db *Database) CreateOrders(o *[]Order) (err error) {
     return result.Error
 }
 
+func (db *Database) SaveOrders(o *[]Order) (err error) {
+	result := db.gorm.Save(&o)
+	if result.Error != nil {
+		return result.Error
+	}
+
+	return result.Error
+}
+
 func (db *Database) GetOrders(PlanID uint) (orders []Order, err error) {
-	result := db.gorm.Where("PlanID = ?", PlanID).Find(&orders)
+	result := db.gorm.Where("plan_id = ?", PlanID).Find(&orders)
 
 	return orders, result.Error
 }

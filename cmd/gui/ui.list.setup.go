@@ -1,12 +1,8 @@
 package main
 
 import (
-	"encoding/json"
 	"image/color"
-	"io/ioutil"
 	"log"
-	"net/http"
-	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
@@ -20,42 +16,12 @@ import (
 
 type planListUI struct {
 	Plans []cryptodb.Plan
-    PairCache map[int64]cryptodb.Pair
+    PairCache []cryptodb.Pair
 	List  *widget.List
 
 	addPlanAction    widget.ToolbarItem
 	removePlanAction widget.ToolbarItem
 	actionBar        *widget.Toolbar
-}
-
-func getPlans() (plans []cryptodb.Plan, err error) {
-	client := http.Client{Timeout: time.Second * 2}
-	// TODO: make host configurable in env/param/file
-	req, err := http.NewRequest(http.MethodGet, "http://localhost:8888/list", nil)
-	if err != nil {
-		log.Printf("error requesting: %v", err)
-	}
-
-	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
-
-	response, err := client.Do(req)
-	if err != nil {
-		log.Printf("error doing request %v", err)
-	}
-	body, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		log.Printf("error reading response %v", err)
-	}
-	defer response.Body.Close()
-	if err != nil {
-		log.Printf("Error reading response.Body")
-	}
-	err = json.Unmarshal(body, &plans)
-	if err != nil {
-		log.Printf("Error unmarshalling pairs %v", err)
-	}
-
-    return plans, err
 }
 
 func MakePlanListSplit() *container.Split {
@@ -86,7 +52,7 @@ func MakePlanListSplit() *container.Split {
 			)
 		},
 		func(i widget.ListItemID, o fyne.CanvasObject) {
-			o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[0].(*canvas.Text).Text = planList.Plans[i].PairID
+			o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[0].(*canvas.Text).Text = planList.PairCache[int64(planList.Plans[i].PairID-1)].Name
 
 			// TODO: use theme colors
 			var directionColor color.Color
@@ -122,7 +88,6 @@ func MakePlanListSplit() *container.Split {
 	planListSplit.SetOffset(0.20)
 
 	planList.addPlanAction = widget.NewToolbarAction(theme.ContentAddIcon(), func() {
-		log.Print("Add button pressed")
 		f := NewForm()
 		f.FillForm(cryptodb.Plan{})
 		planListSplit.Trailing = f.form

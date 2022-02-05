@@ -6,7 +6,7 @@ import (
 
 	"github.com/dez11de/cryptodb"
 	"github.com/dez11de/exchange"
-	"github.com/shopspring/decimal"
+//	"github.com/shopspring/decimal"
 )
 
 func main() {
@@ -31,13 +31,28 @@ func main() {
 		fmt.Println(err)
 	}
 
-	db.RecreateTables()
+	// db.RecreateTables()
 
 	exchangePairs, err := exchange.GetPairs()
 	for _, exchangePair := range exchangePairs {
 		db.CreatePair(&exchangePair)
 	}
 
+    pairNames, err := db.FindPairNames("BT")
+
+    for _, n := range pairNames {
+        fmt.Printf("Possible: %s\n", n)
+    }
+
+    /*
+    newPairs, err := db.GetPairs()
+
+    for i, p := range newPairs {
+        fmt.Printf("[%d] Pair #%d - %s\n", i, p.ID, p.Name)
+    }
+    */
+
+    /*
 	currentPair, err := db.GetPairByName("ADAUSDT")
 	if err != nil {
 		log.Printf("error GetPairByName: %s", err)
@@ -60,4 +75,5 @@ func main() {
     orders[cryptodb.TypeTakeProfit+0].Price = decimal.NewFromFloat(1.202)
     orders[cryptodb.TypeTakeProfit+1].Price = decimal.NewFromFloat(1.3166)
     db.CreateOrders(&orders)
+    */
 }

@@ -10,8 +10,8 @@ func (db *Database) CreatePair(p *Pair) (err error) {
 	return result.Error
 }
 
-func (db *Database) GetPairs() (pairs map[uint]Pair, err error) {
-	result := db.gorm.Find(&pairs)
+func (db *Database) GetPairs() (pairs []Pair, err error) {
+	result := db.gorm.Order("ID ASC").Find(&pairs)
 
 	return pairs, result.Error
 }
@@ -29,8 +29,8 @@ func (db *Database) GetPairByName(s string) (pair Pair, err error) {
 }
 
 // find Pair.Name containing s
-func (db *Database) FindPairNames(s string) (pairNames []string, err error) {
-	result := db.gorm.Select("Name LIKE '%?%'", s).Find(&pairNames)
+func (db *Database) FindPairNames(s string) (pairs []string, err error) {
+	result := db.gorm.Debug().Model(&Pair{}).Select("name").Where("name LIKE ?", "%"+s+"%").Find(&pairs)
 
-	return pairNames, result.Error
+	return pairs, result.Error
 }

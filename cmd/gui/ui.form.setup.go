@@ -1,15 +1,10 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
-	"net/http"
 	"net/url"
 	"strings"
-	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/widget"
@@ -19,10 +14,11 @@ import (
 )
 
 type planForm struct {
-	plan          cryptodb.Plan
-	PairCache     map[int64]cryptodb.Pair
-	CurrentWallet map[string]cryptodb.Balance
-	activePair    cryptodb.Pair
+	PairCache  []cryptodb.Pair
+	activePair cryptodb.Pair
+
+	plan   cryptodb.Plan
+	orders []cryptodb.Order
 
 	form *widget.Form
 
@@ -31,7 +27,7 @@ type planForm struct {
 	riskItem                *widget.FormItem
 	stopLossItem            *widget.FormItem
 	entryItem               *widget.FormItem
-	takeProfitItems         [cryptodb.MaxTakeProfits]*widget.FormItem
+	takeProfitItems         [5]*widget.FormItem // TODO: restore MaxTakeProfits to it's former glory
 	notesMultilineEntryItem *widget.FormItem
 	tradingViewPlanItem     *widget.FormItem
 }
@@ -50,25 +46,28 @@ func (pf *planForm) makePairItem() *widget.FormItem {
 		}
 		if len(possiblePairs) == 1 {
 			CompletionEntry.SetText(possiblePairs[0])
+			CompletionEntry.HideCompletion()
+		} else {
+			CompletionEntry.SetOptions(possiblePairs)
+			CompletionEntry.ShowCompletion()
 		}
-		CompletionEntry.SetOptions(possiblePairs)
-		CompletionEntry.ShowCompletion()
 	}
 
 	CompletionEntry.OnSubmitted = func(s string) {
-        log.Printf("pair submitted")
-        ok := false
+		log.Printf("pair submitted")
+		ok := false
 		s = strings.ToUpper(s)
 		for _, p := range pf.PairCache {
 			if s == p.Name {
 				pf.activePair = p
-                ok = true
+				ok = true
 				break // No need to look further
 			}
 		}
 		if ok {
-			log.Printf("active pair set to %v", pf.activePair)
 			pf.plan.PairID = pf.activePair.ID
+			// TODO; make func setQuoteCurrence (s string) {} that can be called from other places
+			// TODO; make func setPricescale (s string) {}
 			pf.stopLossItem.Text = fmt.Sprintf("Stop Loss (%s)", pf.activePair.QuoteCurrency)
 			pf.stopLossItem.Widget.(*widget.Entry).SetPlaceHolder(decimal.Zero.StringFixed(int32(pf.activePair.PriceScale)))
 			pf.entryItem.Text = fmt.Sprintf("Entry (%s)", pf.activePair.QuoteCurrency)
@@ -80,6 +79,7 @@ func (pf *planForm) makePairItem() *widget.FormItem {
 			pf.sideItem.Widget.(*widget.RadioGroup).Enable()
 			pf.form.Refresh()
 		} else {
+			// TODO: set .Help?
 			log.Printf("pair for plan not found in cache %s", s)
 		}
 	}
@@ -168,97 +168,7 @@ func (pf *planForm) makeNotesMultilineItem() *widget.FormItem {
 	return widget.NewFormItem("Notes", notesMultiLineEntry)
 }
 
-func getPairs() (pairs map[int64]cryptodb.Pair, err error) {
-	client := http.Client{Timeout: time.Second * 2}
-	// TODO: make host configurable in env/param/file
-	req, err := http.NewRequest(http.MethodGet, "http://localhost:8888/pairs", nil)
-	if err != nil {
-		log.Printf("error requesting: %v", err)
-	}
-
-	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
-
-	response, err := client.Do(req)
-	if err != nil {
-		log.Printf("error doing request %v", err)
-	}
-	body, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		log.Printf("error reading response %v", err)
-	}
-	defer response.Body.Close()
-	if err != nil {
-		log.Printf("Error reading response.Body")
-	}
-	err = json.Unmarshal(body, &pairs)
-	if err != nil {
-		log.Printf("Error unmarshalling pairs %v", err)
-	}
-
-	return pairs, err
-}
-
-func searchPairs(s string) (pairs []string, err error) {
-	client := http.Client{Timeout: time.Second * 2}
-	// TODO: make host configurable in env/param/file
-
-	req, err := http.NewRequest(http.MethodGet, "http://localhost:8888/pairs?search="+s, nil)
-	if err != nil {
-		log.Printf("error requesting: %v", err)
-	}
-
-	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
-
-	response, err := client.Do(req)
-	if err != nil {
-		log.Printf("error doing request %v", err)
-	}
-	body, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		log.Printf("error reading response %v", err)
-	}
-	defer response.Body.Close()
-	if err != nil {
-		log.Printf("Error reading response.Body")
-	}
-	err = json.Unmarshal(body, &pairs)
-	if err != nil {
-		log.Printf("Error unmarshalling pairs %v", err)
-	}
-
-	return pairs, err
-}
-
-func sendPlan(p cryptodb.Plan) (err error) {
-	client := http.Client{Timeout: time.Second * 2}
-
-	planBuffer := new(bytes.Buffer)
-	json.NewEncoder(planBuffer).Encode(p)
-	if err != nil {
-		log.Printf("error marshalling newsetup %s", err)
-	}
-	log.Printf("Sending buffer %+v", planBuffer)
-	req, err := http.NewRequest(http.MethodPost, "http://localhost:8888/setup", planBuffer)
-	if err != nil {
-		log.Printf("error requesting: %v", err)
-	}
-
-	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
-
-	response, err := client.Do(req)
-	if err != nil {
-		log.Printf("Error sending request: %s", err)
-	}
-	defer response.Body.Close()
-
-	body, _ := ioutil.ReadAll(req.Body)
-	log.Printf("received response %s", string(body))
-
-	return err
-}
-
 func NewForm() *planForm {
-	// TODO: Load pairCache, plan and it's orders
 	pf := &planForm{}
 	var err error
 	pf.PairCache, err = getPairs()
@@ -276,26 +186,18 @@ func NewForm() *planForm {
 		pf.plan.PairID = pf.activePair.ID
 		// pf.plan.Side.Scan = pf.sideItem.Widget.(*widget.RadioGroup).Selected
 		pf.plan.Risk = decimal.RequireFromString(pf.riskItem.Widget.(*widget.Entry).Text)
-        /*
-		pf.plan.Orders[cryptodb.TypeHardStopLoss].Price = decimal.RequireFromString(pf.stopLossItem.Widget.(*widget.Entry).Text)
-		pf.plan.Orders[cryptodb.TypeEntry].Price = decimal.RequireFromString(pf.entryItem.Widget.(*widget.Entry).Text)
-		for i := 0; i < cryptodb.MaxTakeProfits-1; i++ {
+		pf.orders[cryptodb.TypeHardStopLoss].Price = decimal.RequireFromString(pf.stopLossItem.Widget.(*widget.Entry).Text)
+		pf.orders[cryptodb.TypeEntry].Price = decimal.RequireFromString(pf.entryItem.Widget.(*widget.Entry).Text)
+		for i := 0; i < 5-1; i++ { // TODO: restore MaxTakeProfits to it's former glory
 			tempPrice, err := decimal.NewFromString(pf.takeProfitItems[i].Widget.(*widget.Entry).Text)
 			if err == nil {
-				pf.plan.Orders[3+i].Price = tempPrice
+				pf.orders[3+i].Price = tempPrice
 			} else {
-				pf.plan.Orders[3+i].Price = decimal.Zero
+				pf.orders[3+i].Price = decimal.Zero
 			}
 		}
-        */
-		/*
-			pf.plan.SetEntrySize(pf.activePair, d.WalletCache[pf.activePair.QuoteCurrency].Equity, &pf.orders)
-			pf.plan.SetTakeProfitSizes(pf.activePair, &pf.orders)
-			pf.plan.SetRewardRiskRatio(pf.orders)
-			log.Printf("[Form] Storing to database...")
-			pf.db.StorePlanAndOrders(pf.plan, pf.orders)
-		*/
-		sendPlan(pf.plan)
+		// pf.plan.getRewardRiskRatio(pf.orders)
+		sendSetup(pf.plan, pf.orders)
 	}
 
 	pf.form.OnCancel = func() {
@@ -303,6 +205,7 @@ func NewForm() *planForm {
 	}
 	//pf.form.Disable()
 
+	pf.orders = cryptodb.NewOrders(0)
 	pf.pairItem = pf.makePairItem()
 	pf.form.AppendItem(pf.pairItem)
 	pf.sideItem = pf.makeSideItem()
@@ -314,16 +217,14 @@ func NewForm() *planForm {
 	pf.entryItem = pf.makeEntryItem()
 	pf.form.AppendItem(pf.entryItem)
 
-    /*
 	takeProfitCount := 0
-	for _, order := range pf.plan.Orders {
+	for _, order := range pf.orders {
 		if order.OrderType == cryptodb.TypeTakeProfit {
 			pf.takeProfitItems[takeProfitCount] = pf.makeTakeProfitItem(takeProfitCount)
 			pf.form.AppendItem(pf.takeProfitItems[takeProfitCount])
 			takeProfitCount++
 		}
 	}
-    */
 
 	pf.tradingViewPlanItem = pf.makeTradingViewLinkItem()
 	pf.form.AppendItem(pf.tradingViewPlanItem)
@@ -334,17 +235,20 @@ func NewForm() *planForm {
 }
 
 func (pf *planForm) FillForm(p cryptodb.Plan) {
+	var err error
 	pf.plan = p
-	/* TODO: figure this out
-	pf.orders, _ = pf.db.GetOrders(pf.plan.PlanID)
-	*/
-	/* TODO: figure this out
-	pf.activePair, _ = pf.db.GetPairFromID(pf.plan.PairID)
-	*/
+	pf.activePair, err = getPair(pf.plan.PairID)
+	if err != nil {
+		log.Printf("error getting pair: %s", err)
+	}
+	pf.orders, err = getOrders(pf.plan.ID)
+	if err != nil {
+		log.Printf("error getting orders: %s", err)
+	}
 
 	if pf.plan.ID != 0 {
-		pf.pairItem.Widget.(*xwidget.CompletionEntry).SetText(pf.activePair.Name)
 		pf.pairItem.Widget.(*xwidget.CompletionEntry).Disable()
+		pf.pairItem.Widget.(*xwidget.CompletionEntry).SetText(pf.activePair.Name)
 	}
 
 	// TODO: consider adding a .Help line
@@ -365,26 +269,24 @@ func (pf *planForm) FillForm(p cryptodb.Plan) {
 		pf.riskItem.Widget.(*widget.Entry).SetText(pf.plan.Risk.StringFixed(2))
 	}
 
-    /*
 	// TODO: think about in which statusses changing is allowed
-	if pf.plan.Orders[cryptodb.TypeHardStopLoss].Price.Cmp(decimal.Zero) != 0 {
-		pf.stopLossItem.Widget.(*widget.Entry).SetText(pf.plan.Orders[cryptodb.TypeHardStopLoss].Price.StringFixed(pf.activePair.PriceScale))
+	if pf.orders[cryptodb.TypeHardStopLoss].Price.Cmp(decimal.Zero) != 0 {
+		pf.stopLossItem.Widget.(*widget.Entry).SetText(pf.orders[cryptodb.TypeHardStopLoss].Price.StringFixed(int32(pf.activePair.PriceScale)))
 	}
 
 	// TODO: think about in which statusses changing is allowed, disable editting if required
-	if pf.plan.Orders[cryptodb.TypeEntry].Price.Cmp(decimal.Zero) != 0 {
-		pf.entryItem.Widget.(*widget.Entry).SetText(pf.plan.Orders[cryptodb.TypeEntry].Price.StringFixed(pf.activePair.PriceScale))
+	if pf.orders[cryptodb.TypeEntry].Price.Cmp(decimal.Zero) != 0 {
+		pf.entryItem.Widget.(*widget.Entry).SetText(pf.orders[cryptodb.TypeEntry].Price.StringFixed(int32(pf.activePair.PriceScale)))
 	}
 
 	// TODO: think about in which statusses changing is allowed, disable editting if required
 	takeProfitCount := 0
-	for _, o := range pf.plan.Orders {
+	for _, o := range pf.orders {
 		if o.OrderType == cryptodb.TypeTakeProfit && o.Price.Cmp(decimal.Zero) != 0 {
-			pf.takeProfitItems[takeProfitCount].Widget.(*widget.Entry).SetText(o.Price.StringFixed(pf.activePair.PriceScale))
+			pf.takeProfitItems[takeProfitCount].Widget.(*widget.Entry).SetText(o.Price.StringFixed(int32(pf.activePair.PriceScale)))
 			takeProfitCount++
 		}
 	}
-    */
 
 	// TODO: think about in which statusses changing is allowed
 	if p.Notes != "" {

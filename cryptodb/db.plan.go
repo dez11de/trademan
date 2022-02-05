@@ -14,7 +14,7 @@ func (db *Database) CreatePlan(p *Plan) (err error) {
 }
 
 func (db *Database) SavePlan(p *Plan) (err error) {
-	result := db.gorm.Save(p)
+	result := db.gorm.Save(&p)
 	if result.Error != nil {
 		return result.Error
 	}

@@ -9,11 +9,12 @@ import (
 	"github.com/dez11de/exchange"
 )
 
-var db cryptodb.Database
+var db *cryptodb.Database
 
 func main() {
 	// TODO: read and pass config from env/commandline/configfile
-	db, err := cryptodb.Connect()
+    var err error
+	db, err = cryptodb.Connect()
 	if err != nil {
 		log.Fatalf("Error connecting to database: %s", err)
 	}

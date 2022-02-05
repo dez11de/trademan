@@ -1,14 +1,18 @@
+NeoVIM
+    Configure go run, reformat before save, import before save, rename
+
+Refactor!
+    Might not be the most fun, but is always worth it
+    Is it actually worth it to keep everything in seperate modules?
+
 Investigate 
-    httprouter
-    gorm, althougj i have implemented it, i'm not to happy with it
+    Configuration toolkit that supports ENV, FILE (and PARAMETERS) and is small
+    Gorm Hooks (specifically Update Hooks) for logging
+    Trading break-even (win-rate/rrr)
 
 Properly configure enumer
     go generate 
 	make use of transforme and/or trim options
-
-Split into server and client
-	log actions/errors to database and file
-	regurlaly UPDATE wallet and pairs
 
 Unit testing for 
 	database
@@ -18,6 +22,6 @@ Unit testing for
 
 Auto rejection trading based on fibonnaci?
 
-Mail executed changes
+Mail executed orders
 	respond to further actions via mail
 	or mobile client

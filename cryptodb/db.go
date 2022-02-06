@@ -19,7 +19,7 @@ type databaseConfig struct {
 }
 
 type Database struct {
-	gorm *gorm.DB
+	*gorm.DB
 }
 
 func makeDSN(c databaseConfig) string {
@@ -44,24 +44,27 @@ func Connect() (db *Database, err error) {
 		},
 	)
 
-    db = &Database{}
 
 	dsn := makeDSN(dbCfg)
-    db.gorm, err = gorm.Open(mysql.Open(dsn), &gorm.Config{Logger: newLogger})
+    g, err := gorm.Open(mysql.Open(dsn), &gorm.Config{Logger: newLogger})
+    if err != nil {
+        log.Panicf("unable to connect to database")
+    }
+    db = &Database{g}
     return db, err
 }
 
 func (db *Database) RecreateTables() (err error) {
-    db.gorm.Migrator().DropTable(&Pair{})
-	db.gorm.Migrator().CreateTable(&Pair{})
-	db.gorm.Migrator().DropTable(Plan{})
-	db.gorm.Migrator().CreateTable(Plan{})
-	db.gorm.Migrator().DropTable(Order{})
-	db.gorm.Migrator().CreateTable(Order{})
-	db.gorm.Migrator().DropTable(Log{})
-	db.gorm.Migrator().CreateTable(Log{})
-	db.gorm.Migrator().DropTable(Balance{})
-	db.gorm.Migrator().CreateTable(Balance{})
+    db.Migrator().DropTable(&Pair{})
+	db.Migrator().CreateTable(&Pair{})
+	db.Migrator().DropTable(Plan{})
+	db.Migrator().CreateTable(Plan{})
+	db.Migrator().DropTable(Order{})
+	db.Migrator().CreateTable(Order{})
+	db.Migrator().DropTable(Log{})
+	db.Migrator().CreateTable(Log{})
+	db.Migrator().DropTable(Balance{})
+	db.Migrator().CreateTable(Balance{})
     // TODO: handle errors
     return nil
 }

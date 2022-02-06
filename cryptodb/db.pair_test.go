@@ -28,7 +28,7 @@ func TestShouldSavePair(t *testing.T) {
 	dialector := mysql.New(mysql.Config{Conn: mockdb, DriverName: "mysql", SkipInitializeWithVersion: true})
 	gdb, err := gorm.Open(dialector, &gorm.Config{})
 
-	db := &Database{gorm: gdb}
+	db := &Database{gdb}
 
 	mockPairs := []Pair{
 		{
@@ -52,12 +52,12 @@ func TestShouldSavePair(t *testing.T) {
 	t.Run("Should UPDATE Pairs", func(t *testing.T) {
 		for n, p := range mockPairs {
 			mock.ExpectBegin()
-			mock.ExpectExec("UPDATE `pairs` SET .+ WHERE .+").
+			mock.ExpectExec("INSERT INTO `pairs` (.+) VALUES (.+)").
 				WithArgs(p.Name, p.Alias, p.Status, p.BaseCurrency, p.QuoteCurrency, p.PriceScale, p.TakerFee, p.MakerFee, p.Leverage.Min, p.Leverage.Max, p.Leverage.Step, p.Price.Min, p.Price.Max, p.Price.Tick, p.Order.Min, p.Order.Max, p.Order.Step, AnyTime{}, AnyTime{}, p.ID).
 				WillReturnResult(sqlmock.NewResult(1, 1))
 			mock.ExpectCommit()
 
-			err := db.SavePair(&mockPairs[n])
+			err := db.CreatePair(&mockPairs[n])
 			if err != nil {
 				t.Errorf("received unexpected error %s", err)
 			}
@@ -70,32 +70,32 @@ func TestShouldSavePair(t *testing.T) {
 }
 
 func TestShouldGetPairs(t *testing.T) {
-    /* This causes a runtime error in db.GetPairs()
-	mockdb, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
+	/* This causes a runtime error in db.GetPairs()
+		mockdb, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 
-	if err != nil {
-		t.Fatalf("an error '%s' was not expected when opening a mock database connection", err)
-	}
-	defer mockdb.Close()
+		if err != nil {
+			t.Fatalf("an error '%s' was not expected when opening a mock database connection", err)
+		}
+		defer mockdb.Close()
 
-	dialector := mysql.New(mysql.Config{Conn: mockdb, DriverName: "mysql", SkipInitializeWithVersion: true})
-	gdb, err := gorm.Open(dialector, &gorm.Config{})
+		dialector := mysql.New(mysql.Config{Conn: mockdb, DriverName: "mysql", SkipInitializeWithVersion: true})
+		gdb, err := gorm.Open(dialector, &gorm.Config{})
 
-	db := &Database{gorm: gdb}
+		db := &Database{gorm: gdb}
 
-	t.Run("Should SELECT all pairs", func(t *testing.T) {
-			mock.ExpectQuery("SELECT * FROM `pairs`").
-				WillReturnRows()
+		t.Run("Should SELECT all pairs", func(t *testing.T) {
+				mock.ExpectQuery("SELECT * FROM `pairs`").
+					WillReturnRows()
 
-			pairs, err := db.GetPairs()
-			if err != nil {
-				t.Errorf("received unexpected error %s", err)
-			}
-            fmt.Printf("Pairs: %v", pairs)
-	})
+				pairs, err := db.GetPairs()
+				if err != nil {
+					t.Errorf("received unexpected error %s", err)
+				}
+	            fmt.Printf("Pairs: %v", pairs)
+		})
 
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unmet expectations: %s", err)
-	}
-    */
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Errorf("there were unmet expectations: %s", err)
+		}
+	*/
 }

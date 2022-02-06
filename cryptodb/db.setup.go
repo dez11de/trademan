@@ -5,7 +5,7 @@ import (
 )
 
 func (db *Database) CreateSetup(s *Setup) (err error) {
-	tx := db.gorm.Begin()
+	tx := db.Begin()
 
 	err = db.CreatePlan(&s.Plan)
 	if err != nil {
@@ -40,7 +40,7 @@ func (db *Database) SaveSetup(logSource LogSource, newSetup *Setup) (err error) 
 		return err
 	}
 
-	tx := db.gorm.Begin()
+	tx := db.Begin()
 
 	err = db.SavePlan(&newSetup.Plan)
 	if err != nil {

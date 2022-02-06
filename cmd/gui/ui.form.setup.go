@@ -99,7 +99,6 @@ func (pf *planForm) FillForm(p cryptodb.Plan) {
 		pf.setPriceScale(int32(pf.activePair.PriceScale))
 	}
 
-	// TODO: make better use of enumer options, see TODO.txt
 	if pf.plan.ID != 0 {
 		switch pf.plan.Side {
 		case cryptodb.SideLong:

@@ -68,7 +68,7 @@ func MakePerformanceContainer() *fyne.Container {
 	yearlyPerformance.TextStyle = fyne.TextStyle{Monospace: true}
 	yearlyPerformance.TextSize = 10
 
-	performancePane := container.New(layout.NewGridLayout(5), dailyPerformance, weeklyPerformance, monthlyPerformance, quarterlyPerformance, yearlyPerformance)
+	performancePane := container.NewHBox(layout.NewSpacer(), dailyPerformance, weeklyPerformance, monthlyPerformance, quarterlyPerformance, yearlyPerformance, layout.NewSpacer())
 
 	return performancePane
 }

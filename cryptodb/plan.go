@@ -6,6 +6,8 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+// TODO: consider including a seperate struct for statastics such as RRR @ start, Evolved RRR, 
+// Break/Even, relative PnL.
 type Plan struct {
 	ID              uint
 	PairID          uint

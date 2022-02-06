@@ -90,7 +90,7 @@ func MakePlanListSplit() *container.Split {
 	planList.addPlanAction = widget.NewToolbarAction(theme.ContentAddIcon(), func() {
 		f := NewForm()
 		f.FillForm(cryptodb.Plan{})
-		planListSplit.Trailing = f.form
+		planListSplit.Trailing = f.formContainer
 
 		planListSplit.Refresh()
 	})
@@ -110,7 +110,7 @@ func MakePlanListSplit() *container.Split {
 	planList.List.OnSelected = func(id widget.ListItemID) {
 		f := NewForm()
 		f.FillForm(planList.Plans[id])
-		planListSplit.Trailing = f.form
+		planListSplit.Trailing = f.formContainer
 		planListSplit.Refresh()
 	}
 

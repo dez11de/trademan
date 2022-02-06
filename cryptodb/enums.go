@@ -1,5 +1,8 @@
 package cryptodb
 
+
+//go:generate enumer -json -sql -type Side,Status,OrderType,LogSource -output enums_helpers.go
+
 type Side int
 
 const (

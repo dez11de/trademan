@@ -1,17 +1,26 @@
 package main
 
 import (
+	"log"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 )
 
 func main() {
-	// TODO: come up with a better name that doesn't focus on ByBit cause you never know
-	app := app.NewWithID("bbtrader")
-	mainWindow := app.NewWindow("ByBit Trade Manager")
+	app := app.NewWithID("nl.ganzeinfach.apps.bbtrader")
+	mainWindow := app.NewWindow("Trade Manager")
 	mainContent := makeMainContent()
-	// TODO: store and restore size and position settings
-	mainWindow.Resize(fyne.Size{Width: 800, Height: 600})
+	width := app.Preferences().FloatWithFallback("width", 800)
+	height := app.Preferences().FloatWithFallback("height", 900)
+	mainWindow.Resize(fyne.Size{Width: float32(width), Height: float32(height)})
+	mainWindow.SetCloseIntercept(func() {
+        log.Printf("Window W: %.0f x H: %.0f", mainWindow.Canvas().Size().Width, mainWindow.Canvas().Size().Height)
+		app.Preferences().SetFloat("width", float64(mainWindow.Canvas().Size().Width))
+		app.Preferences().SetFloat("height", float64(mainWindow.Canvas().Size().Height))
+        mainWindow.Close()
+	})
+
 	mainWindow.CenterOnScreen()
 	mainWindow.SetContent(mainContent)
 	mainWindow.ShowAndRun()

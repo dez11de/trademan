@@ -1,5 +1,5 @@
 NeoVIM
-    Configure go run, reformat before save, import before save, rename
+    Configure go run, reformat before save, import before save
 
 Refactor!
     Might not be the most fun, but is always worth it
@@ -7,12 +7,10 @@ Refactor!
 
 Investigate 
     Configuration toolkit that supports ENV, FILE (and PARAMETERS) and is small
-    Gorm Hooks (specifically Update Hooks) for logging
     Trading break-even (win-rate/rrr)
 
 Properly configure enumer
-    go generate 
-	make use of transforme and/or trim options
+	make use of transforme and/or trim options?
 
 Unit testing for 
 	database

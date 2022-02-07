@@ -10,6 +10,12 @@ func (db *Database) CreatePair(p *Pair) (err error) {
 	return result.Error
 }
 
+func (db *Database) SavePair(p *Pair) (err error) {
+	result := db.Save(p)
+
+	return result.Error
+}
+
 func (db *Database) GetPairs() (pairs []Pair, err error) {
 	result := db.Order("ID ASC").Find(&pairs)
 
@@ -23,7 +29,7 @@ func (db *Database) GetPair(id uint) (pair Pair, err error) {
 }
 
 func (db *Database) GetPairByName(s string) (pair Pair, err error) {
-	result := db.Where("Name = ?", s).First(&pair)
+	result := db.Where("name = ?", s).First(&pair)
 
 	return pair, result.Error
 }

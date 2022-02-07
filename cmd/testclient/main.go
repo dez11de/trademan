@@ -6,7 +6,7 @@ import (
 
 	"github.com/dez11de/cryptodb"
 	"github.com/dez11de/exchange"
-//	"github.com/shopspring/decimal"
+	//	"github.com/shopspring/decimal"
 )
 
 func main() {
@@ -31,49 +31,49 @@ func main() {
 		fmt.Println(err)
 	}
 
-    db.RecreateTables()
+	db.RecreateTables()
 
 	exchangePairs, err := exchange.GetPairs()
 	for _, exchangePair := range exchangePairs {
 		db.CreatePair(&exchangePair)
 	}
 
-    /*
-    pairNames, err := db.FindPairNames("BT")
+	/*
+	   pairNames, err := db.FindPairNames("BT")
 
-    for _, n := range pairNames {
-        fmt.Printf("Possible: %s\n", n)
-    }
+	   for _, n := range pairNames {
+	       fmt.Printf("Possible: %s\n", n)
+	   }
 
-    newPairs, err := db.GetPairs()
+	   newPairs, err := db.GetPairs()
 
-    for i, p := range newPairs {
-        fmt.Printf("[%d] Pair #%d - %s\n", i, p.ID, p.Name)
-    }
-    */
+	   for i, p := range newPairs {
+	       fmt.Printf("[%d] Pair #%d - %s\n", i, p.ID, p.Name)
+	   }
+	*/
 
-    /*
-	currentPair, err := db.GetPairByName("ADAUSDT")
-	if err != nil {
-		log.Printf("error GetPairByName: %s", err)
-	}
-	fmt.Printf("Pair name: %s\nPair status: %s\n\n", currentPair.Name, currentPair.Status)
+	/*
+			currentPair, err := db.GetPairByName("ADAUSDT")
+			if err != nil {
+				log.Printf("error GetPairByName: %s", err)
+			}
+			fmt.Printf("Pair name: %s\nPair status: %s\n\n", currentPair.Name, currentPair.Status)
 
-    currentPlan := cryptodb.Plan{}
-    currentPlan.PairID = currentPair.ID
-    currentPlan.Notes = "This is just a test plan."
-    db.CreatePlan(&currentPlan)
-    fmt.Printf("Plan #: %d\nPair name: %s\nPlan status: %s\n", currentPlan.ID, currentPair.Name, currentPlan.Notes)
+		    currentPlan := cryptodb.Plan{}
+		    currentPlan.PairID = currentPair.ID
+		    currentPlan.Notes = "This is just a test plan."
+		    db.CreatePlan(&currentPlan)
+		    fmt.Printf("Plan #: %d\nPair name: %s\nPlan status: %s\n", currentPlan.ID, currentPair.Name, currentPlan.Notes)
 
-    currentPlan.Notes = currentPlan.Notes + " And this is an update."
-    db.SavePlan(&currentPlan)
-    fmt.Printf("Plan #: %d\nPair name: %s\nPlan status: %s\n", currentPlan.ID, currentPair.Name, currentPlan.Notes)
+		    currentPlan.Notes = currentPlan.Notes + " And this is an update."
+		    db.SavePlan(&currentPlan)
+		    fmt.Printf("Plan #: %d\nPair name: %s\nPlan status: %s\n", currentPlan.ID, currentPair.Name, currentPlan.Notes)
 
-    orders := cryptodb.NewOrders(currentPlan.ID)
-    orders[cryptodb.TypeHardStopLoss].Price = decimal.NewFromFloat(1.0003)
-    orders[cryptodb.TypeEntry].Price = decimal.NewFromFloat(1.0263)
-    orders[cryptodb.TypeTakeProfit+0].Price = decimal.NewFromFloat(1.202)
-    orders[cryptodb.TypeTakeProfit+1].Price = decimal.NewFromFloat(1.3166)
-    db.CreateOrders(&orders)
-    */
+		    orders := cryptodb.NewOrders(currentPlan.ID)
+		    orders[cryptodb.TypeHardStopLoss].Price = decimal.NewFromFloat(1.0003)
+		    orders[cryptodb.TypeEntry].Price = decimal.NewFromFloat(1.0263)
+		    orders[cryptodb.TypeTakeProfit+0].Price = decimal.NewFromFloat(1.202)
+		    orders[cryptodb.TypeTakeProfit+1].Price = decimal.NewFromFloat(1.3166)
+		    db.CreateOrders(&orders)
+	*/
 }

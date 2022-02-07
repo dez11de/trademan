@@ -13,7 +13,7 @@ var db *cryptodb.Database
 
 func main() {
 	// TODO: read and pass config from env/commandline/configfile
-    var err error
+	var err error
 	db, err = cryptodb.Connect()
 	if err != nil {
 		log.Fatalf("Error connecting to database: %s", err)

@@ -29,9 +29,9 @@ func makeDSN(c databaseConfig) string {
 func Connect() (db *Database, err error) {
 	// TODO: read this from env/file/cli
 	dbCfg := databaseConfig{
-		Host:     "192.168.1.250",
-		Port:     "3306",
-        //TODO: make a switch for test/production/dev?
+		Host: "192.168.1.250",
+		Port: "3306",
+		//TODO: make a switch for test/production/dev?
 		Database: "test_trademan",
 		User:     "dennis",
 		Password: "c0d3mysql",
@@ -44,18 +44,17 @@ func Connect() (db *Database, err error) {
 		},
 	)
 
-
 	dsn := makeDSN(dbCfg)
-    g, err := gorm.Open(mysql.Open(dsn), &gorm.Config{Logger: newLogger})
-    if err != nil {
-        log.Panicf("unable to connect to database")
-    }
-    db = &Database{g}
-    return db, err
+	g, err := gorm.Open(mysql.Open(dsn), &gorm.Config{Logger: newLogger})
+	if err != nil {
+		log.Panicf("unable to connect to database")
+	}
+	db = &Database{g}
+	return db, err
 }
 
 func (db *Database) RecreateTables() (err error) {
-    db.Migrator().DropTable(&Pair{})
+	db.Migrator().DropTable(&Pair{})
 	db.Migrator().CreateTable(&Pair{})
 	db.Migrator().DropTable(Plan{})
 	db.Migrator().CreateTable(Plan{})
@@ -65,6 +64,6 @@ func (db *Database) RecreateTables() (err error) {
 	db.Migrator().CreateTable(Log{})
 	db.Migrator().DropTable(Balance{})
 	db.Migrator().CreateTable(Balance{})
-    // TODO: handle errors
-    return nil
+	// TODO: handle errors
+	return nil
 }

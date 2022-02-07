@@ -1,3 +1,4 @@
 go.mod
 go.sum
-reset_database.sh
+server/cmd/trademan.yml
+

@@ -11,6 +11,7 @@ type Order struct {
 	PlanID          uint `gorm:"index"`
 	Status          Status
 	ExchangeOrderID string          `json:"order_link_id"`
+    OrderKind       OrderKind
 	OrderType       OrderType       `json:"order_type"`
 	Size            decimal.Decimal `gorm:"type:decimal(20, 8)" json:"qty"`
 	TriggerPrice    decimal.Decimal `gorm:"type:decimal(20, 8)" json:"tp_trigger"`
@@ -23,13 +24,13 @@ type Order struct {
 
 func NewOrders(PlanID uint) []Order {
 	return []Order{
-		{PlanID: PlanID, OrderType: TypeHardStopLoss},
-		{PlanID: PlanID, OrderType: TypeSoftStopLoss},
-		{PlanID: PlanID, OrderType: TypeEntry},
-		{PlanID: PlanID, OrderType: TypeTakeProfit},
-		{PlanID: PlanID, OrderType: TypeTakeProfit},
-		{PlanID: PlanID, OrderType: TypeTakeProfit},
-		{PlanID: PlanID, OrderType: TypeTakeProfit},
-		{PlanID: PlanID, OrderType: TypeTakeProfit},
+		{PlanID: PlanID, OrderKind: KindHardStopLoss},
+		{PlanID: PlanID, OrderKind: KindSoftStopLoss},
+		{PlanID: PlanID, OrderKind: KindEntry},
+		{PlanID: PlanID, OrderKind: KindTakeProfit},
+		{PlanID: PlanID, OrderKind: KindTakeProfit},
+		{PlanID: PlanID, OrderKind: KindTakeProfit},
+		{PlanID: PlanID, OrderKind: KindTakeProfit},
+		{PlanID: PlanID, OrderKind: KindTakeProfit},
 	}
 }

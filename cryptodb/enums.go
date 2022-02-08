@@ -1,13 +1,19 @@
 package cryptodb
 
+//go:generate enumer -json -sql -type Direction,Side,Status,OrderType,OrderKind,LogSource -output enums_helpers.go
 
-//go:generate enumer -json -sql -type Side,Status,OrderType,LogSource -output enums_helpers.go
+type Direction int
+
+const (
+	DirectionLong Direction = iota
+	DirectionShort
+)
 
 type Side int
 
 const (
-	SideLong Side = iota
-	SideShort
+	SideBuy Side = iota
+	SideSell
 )
 
 type Status int
@@ -26,16 +32,23 @@ const (
 type OrderType int
 
 const (
-	TypeHardStopLoss OrderType = iota
-	TypeSoftStopLoss
-	TypeEntry
-	TypeTakeProfit
+	TypeMarket OrderType = iota
+	TypeLimit
+)
+
+type OrderKind int
+
+const (
+	KindHardStopLoss OrderKind = iota
+	KindSoftStopLoss
+	KindEntry
+	KindTakeProfit
 )
 
 type LogSource int
 
 const (
-	SourceTrigger LogSource = iota
+	SourceExchange LogSource = iota
 	SourceSoftware
 	SourceUser
 )

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -9,7 +10,7 @@ import (
 
 const APIv1Base = "/api/v1/"
 
-func HandleRequests() {
+func HandleRequests(c RESTServerConfig) {
 	log.Printf("Routing HTTP handler functions")
 	router := httprouter.New()
 
@@ -24,5 +25,5 @@ func HandleRequests() {
 	router.POST(APIv1Base+"setup", setupHandler)
 
 	// TODO make at least port configurable
-	log.Fatal(http.ListenAndServe(":8888", router))
+    log.Fatal(http.ListenAndServe(fmt.Sprintf("%s:%s", c.Host, c.Port), router))
 }

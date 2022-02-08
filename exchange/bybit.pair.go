@@ -4,18 +4,9 @@ import (
 	"github.com/dez11de/cryptodb"
 )
 
-func (b *ByBit) GetPairs() (pairs []cryptodb.Pair, err error) {
+func (e *Exchange) GetPairs() (pairs []cryptodb.Pair, err error) {
 	var pr PairResponse
-	_, err = b.PublicRequest("GET", "/v2/public/symbols", nil, &pr)
-	if err != nil {
-		return nil, err
-	}
-    /*
-	for _, pair := range pr.Results {
-        pairs = append(pairs, pair)
-	}
-	return pairs, nil
-    */ 
+	_, err = e.PublicRequest("GET", "/v2/public/symbols", nil, &pr)
 
-    return pr.Results, err
+    return pr.Pairs, err
 }

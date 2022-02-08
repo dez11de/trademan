@@ -1,0 +1,14 @@
+Database:
+  Username: dennis
+  Password: n00bn00b
+  Host: 192.168.1.250
+
+RESTServer:
+  host: 192.168.1.250       # Usualy localhost
+  port: 8888                # make sure this port is opened in the firewall
+
+Exchange:
+  api_key: 2398r            # the short code
+  api_secret: 238fga        # the long one
+  host: testnet
+

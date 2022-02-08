@@ -1,7 +1,6 @@
 package exchange
 
 import (
-	"context"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/hex"
@@ -11,9 +10,8 @@ import (
 	"strconv"
 	"time"
 
-	"nhooyr.io/websocket"
+	"github.com/dez11de/cryptodb"
 	"nhooyr.io/websocket/wsjson"
-    "github.com/dez11de/cryptodb"
 )
 
 type websocketCmd struct {
@@ -29,17 +27,7 @@ type websocketResponse struct {
 	Data          interface{} `json:"data"`
 }
 
-func (b *ByBit) Connect() error {
-	b.context = context.Background()
-	var err error
-	b.connection, _, err = websocket.Dial(b.context, b.websocketHost, nil)
-	if err != nil {
-		return err
-	}
-	return b.Authenticate()
-}
-
-func (b *ByBit) Authenticate() error {
+func (b *Exchange) Authenticate() error {
 	expiresTime := time.Now().Unix()*1000 + 10000
 	req := "GET/realtime" + strconv.FormatInt(expiresTime, 10)
 	sig := hmac.New(sha256.New, []byte(b.apiSecret))
@@ -71,7 +59,7 @@ func (b *ByBit) Authenticate() error {
 	return nil
 }
 
-func (b *ByBit) Ping() error {
+func (b *Exchange) Ping() error {
 	cmd := websocketCmd{Op: "ping"}
 	err := wsjson.Write(b.context, b.connection, cmd)
 	if err != nil {
@@ -80,7 +68,7 @@ func (b *ByBit) Ping() error {
 	return nil
 }
 
-func (b *ByBit) Subscribe(topic string) error {
+func (b *Exchange) Subscribe(topic string) error {
 	cmd := websocketCmd{Op: "subscribe",
 		Args: []interface{}{topic},
 	}
@@ -104,7 +92,7 @@ func (b *ByBit) Subscribe(topic string) error {
 	return nil
 }
 
-func (b *ByBit) ProcessMessages(positionsChannel chan<- cryptodb.Plan, executionChannel chan<- Execution, orderChannel chan<- cryptodb.Order) {
+func (b *Exchange) ProcessMessages(positionsChannel chan<- Position, executionChannel chan<- Execution, orderChannel chan<- cryptodb.Order) {
 	for {
 		_, data, err := b.connection.Read(b.context)
 		if err != nil {
@@ -127,8 +115,8 @@ func (b *ByBit) ProcessMessages(positionsChannel chan<- cryptodb.Plan, execution
 			}
 		}
 
-		if !wsresp.Success {
-			var p []cryptodb.Plan
+        if !wsresp.Success { // TODO: this doesn't seem right does it?
+			var p []Position
 			var e []Execution
 			var o []cryptodb.Order
 			switch wsresp.Topic {
@@ -163,7 +151,7 @@ func (b *ByBit) ProcessMessages(positionsChannel chan<- cryptodb.Plan, execution
 	}
 }
 
-func (b *ByBit) Close() {
+func (b *Exchange) Close() {
 	b.context.Done()
 	b.connection.Close(http.StatusConflict, "weirdness")
 }

@@ -10,33 +10,24 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-type databaseConfig struct {
-	Host     string
-	Port     string
-	Database string
-	User     string
-	Password string
+type DatabaseConfig struct {
+	Username    string `flag:"user||user configured on the MySQL server instance" env:"TRADEMAN_MYSQL_USERNAME"`
+	Password    string `flag:"pass||password configured on the MySQL server instance" env:"TRADEMAN_MYSQL_PASSWORD"`
+	Host        string `flag:"host|127.0.0.1|the host that runs the MySQL server instance" env:"TRADEMAN_MYSQL_HOST" default:"127.0.0.1"`
+	Port        string `flag:"port|3306|the port the MySQL server is listening on" env:"TRADEMAN_MYSQL_PORT" default:"3306"`
+	Database    string `flag:"database|trademan|name of the database created on the MySQL server instance" env:"TRADEMAN_MYSQL_DATABASE" default:"trademan"`
+	ResetTables bool   `flag:"recreate_tables|false|DANGEROUS (re)create all database tables DANGEROUS\nall existing tables will be dropped"`
 }
 
 type Database struct {
 	*gorm.DB
 }
 
-func makeDSN(c databaseConfig) string {
-	return fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", c.User, c.Password, c.Host, c.Port, "gorm_"+c.Database)
+func makeDSN(c DatabaseConfig) string {
+	return fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", c.Username, c.Password, c.Host, c.Port, c.Database)
 }
 
-func Connect() (db *Database, err error) {
-	// TODO: read this from env/file/cli
-	dbCfg := databaseConfig{
-		Host: "192.168.1.250",
-		Port: "3306",
-		//TODO: make a switch for test/production/dev?
-		Database: "test_trademan",
-		User:     "dennis",
-		Password: "c0d3mysql",
-	}
-
+func Connect(c DatabaseConfig) (db *Database, err error) {
 	newLogger := logger.New(
 		log.New(os.Stdout, "\n", log.LstdFlags),
 		logger.Config{
@@ -44,16 +35,21 @@ func Connect() (db *Database, err error) {
 		},
 	)
 
-	dsn := makeDSN(dbCfg)
+	dsn := makeDSN(c)
 	g, err := gorm.Open(mysql.Open(dsn), &gorm.Config{Logger: newLogger})
 	if err != nil {
-		log.Panicf("unable to connect to database")
+		log.Fatalf("error opening database: %s", err)
 	}
+
 	db = &Database{g}
+	if c.ResetTables {
+		err = db.recreateTables()
+	}
 	return db, err
 }
 
-func (db *Database) RecreateTables() (err error) {
+func (db *Database) recreateTables() (err error) {
+	// TODO: handle errors
 	db.Migrator().DropTable(&Pair{})
 	db.Migrator().CreateTable(&Pair{})
 	db.Migrator().DropTable(Plan{})
@@ -64,6 +60,5 @@ func (db *Database) RecreateTables() (err error) {
 	db.Migrator().CreateTable(Log{})
 	db.Migrator().DropTable(Balance{})
 	db.Migrator().CreateTable(Balance{})
-	// TODO: handle errors
 	return nil
 }

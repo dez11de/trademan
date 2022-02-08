@@ -56,14 +56,14 @@ func MakePlanListSplit() *container.Split {
 
 			// TODO: use theme colors
 			var directionColor color.Color
-			switch planList.Plans[i].Side {
-			case cryptodb.SideLong:
+			switch planList.Plans[i].Direction {
+			case cryptodb.DirectionLong:
 				directionColor = colornames.Green
-			case cryptodb.SideShort:
+			case cryptodb.DirectionShort:
 				directionColor = colornames.Red
 			}
 			o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[2].(*canvas.Text).Color = directionColor
-			o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[2].(*canvas.Text).Text = planList.Plans[i].Side.String()
+			o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[2].(*canvas.Text).Text = planList.Plans[i].Direction.String()
 
 			var statusColor color.Color
 			// TODO: give all posible statuses a different color

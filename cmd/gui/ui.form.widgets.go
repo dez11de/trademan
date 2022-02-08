@@ -12,7 +12,6 @@ import (
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	xwidget "fyne.io/x/fyne/widget"
-	"github.com/dez11de/cryptodb"
 	"github.com/shopspring/decimal"
 )
 
@@ -97,7 +96,7 @@ func (pf *planForm) makePairItem() *widget.FormItem {
 }
 
 func (pf *planForm) makeSideItem() *widget.FormItem {
-	sideRadio := widget.NewRadioGroup(cryptodb.SideStrings(),
+	sideRadio := widget.NewRadioGroup([]string{"Long", "Short"},
 		func(s string) {
 			pf.riskItem.Widget.(*widget.Entry).Enable()
 			pf.form.Refresh()

@@ -55,7 +55,7 @@ func NewForm() *planForm {
 
 	takeProfitCount := 0
 	for _, order := range pf.orders {
-		if order.OrderType == cryptodb.TypeTakeProfit {
+		if order.OrderKind == cryptodb.KindTakeProfit {
 			pf.takeProfitItems[takeProfitCount] = pf.makeTakeProfitItem(takeProfitCount)
 			pf.form.AppendItem(pf.takeProfitItems[takeProfitCount])
 			takeProfitCount++
@@ -100,10 +100,10 @@ func (pf *planForm) FillForm(p cryptodb.Plan) {
 	}
 
 	if pf.plan.ID != 0 {
-		switch pf.plan.Side {
-		case cryptodb.SideLong:
+		switch pf.plan.Direction {
+		case cryptodb.Direction(cryptodb.DirectionLong):
 			pf.sideItem.Widget.(*widget.RadioGroup).SetSelected("Long")
-		case cryptodb.SideShort:
+		case cryptodb.Direction(cryptodb.DirectionShort):
 			pf.sideItem.Widget.(*widget.RadioGroup).SetSelected("Short")
 		}
 		pf.sideItem.Widget.(*widget.RadioGroup).Disable()
@@ -118,19 +118,19 @@ func (pf *planForm) FillForm(p cryptodb.Plan) {
 	}
 
 	// TODO: think about in which statusses changing is allowed
-	if !pf.orders[cryptodb.TypeHardStopLoss].Price.Equal(decimal.Zero) {
-		pf.stopLossItem.Widget.(*widget.Entry).SetText(pf.orders[cryptodb.TypeHardStopLoss].Price.StringFixed(int32(pf.activePair.PriceScale)))
+	if !pf.orders[cryptodb.KindHardStopLoss].Price.Equal(decimal.Zero) {
+		pf.stopLossItem.Widget.(*widget.Entry).SetText(pf.orders[cryptodb.KindHardStopLoss].Price.StringFixed(int32(pf.activePair.PriceScale)))
 	}
 
 	// TODO: think about in which statusses changing is allowed, disable editting if required
-	if pf.orders[cryptodb.TypeEntry].Price.Cmp(decimal.Zero) != 0 {
-		pf.entryItem.Widget.(*widget.Entry).SetText(pf.orders[cryptodb.TypeEntry].Price.StringFixed(int32(pf.activePair.PriceScale)))
+	if pf.orders[cryptodb.KindEntry].Price.Cmp(decimal.Zero) != 0 {
+		pf.entryItem.Widget.(*widget.Entry).SetText(pf.orders[cryptodb.KindEntry].Price.StringFixed(int32(pf.activePair.PriceScale)))
 	}
 
 	// TODO: think about in which statusses changing is allowed, disable editting if required
 	takeProfitCount := 0
 	for _, o := range pf.orders {
-		if o.OrderType == cryptodb.TypeTakeProfit && o.Price.Cmp(decimal.Zero) != 0 {
+		if o.OrderKind == cryptodb.KindTakeProfit && o.Price.Cmp(decimal.Zero) != 0 {
 			pf.takeProfitItems[takeProfitCount].Widget.(*widget.Entry).SetText(o.Price.StringFixed(int32(pf.activePair.PriceScale)))
 			takeProfitCount++
 		}

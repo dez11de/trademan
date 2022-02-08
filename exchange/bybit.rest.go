@@ -18,7 +18,9 @@ import (
 	"time"
 )
 
-func (b *ByBit) PublicRequest(method string, apiURL string, params map[string]interface{}, result interface{}) (resp []byte, err error) {
+type RequestParameters map[string]interface{}
+
+func (e *Exchange) PublicRequest(method string, apiURL string, params map[string]interface{}, result interface{}) (resp []byte, err error) {
 	keys := make([]string, 0, len(params))
 	for k := range params {
 		keys = append(keys, k)
@@ -31,11 +33,11 @@ func (b *ByBit) PublicRequest(method string, apiURL string, params map[string]in
 	}
 
 	param := strings.Join(p, "&")
-	fullURL := b.RESTHost + apiURL
+	fullURL := e.RESTHost + apiURL
 	if param != "" {
 		fullURL += "?" + param
 	}
-	if b.debugMode {
+	if e.debugMode {
 		log.Printf("PublicRequest: %v", fullURL)
 	}
 	var binBody = bytes.NewReader(make([]byte, 0))
@@ -47,7 +49,7 @@ func (b *ByBit) PublicRequest(method string, apiURL string, params map[string]in
 	}
 
 	var response *http.Response
-	response, err = b.RESTClient.Do(request)
+	response, err = e.RESTClient.Do(request)
 	if err != nil {
 		return
 	}
@@ -58,7 +60,7 @@ func (b *ByBit) PublicRequest(method string, apiURL string, params map[string]in
 		return
 	}
 
-	if b.debugMode {
+	if e.debugMode {
 		log.Printf("PublicRequest: %v", string(resp))
 	}
 
@@ -66,7 +68,7 @@ func (b *ByBit) PublicRequest(method string, apiURL string, params map[string]in
 	return
 }
 
-func (b *ByBit) PrivateRequest(method string, apiURL string, params map[string]interface{}, result interface{}) (resp []byte, err error) {
+func (b *Exchange) PrivateRequest(method string, apiURL string, params map[string]interface{}, result interface{}) (resp []byte, err error) {
 	timestamp := time.Now().UnixNano() / 1e6
 
 	params["api_key"] = b.apiKey
@@ -120,7 +122,7 @@ func (b *ByBit) PrivateRequest(method string, apiURL string, params map[string]i
 	return
 }
 
-func (b *ByBit) SignedRequest(method string, apiURL string, params map[string]interface{}, result interface{}) (fullURL string, resp []byte, err error) {
+func (b *Exchange) SignedRequest(method string, apiURL string, params map[string]interface{}, result interface{}) (fullURL string, resp []byte, err error) {
 	timestamp := time.Now().UnixNano() / 1e6
 
 	params["api_key"] = b.apiKey
@@ -173,7 +175,7 @@ func (b *ByBit) SignedRequest(method string, apiURL string, params map[string]in
 	return
 }
 
-func (b *ByBit) getSigned(param string) string {
+func (b *Exchange) getSigned(param string) string {
 	sig := hmac.New(sha256.New, []byte(b.apiSecret))
 	sig.Write([]byte(param))
 	signature := hex.EncodeToString(sig.Sum(nil))

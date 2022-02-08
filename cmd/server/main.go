@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"time"
 
@@ -12,37 +11,43 @@ import (
 var db *cryptodb.Database
 
 func main() {
-	// TODO: read and pass config from env/commandline/configfile
-	var err error
-	db, err = cryptodb.Connect()
+	var trademanCfg trademanConfig
+	err := readConfig(&trademanCfg)
+	if err != nil {
+		log.Fatalf("Error reading configuration: %s", err)
+	}
+
+	db, err = cryptodb.Connect(trademanCfg.Database)
 	if err != nil {
 		log.Fatalf("Error connecting to database: %s", err)
 	}
 
-	// TODO: read these from config or envvar
-	exchange := exchange.NewByBit("https://api-testnet.bybit.com",
-		"wss://stream-testnet.bybit.com/realtime_private",
-		"rLot58Xxaj4Kdb3pog",
-		"0a3GihYe3CfFkLbYsE41wWoNTtofwY2WPkwi",
-		false)
-	// TODO: read and pass config from env/commandline/configfile
-	// TODO: return err if connecting failed
-	if exchange == nil {
-		log.Fatalf("Error creating ByBit object")
-	}
-
-	err = exchange.Connect()
+	exchange, err := exchange.Connect(trademanCfg.Exchange)
 	if err != nil {
-		fmt.Println(err)
+		log.Fatalf("Error connecting to exchange: %s", err)
 	}
 
-	// TODO: add exchange.Ping() to keep connection alive
+    if trademanCfg.Database.ResetTables {
+        // database tables will be recreated by cryptodb
+        // fill the `pairs` table again
+        exchangePairs, err := exchange.GetPairs()
+        if err != nil {
+            log.Fatalf("unable to reload pairs from exchange: %s", err)
+        }
+        for _, p := range exchangePairs {
+            db.CreatePair(&p)
+            log.Printf("Pair %s assigned ID %d", p.Name, p.ID)
+        }
+    }
+
 	pingExchangeTicker := time.NewTicker(1 * time.Minute)
 	refreshWalletTicker := time.NewTicker(2 * time.Hour)
 	refreshPairsTicker := time.NewTicker(24 * time.Hour)
 	quit := make(chan struct{})
 
-	go HandleRequests()
+	// TODO: what if it can't open the port?
+	go HandleRequests(trademanCfg.RESTServer)
+	// go exchange.ProcessMessages()
 
 	for {
 		select {
@@ -55,7 +60,7 @@ func main() {
 				for _, b := range currentBalances {
 					err = db.CreateBalance(&b)
 					if err != nil {
-						log.Printf("error writing wallet to database %v", err)
+						log.Printf("error writing balance to database %v", err)
 					}
 				}
 			}
@@ -65,6 +70,7 @@ func main() {
 				log.Printf("error getting current pairs %v", err)
 			} else {
 				for _, p := range currentPairs {
+                    // TODO: should check if it should update or create
 					err = db.CreatePair(&p)
 					if err != nil {
 						log.Printf("error writing pair to database %v", err)

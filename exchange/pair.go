@@ -6,7 +6,7 @@ type PairResponse struct {
 	ReturnCode       int             `json:"ret_code"`
 	ReturnMessage    string          `json:"ret_msg"`
 	ExtendedCode     string          `json:"ext_code"`
-	Results          []cryptodb.Pair `json:"result"`
+	Pairs            []cryptodb.Pair `json:"result"`
 	ExtendedInfo     string          `json:"ext_info"`
 	ServerTime       string          `json:"time_now"`
 	RateLimitStatus  int             `json:"rate_limit_status"`

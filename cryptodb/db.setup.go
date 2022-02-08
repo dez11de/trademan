@@ -107,14 +107,14 @@ func (db *Database) logOrderDifferences(logSource LogSource, pairID uint, oldOrd
 
 	for i := 0; i <= len(oldOrders)-1; i++ {
 		var orderName string
-		switch oldOrders[i].OrderType {
-		case TypeHardStopLoss:
+		switch oldOrders[i].OrderKind {
+		case KindHardStopLoss:
 			orderName = "(hard)StopLoss"
-		case TypeSoftStopLoss:
+		case KindSoftStopLoss:
 			orderName = "(soft)StopLoss"
-		case TypeEntry:
+		case KindEntry:
 			orderName = "Entry"
-		case TypeTakeProfit:
+		case KindTakeProfit:
 			orderName = fmt.Sprintf("Take profit #%d", i-2)
 		}
 		if oldOrders[i].Status != newOrders[i].Status {

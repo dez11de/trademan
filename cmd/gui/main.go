@@ -7,6 +7,7 @@ import (
 
 func main() {
 	app := app.NewWithID("nl.ganzeinfach.apps.bbtrader")
+    app.Settings().SetTheme(&myTheme{})
 	mainWindow := app.NewWindow("Trade Manager")
 	mainContent := makeMainContent()
 	width := app.Preferences().FloatWithFallback("width", 800)

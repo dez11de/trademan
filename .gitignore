@@ -1,4 +1,4 @@
 go.mod
 go.sum
-server/cmd/trademan.yml
+cmd/server/trademan.yml
 

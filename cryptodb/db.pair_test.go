@@ -58,7 +58,7 @@ func TestShouldSavePair(t *testing.T) {
 				WillReturnResult(sqlmock.NewResult(1, 1))
 			mock.ExpectCommit()
 
-			err := db.CreatePair(&mockPairs[n])
+			err := db.createPair(&mockPairs[n])
 			if err != nil {
 				t.Errorf("received unexpected error %s", err)
 			}
@@ -72,12 +72,14 @@ func TestShouldSavePair(t *testing.T) {
 				WillReturnResult(sqlmock.NewResult(1, 1))
 			mock.ExpectCommit()
 
-			err := db.SavePair(&mockPairs[n])
+			err := db.savePair(&mockPairs[n])
 			if err != nil {
 				t.Errorf("received unexpected error %s", err)
 			}
 		}
 	})
+
+    // TODO: should also create test for Crupdate
 
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("there were unmet expectations: %s", err)

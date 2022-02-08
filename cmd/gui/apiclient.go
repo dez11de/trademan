@@ -10,9 +10,11 @@ import (
 	"github.com/dez11de/cryptodb"
 )
 
+// TODO: make host:port configurable in env/param/file
+const BaseURL = "http://localhost:8888/api/v1/"
+
 func getPairs() (pairs []cryptodb.Pair, err error) {
-	// TODO: make host configurable in env/param/file
-	resp, err := http.Get("http://localhost:8888/api/v1/pairs")
+	resp, err := http.Get(BaseURL + "pairs")
 	if err != nil {
 		return pairs, err
 	}
@@ -25,8 +27,7 @@ func getPairs() (pairs []cryptodb.Pair, err error) {
 }
 
 func searchPairs(s string) (pairs []string, err error) {
-	// TODO: make host configurable in env/param/file
-	resp, err := http.Get("http://localhost:8888/api/v1/pairs_search/" + s)
+	resp, err := http.Get(BaseURL + "pairs_search/" + s)
 	if err != nil {
 		return pairs, err
 	}
@@ -39,8 +40,7 @@ func searchPairs(s string) (pairs []string, err error) {
 }
 
 func getPair(id uint) (pair cryptodb.Pair, err error) {
-	// TODO: make host configurable in env/param/file
-	resp, err := http.Get("http://localhost:8888/api/v1/pair/" + strconv.Itoa(int(id)))
+	resp, err := http.Get(BaseURL + "pair/" + strconv.Itoa(int(id)))
 	if err != nil {
 		return pair, err
 	}
@@ -53,8 +53,7 @@ func getPair(id uint) (pair cryptodb.Pair, err error) {
 }
 
 func getPlans() (plans []cryptodb.Plan, err error) {
-	// TODO: make host configurable in env/param/file
-	resp, err := http.Get("http://localhost:8888/api/v1/plans")
+	resp, err := http.Get(BaseURL + "plans")
 	if err != nil {
 		return plans, err
 	}
@@ -68,8 +67,7 @@ func getPlans() (plans []cryptodb.Plan, err error) {
 
 func getOrders(PlanID uint) (orders []cryptodb.Order, err error) {
 	orders = cryptodb.NewOrders(PlanID) // TODO: is this really necessary here?
-	// TODO: make host configurable in env/param/file
-	resp, err := http.Get("http://localhost:8888/api/v1/orders/" + strconv.Itoa(int(PlanID)))
+	resp, err := http.Get(BaseURL + "orders/" + strconv.Itoa(int(PlanID)))
 	if err != nil {
 		return orders, err
 	}
@@ -87,11 +85,10 @@ func sendSetup(p cryptodb.Plan, o []cryptodb.Order) (err error) {
 	setup.Orders = o
 
 	setupJSON, _ := json.Marshal(setup)
-	// TODO: make host configurable in env/param/file
-	resp, err := http.Post("http://localhost:8888/api/v1/setup", "", bytes.NewBuffer(setupJSON))
-    if err != nil {
-        return err
-    }
+    resp, err := http.Post(BaseURL+"setup", "", bytes.NewBuffer(setupJSON)) // TODO: should this include "application/json or Content-Type/json"
+	if err != nil {
+		return err
+	}
 	defer resp.Body.Close()
 
 	return err

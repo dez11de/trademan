@@ -13,10 +13,8 @@ func (e *Exchange) PlaceOrders(p cryptodb.Plan, activePair cryptodb.Pair, o []cr
 	var result OrderResponse
 
 	params := map[string]interface{}{}
-	// TODO: create new enum Side, not to be confused with direction?
 	params["side"] = "Buy"
 	params["symbol"] = activePair.Name
-	// TODO: create new enum for order_type, not the be confused with OrderType
 	params["order_type"] = "Limit"
 	params["qty"] = o[cryptodb.KindEntry].Size.InexactFloat64()
 	params["price"] = o[cryptodb.KindEntry].Price

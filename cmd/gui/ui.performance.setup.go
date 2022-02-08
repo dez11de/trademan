@@ -11,43 +11,42 @@ import (
 )
 
 func getPerformance(symbol string, period time.Duration) float64 {
-    /*
-	jsonRequest, err := json.Marshal(cryptodb.Performance{Symbol: symbol,
-		Since: time.Now().Add(-period),
-	})
-	if err != nil {
-		log.Printf("error marshalling request %v", err)
-	}
+	/*
+		jsonRequest, err := json.Marshal(cryptodb.Performance{Symbol: symbol,
+			Since: time.Now().Add(-period),
+		})
+		if err != nil {
+			log.Printf("error marshalling request %v", err)
+		}
 
-	client := http.Client{Timeout: time.Second * 2}
-	// TODO: make host configurable in env/param/file
-	req, err := http.NewRequest(http.MethodPost, "http://localhost:8888/performance", bytes.NewBuffer(jsonRequest))
-	if err != nil {
-		log.Printf("error requesting: %v", err)
-	}
+		client := http.Client{Timeout: time.Second * 2}
+		req, err := http.NewRequest(http.MethodPost, BaseURL+"performance", bytes.NewBuffer(jsonRequest))
+		if err != nil {
+			log.Printf("error requesting: %v", err)
+		}
 
-	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
+		req.Header.Set("Content-Type", "application/json; charset=UTF-8")
 
-	response, err := client.Do(req)
-	if err != nil {
-		log.Printf("error doing request %v", err)
-	}
-	body, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		log.Printf("error reading response %v", err)
-	}
-	defer response.Body.Close()
-	if err != nil {
-		log.Printf("Error reading response.Body")
-	}
-	var performance cryptodb.Performance
-	err = json.Unmarshal(body, &performance)
-	if err != nil {
-		log.Printf("Error unmarshalling performance %v", err)
-	}
-    */
+		response, err := client.Do(req)
+		if err != nil {
+			log.Printf("error doing request %v", err)
+		}
+		body, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			log.Printf("error reading response %v", err)
+		}
+		defer response.Body.Close()
+		if err != nil {
+			log.Printf("Error reading response.Body")
+		}
+		var performance cryptodb.Performance
+		err = json.Unmarshal(body, &performance)
+		if err != nil {
+			log.Printf("Error unmarshalling performance %v", err)
+		}
+	*/
 
-	return 0.0 
+	return 0.0
 }
 
 func MakePerformanceContainer() *fyne.Container {

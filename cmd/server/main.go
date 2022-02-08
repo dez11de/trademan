@@ -35,7 +35,7 @@ func main() {
             log.Fatalf("unable to reload pairs from exchange: %s", err)
         }
         for _, p := range exchangePairs {
-            db.CreatePair(&p)
+            db.CrupdatePair(&p) // eventhough tables have just been reset 
             log.Printf("Pair %s assigned ID %d", p.Name, p.ID)
         }
     }
@@ -70,8 +70,7 @@ func main() {
 				log.Printf("error getting current pairs %v", err)
 			} else {
 				for _, p := range currentPairs {
-                    // TODO: should check if it should update or create
-					err = db.CreatePair(&p)
+					err = db.CrupdatePair(&p)
 					if err != nil {
 						log.Printf("error writing pair to database %v", err)
 					}

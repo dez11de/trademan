@@ -7,7 +7,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-// TODO: should only return 'open' plans. See bybit api documentation.
+// TODO: should only return 'open' plans. See GORM api documentation.
 func allPlansHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	allPlans, err := db.GetPlans()
 	if err != nil {

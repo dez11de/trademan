@@ -20,8 +20,8 @@ type Exchange struct {
 	apiKey    string
 	apiSecret string
 
-	RESTHost   string       // TODO: rename to lowercaps to avoid exporting
-	RESTClient *http.Client // TODO: rename to lowercaps to avoid exporting
+	restHost   string       // TODO: rename to lowercaps to avoid exporting
+	restClient *http.Client // TODO: rename to lowercaps to avoid exporting
 
 	websocketHost string
 	context       context.Context
@@ -34,9 +34,9 @@ func Connect(c ExchangeConfig) (e Exchange, err error) {
 	e = Exchange{
 		apiKey:        c.ApiKey,
 		apiSecret:     c.ApiSecret,
-		RESTHost:      c.RESTHost,
+		restHost:      c.RESTHost,
 		websocketHost: c.WSHost,
-		RESTClient: &http.Client{
+		restClient: &http.Client{
 			Timeout: 6 * time.Second, // TODO check with documentation
 		},
         context: context.Background(),
@@ -48,11 +48,6 @@ func Connect(c ExchangeConfig) (e Exchange, err error) {
 	}
 
 	err = e.Authenticate()
-    if err != nil {
-		return Exchange{}, err
-    }
-
-	err = e.Ping()
 
 	return e, err
 }

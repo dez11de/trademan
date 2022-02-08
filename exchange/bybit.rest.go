@@ -33,7 +33,7 @@ func (e *Exchange) PublicRequest(method string, apiURL string, params map[string
 	}
 
 	param := strings.Join(p, "&")
-	fullURL := e.RESTHost + apiURL
+	fullURL := e.restHost + apiURL
 	if param != "" {
 		fullURL += "?" + param
 	}
@@ -49,7 +49,7 @@ func (e *Exchange) PublicRequest(method string, apiURL string, params map[string
 	}
 
 	var response *http.Response
-	response, err = e.RESTClient.Do(request)
+	response, err = e.restClient.Do(request)
 	if err != nil {
 		return
 	}
@@ -89,7 +89,7 @@ func (b *Exchange) PrivateRequest(method string, apiURL string, params map[strin
 	signature := b.getSigned(param)
 	param += "&sign=" + signature
 
-	fullURL := b.RESTHost + apiURL + "?" + param
+	fullURL := b.restHost + apiURL + "?" + param
 	if b.debugMode {
 		log.Printf("SignedRequest: %v", fullURL)
 	}
@@ -103,7 +103,7 @@ func (b *Exchange) PrivateRequest(method string, apiURL string, params map[strin
 	}
 
 	var response *http.Response
-	response, err = b.RESTClient.Do(request)
+	response, err = b.restClient.Do(request)
 	if err != nil {
 		return
 	}
@@ -143,7 +143,7 @@ func (b *Exchange) SignedRequest(method string, apiURL string, params map[string
 	signature := b.getSigned(param)
 	param += "&sign=" + signature
 
-	fullURL = b.RESTHost + apiURL + "?" + param
+	fullURL = b.restHost + apiURL + "?" + param
 	if b.debugMode {
 		log.Printf("SignedRequest: %v", fullURL)
 	}
@@ -157,7 +157,7 @@ func (b *Exchange) SignedRequest(method string, apiURL string, params map[string
 	}
 
 	var response *http.Response
-	response, err = b.RESTClient.Do(request)
+	response, err = b.restClient.Do(request)
 	if err != nil {
 		return
 	}

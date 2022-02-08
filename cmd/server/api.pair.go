@@ -8,7 +8,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-// TODO: should only return Active pairs. See bybit api documentation.
+// TODO: should only return Active pairs. See GORM api documentation.
 func allPairsHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	allPairs, err := db.GetPairs()
 	if err != nil {

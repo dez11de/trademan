@@ -13,10 +13,12 @@ func allPairsHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 	allPairs, err := db.GetPairs()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+        w.Write([]byte(err.Error()))
 	}
 	jsonResp, err := json.Marshal(allPairs)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+        w.Write([]byte(err.Error()))
 	}
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.Write(jsonResp)

@@ -1,6 +1,7 @@
 package exchange
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 
@@ -8,29 +9,70 @@ import (
 )
 
 func (e *Exchange) PlaceOrders(p cryptodb.Plan, activePair cryptodb.Pair, o []cryptodb.Order) (err error) {
-	log.Print("Placing orders...")
-
-	var result OrderResponse
-
-	params := map[string]interface{}{}
-	params["side"] = "Buy"
-	params["symbol"] = activePair.Name
-	params["order_type"] = "Limit"
-	params["qty"] = o[cryptodb.KindEntry].Size.InexactFloat64()
-	params["price"] = o[cryptodb.KindEntry].Price
-	params["time_in_force"] = "GoodTillCancel"
-	// TODO: figure out what exactly this means
-	params["close_on_trigger"] = false
-	// TODO: figure out what exactly this means
-	params["reduce_only"] = false
-	// TODO: there is a better solution for this, either wait for RoundStep to get integrated or use the fork https://github.com/bart613/decimal
-	log.Printf("Order size step: %s", activePair.Order.Step.String())
-	log.Printf("Order size adjusted for step: %s", o[cryptodb.KindEntry].Size.Div(activePair.Order.Step).Floor().Mul(activePair.Order.Step).String())
-	params["stop_loss"] = o[cryptodb.KindHardStopLoss].Price.InexactFloat64()
-
-	fullUrl, response, err := e.SignedRequest(http.MethodPost, "/private/linear/order/create", params, &result)
-	log.Printf("Full URL: %s", fullUrl)
-	log.Printf("Result: %v", result)
-	log.Printf("Response: %v", string(response))
+	err = e.placeEntry(p, activePair, o[cryptodb.KindMarketStopLoss], o[cryptodb.KindLimitStopLoss], o[cryptodb.KindEntry])
 	return err
+}
+
+func (e *Exchange) placeEntry(plan cryptodb.Plan, pair cryptodb.Pair, marketStopLoss, limitStopLoss, entry cryptodb.Order) (err error) {
+	var result OrderResponse
+	entryParams := make(RequestParameters)
+
+	// Set entry and HardStopLoss
+	entryParams["order_link_id"] = entry.ExchangeOrderID
+	entryParams["symbol"] = pair.Name
+	if plan.Direction == cryptodb.DirectionLong {
+		entryParams["side"] = "Buy"
+	} else {
+		entryParams["side"] = "Sell"
+	}
+	entryParams["order_type"] = "Limit"
+	entryParams["qty"] = entry.Size.InexactFloat64()    // TODO: check if this is has been properly 'steprounded'
+	entryParams["price"] = entry.Price.InexactFloat64() // TODO: check if this is has been properly 'steprounded'
+	entryParams["close_on_trigger"] = false             // TODO: figure out what exactly this means
+	entryParams["reduce_only"] = false                  // TODO: figure out what exactly this means
+	entryParams["time_in_force"] = "GoodTillCancel"
+	entryParams["stop_loss"] = marketStopLoss.Price.InexactFloat64()
+
+	fullURL, resp, err := e.SignedRequest(http.MethodPost, "/private/linear/order/create", entryParams, &result)
+	json.Unmarshal(resp, &result)
+	if err != nil || result.ReturnMessage != "OK" {
+		log.Printf("Entry not accepted: %s", err)
+		log.Printf("URL: %s", fullURL)
+		log.Printf("Response: %v", result)
+		return err // TODO: if no error but ReturnMessage not "OK" return that
+	}
+
+	entry.Status = cryptodb.StatusOrdered
+	marketStopLoss.Status = cryptodb.StatusOrdered
+
+	// Set LimitStopLoss
+	sslParams := make(RequestParameters)
+	sslParams["order_link_id"] = limitStopLoss.ExchangeOrderID
+	sslParams["symbol"] = pair.Name
+	if plan.Direction == cryptodb.DirectionLong {
+		sslParams["side"] = "Sell"
+	} else {
+		sslParams["side"] = "Buy"
+	}
+	sslParams["order_type"] = "Limit"
+	sslParams["qty"] = limitStopLoss.Size.InexactFloat64()    // TODO: check if this is has been properly 'steprounded'
+	sslParams["price"] = limitStopLoss.Price.InexactFloat64() // TODO: check if this is has been properly 'steprounded'
+	sslParams["base_price"] = entry.Price.InexactFloat64()    // TODO: check if this is has been properly 'steprounded'
+	sslParams["stop_px"] = entry.Price.InexactFloat64()       // TODO: check if this is has been properly 'steprounded'
+	sslParams["close_on_trigger"] = false                     // TODO: i have no idea
+	sslParams["trigger_by"] = "LastPrice"                     // TODO: i have some sort of idea, api documentation seems incorrect
+	sslParams["reduce_only"] = false                          // TODO: i have no idea
+	sslParams["time_in_force"] = "GoodTillCancel"
+
+	fullURL, resp, err = e.SignedRequest(http.MethodPost, "/private/linear/stop-order/create", sslParams, &result)
+	json.Unmarshal(resp, &result)
+	if err != nil || result.ReturnMessage != "OK" {
+		log.Printf("Soft stoploss not accepted: %s", err)
+		log.Printf("URL: %s", fullURL)
+		log.Printf("Response: %s", string(resp))
+		return err // TODO: if no error but ReturnMessage not "OK" return that
+	}
+	limitStopLoss.Status = cryptodb.StatusOrdered
+
+	return nil
 }

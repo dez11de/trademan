@@ -13,7 +13,7 @@ type Pair struct {
 	Status        string          `gorm:"size:15" json:"status"` // TODO: make enum
 	BaseCurrency  string          `gorm:"size:10" json:"base_currency"`
 	QuoteCurrency string          `gorm:"size:10" json:"quote_currency"`
-	PriceScale    int             `json:"price_scale,number"`
+	PriceScale    int32           `json:"price_scale,number"`
 	TakerFee      decimal.Decimal `gorm:"type:decimal(20, 8)" json:"taker_fee,string"` //TODO: investigate right size
 	MakerFee      decimal.Decimal `gorm:"type:decimal(20, 8)" json:"maker_fee,string"`
 
@@ -21,7 +21,7 @@ type Pair struct {
 		Min  decimal.Decimal `gorm:"type:decimal(20, 8)" json:"min_leverage"`
 		Max  decimal.Decimal `gorm:"type:decimal(20, 8)" json:"max_leverage"`
 		Step decimal.Decimal `gorm:"type:decimal(20, 8)" json:"leverage_step,string"`
-	} `gorm:"embedded;embeddedPrefix:leverage_" json:"leverage_filter"`
+    } `gorm:"embedded;embeddedPrefix:leverage_" json:"leverage_filter"` // TODO: is embedding still necesarry?
 
 	Price struct {
 		Min  decimal.Decimal `gorm:"type:decimal(20, 8)" json:"min_price,string"`

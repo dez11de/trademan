@@ -39,8 +39,8 @@ const (
 type OrderKind int
 
 const (
-	KindHardStopLoss OrderKind = iota
-	KindSoftStopLoss
+	KindMarketStopLoss OrderKind = iota
+	KindLimitStopLoss
 	KindEntry
 	KindTakeProfit
 )

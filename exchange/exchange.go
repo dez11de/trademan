@@ -30,8 +30,8 @@ type Exchange struct {
 	debugMode bool
 }
 
-func Connect(c ExchangeConfig) (e Exchange, err error) {
-	e = Exchange{
+func Connect(c ExchangeConfig) (e *Exchange, err error) {
+	e = &Exchange{
 		apiKey:        c.ApiKey,
 		apiSecret:     c.ApiSecret,
 		restHost:      c.RESTHost,
@@ -44,7 +44,7 @@ func Connect(c ExchangeConfig) (e Exchange, err error) {
 
 	e.connection, _, err = websocket.Dial(e.context, e.websocketHost, nil)
 	if err != nil {
-		return Exchange{}, err
+		return nil, err
 	}
 
 	err = e.Authenticate()

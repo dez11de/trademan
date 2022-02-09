@@ -38,13 +38,13 @@ func (db *Database) GetPairs() (pairs []Pair, err error) {
 }
 
 func (db *Database) GetPair(id uint) (pair Pair, err error) {
-	result := db.Where("ID = ?", id).First(&pair)
+	result := db.Where("ID = ?", id).Find(&pair)
 
 	return pair, result.Error
 }
 
 func (db *Database) GetPairByName(s string) (pair Pair, err error) {
-	result := db.Where("name = ?", s).First(&pair)
+	result := db.Where("name = ?", s).Find(&pair)
 
 	return pair, result.Error
 }

@@ -56,6 +56,39 @@ func (m myTheme) Color(name fyne.ThemeColorName, variant fyne.ThemeVariant) colo
 		return rgbacolor
 	}
 
+    if name == theme.ColorGreen  {
+		if variant == theme.VariantLight {
+			// log.Printf("Light requested %+v", variant)
+			return color.White
+		}
+
+		rgbacolor, _ := ParseHexColor("#81b29a")
+
+		return rgbacolor
+	}
+
+    if name == theme.ColorRed  {
+		if variant == theme.VariantLight {
+			// log.Printf("Light requested %+v", variant)
+			return color.White
+		}
+
+		rgbacolor, _ := ParseHexColor("#c94f6d")
+
+		return rgbacolor
+	}
+
+    if name == theme.ColorBlue  {
+		if variant == theme.VariantLight {
+			// log.Printf("Light requested %+v", variant)
+			return color.White
+		}
+
+		rgbacolor, _ := ParseHexColor("#719cd6")
+
+		return rgbacolor
+	}
+
 	return theme.DefaultTheme().Color(name, variant)
 }
 

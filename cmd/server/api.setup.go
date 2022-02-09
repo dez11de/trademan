@@ -8,6 +8,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
+// TODO: error handling
 func setupHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	setup := cryptodb.NewSetup()
 
@@ -21,5 +22,6 @@ func setupHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		db.SaveSetup(cryptodb.SourceUser, &setup)
 	}
 
-	// TODO: return statusOK or something
+	// TODO: return statusOK and updated Setup or something
 }
+

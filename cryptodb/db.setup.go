@@ -15,6 +15,7 @@ func (db *Database) CreateSetup(s *Setup) (err error) {
 
 	for i := range s.Orders {
 		s.Orders[i].PlanID = s.Plan.ID
+        s.Orders[i].ExchangeOrderID = fmt.Sprintf("TM-%d-%d-%d", s.Plan.ID, s.Orders[i].OrderKind, s.Plan.CreatedAt.Unix())
 	}
 
 	err = db.CreateOrders(s.Orders)
@@ -93,7 +94,7 @@ func (db *Database) logPlanDifferences(logSource LogSource, oldPlan, newPlan Pla
 
 	if !oldPlan.Profit.Equal(newPlan.Profit) {
 		logEntry.Text = fmt.Sprintf("Profit changed from %s to %s.",
-			oldPlan.Profit.StringFixed(2), // TODO: get number of decimals from pair.
+			oldPlan.Profit.StringFixed(2), // TODO: get number of decimals from pair, multiple places in this file
 			newPlan.Profit.StringFixed(2))
 		db.CreateLog(&logEntry)
 	}
@@ -108,10 +109,10 @@ func (db *Database) logOrderDifferences(logSource LogSource, pairID uint, oldOrd
 	for i := 0; i <= len(oldOrders)-1; i++ {
 		var orderName string
 		switch oldOrders[i].OrderKind {
-		case KindHardStopLoss:
-			orderName = "(hard)StopLoss"
-		case KindSoftStopLoss:
-			orderName = "(soft)StopLoss"
+		case KindMarketStopLoss:
+			orderName = "(market)StopLoss"
+		case KindLimitStopLoss:
+			orderName = "(limit)StopLoss"
 		case KindEntry:
 			orderName = "Entry"
 		case KindTakeProfit:

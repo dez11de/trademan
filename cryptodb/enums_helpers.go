@@ -501,11 +501,11 @@ func (i *OrderType) Scan(value interface{}) error {
 	return nil
 }
 
-const _OrderKindName = "KindHardStopLossKindSoftStopLossKindEntryKindTakeProfit"
+const _OrderKindName = "KindMarketStopLossKindLimitStopLossKindEntryKindTakeProfit"
 
-var _OrderKindIndex = [...]uint8{0, 16, 32, 41, 55}
+var _OrderKindIndex = [...]uint8{0, 18, 35, 44, 58}
 
-const _OrderKindLowerName = "kindhardstoplosskindsoftstoplosskindentrykindtakeprofit"
+const _OrderKindLowerName = "kindmarketstoplosskindlimitstoplosskindentrykindtakeprofit"
 
 func (i OrderKind) String() string {
 	if i < 0 || i >= OrderKind(len(_OrderKindIndex)-1) {
@@ -518,30 +518,30 @@ func (i OrderKind) String() string {
 // Re-run the stringer command to generate them again.
 func _OrderKindNoOp() {
 	var x [1]struct{}
-	_ = x[KindHardStopLoss-(0)]
-	_ = x[KindSoftStopLoss-(1)]
+	_ = x[KindMarketStopLoss-(0)]
+	_ = x[KindLimitStopLoss-(1)]
 	_ = x[KindEntry-(2)]
 	_ = x[KindTakeProfit-(3)]
 }
 
-var _OrderKindValues = []OrderKind{KindHardStopLoss, KindSoftStopLoss, KindEntry, KindTakeProfit}
+var _OrderKindValues = []OrderKind{KindMarketStopLoss, KindLimitStopLoss, KindEntry, KindTakeProfit}
 
 var _OrderKindNameToValueMap = map[string]OrderKind{
-	_OrderKindName[0:16]:       KindHardStopLoss,
-	_OrderKindLowerName[0:16]:  KindHardStopLoss,
-	_OrderKindName[16:32]:      KindSoftStopLoss,
-	_OrderKindLowerName[16:32]: KindSoftStopLoss,
-	_OrderKindName[32:41]:      KindEntry,
-	_OrderKindLowerName[32:41]: KindEntry,
-	_OrderKindName[41:55]:      KindTakeProfit,
-	_OrderKindLowerName[41:55]: KindTakeProfit,
+	_OrderKindName[0:18]:       KindMarketStopLoss,
+	_OrderKindLowerName[0:18]:  KindMarketStopLoss,
+	_OrderKindName[18:35]:      KindLimitStopLoss,
+	_OrderKindLowerName[18:35]: KindLimitStopLoss,
+	_OrderKindName[35:44]:      KindEntry,
+	_OrderKindLowerName[35:44]: KindEntry,
+	_OrderKindName[44:58]:      KindTakeProfit,
+	_OrderKindLowerName[44:58]: KindTakeProfit,
 }
 
 var _OrderKindNames = []string{
-	_OrderKindName[0:16],
-	_OrderKindName[16:32],
-	_OrderKindName[32:41],
-	_OrderKindName[41:55],
+	_OrderKindName[0:18],
+	_OrderKindName[18:35],
+	_OrderKindName[35:44],
+	_OrderKindName[44:58],
 }
 
 // OrderKindString retrieves an enum value from the enum constants string name.

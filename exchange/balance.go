@@ -10,7 +10,7 @@ type WalletResponse struct {
 	ExtendedCode     string                      `json:"ext_code"`
 	Results          map[string]cryptodb.Balance `json:"result"`
 	ExtendedInfo     string                      `json:"ext_info"`
-	ServerTime       string                      `json:"time_now,string"`
+	ServerTime       string                      `json:"time_now"`
 	RateLimitStatus  int                         `json:"rate_limit_status"`
 	RateLimitResetMS int                         `json:"rate_limit_reset_ms"`
 	RateLimit        int                         `json:"rate_limit"`

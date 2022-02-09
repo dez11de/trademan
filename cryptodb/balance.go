@@ -8,7 +8,7 @@ import (
 
 type Balance struct {
 	Symbol         string          `gorm:"index"`
-	Equity         decimal.Decimal `gorm:"type:decimal(20, 8) "json:"equity"`
+	Equity         decimal.Decimal `gorm:"type:decimal(20, 8)" json:"equity"`
 	Available      decimal.Decimal `gorm:"type:decimal(20, 8)" json:"available_balance"`
 	UsedMargin     decimal.Decimal `gorm:"type:decimal(20, 8)" json:"used_margin"`
 	OrderMargin    decimal.Decimal `gorm:"type:decimal(20, 8)" json:"order_margin"`

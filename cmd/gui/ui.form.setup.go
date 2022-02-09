@@ -3,7 +3,9 @@ package main
 import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
+	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	xwidget "fyne.io/x/fyne/widget"
 	"github.com/dez11de/cryptodb"
@@ -17,7 +19,7 @@ type planForm struct {
 	plan   cryptodb.Plan
 	orders []cryptodb.Order
 
-	formContainer *fyne.Container
+	formContainer       *fyne.Container
 	statisticsContainer *fyne.Container
 
 	form                    *widget.Form
@@ -36,6 +38,7 @@ func NewForm() *planForm {
 	var err error
 	pf.PairCache, err = getPairs()
 	if err != nil {
+		dialog.ShowError(err, mainWindow)
 		return pf
 	}
 	pf.orders = cryptodb.NewOrders(0)
@@ -68,17 +71,17 @@ func NewForm() *planForm {
 	pf.form.AppendItem(pf.notesMultilineEntryItem)
 
 	pf.setQuoteCurrency(" . . . ")
-	pf.setPriceScale(1)
+	pf.setPriceScale(0)
 
-	pf.form.OnSubmit = pf.formSubmit
-	pf.form.OnCancel = pf.formCancel
-	pf.form.SubmitText = "OK"
-	pf.form.CancelText = "Cancel"
-	pf.form.Disable()
+    executeAction := widget.NewToolbarAction(theme.UploadIcon(), pf.executeAction)
+    cancelAction := widget.NewToolbarAction(theme.CancelIcon(), pf.cancelAction)
+    okAction := widget.NewToolbarAction(theme.ConfirmIcon(), pf.okAction)
+    
+    formActionBar := widget.NewToolbar(widget.NewToolbarSpacer(), executeAction, cancelAction, okAction)
 
 	pf.statisticsContainer = pf.makeStatContainer()
 
-	pf.formContainer = container.New(layout.NewBorderLayout(pf.statisticsContainer, nil, nil, nil), pf.statisticsContainer, pf.form)
+	pf.formContainer = container.New(layout.NewBorderLayout(pf.statisticsContainer, formActionBar, nil, nil), pf.statisticsContainer, formActionBar, pf.form)
 	return pf
 }
 
@@ -95,7 +98,7 @@ func (pf *planForm) FillForm(p cryptodb.Plan) {
 	if pf.plan.ID != 0 {
 		pf.pairItem.Widget.(*xwidget.CompletionEntry).Disable()
 		pf.pairItem.Widget.(*xwidget.CompletionEntry).SetText(pf.activePair.Name)
-		pf.setQuoteCurrency(pf.activePair.Name)
+		pf.setQuoteCurrency(pf.activePair.QuoteCurrency)
 		pf.setPriceScale(int32(pf.activePair.PriceScale))
 	}
 
@@ -118,8 +121,8 @@ func (pf *planForm) FillForm(p cryptodb.Plan) {
 	}
 
 	// TODO: think about in which statusses changing is allowed
-	if !pf.orders[cryptodb.KindHardStopLoss].Price.Equal(decimal.Zero) {
-		pf.stopLossItem.Widget.(*widget.Entry).SetText(pf.orders[cryptodb.KindHardStopLoss].Price.StringFixed(int32(pf.activePair.PriceScale)))
+	if !pf.orders[cryptodb.KindMarketStopLoss].Price.Equal(decimal.Zero) {
+		pf.stopLossItem.Widget.(*widget.Entry).SetText(pf.orders[cryptodb.KindMarketStopLoss].Price.StringFixed(int32(pf.activePair.PriceScale)))
 	}
 
 	// TODO: think about in which statusses changing is allowed, disable editting if required
@@ -141,6 +144,11 @@ func (pf *planForm) FillForm(p cryptodb.Plan) {
 		pf.notesMultilineEntryItem.Widget.(*widget.Entry).SetText(pf.plan.Notes)
 	}
 
-	//pf.tradingViewPlanItem.Widget.(*widget.Hyperlink).SetURLFromString(pf.plan.TradingViewPlan)
-	pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[1].Show()
+	/*
+		if pf.plan.TradingViewPlan == "" {
+			pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[1].Show()
+		} else {
+			pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[0].Show()
+		}
+	*/
 }

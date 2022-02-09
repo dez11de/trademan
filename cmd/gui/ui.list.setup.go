@@ -2,11 +2,11 @@ package main
 
 import (
 	"image/color"
-	"log"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
@@ -30,11 +30,11 @@ func MakePlanListSplit() *container.Split {
     var err error
     planList.Plans, err = getPlans()
     if err != nil {
-        // TODO: i should probably do something here
+        dialog.ShowError(err, mainWindow)
     }
     planList.PairCache, err = getPairs()
     if err != nil {
-        // TODO: i should probably do something here
+        dialog.ShowError(err, mainWindow)
     }
 	planList.List = widget.NewList(
 		func() int {
@@ -42,10 +42,10 @@ func MakePlanListSplit() *container.Split {
 		},
 		func() fyne.CanvasObject {
 			// TODO: change this to widget.RichText
-			pairText := canvas.NewText("PAIRCUR", colornames.White)
+			pairText := canvas.NewText("Pair", theme.ForegroundColor())
 			pairText.TextStyle = fyne.TextStyle{Bold: true}
-			statusText := canvas.NewText("STATUS", colornames.White)
-			directionText := canvas.NewText("Long", colornames.Green)
+			statusText := canvas.NewText("Status", colornames.White)
+			directionText := canvas.NewText("Direction", colornames.Green)
 			return container.NewVBox(
 				container.NewHBox(pairText, layout.NewSpacer(), directionText),
 				container.New(layout.NewCenterLayout(), statusText),
@@ -56,29 +56,36 @@ func MakePlanListSplit() *container.Split {
 
 			// TODO: use theme colors
 			var directionColor color.Color
+            var directionName string
 			switch planList.Plans[i].Direction {
 			case cryptodb.DirectionLong:
-				directionColor = colornames.Green
+                directionName = "Long"
+				directionColor = theme.PrimaryColorNamed("Green")
 			case cryptodb.DirectionShort:
-				directionColor = colornames.Red
+                directionName = "Short"
+				directionColor = theme.PrimaryColorNamed("Red")
 			}
-			o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[2].(*canvas.Text).Color = directionColor
-			o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[2].(*canvas.Text).Text = planList.Plans[i].Direction.String()
+			o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[2].(*canvas.Text).Text = directionName 
+			o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[2].(*canvas.Text).Color = directionColor 
 
 			var statusColor color.Color
+            var statusName string
 			// TODO: give all posible statuses a different color
 			switch planList.Plans[i].Status {
 			case cryptodb.StatusPlanned:
-				statusColor = colornames.Blue
+                statusName = "Planned"
+				statusColor = theme.PrimaryColorNamed("Blue")
 			case cryptodb.StatusOrdered:
-				statusColor = colornames.Green
+                statusName = "Ordered"
+				statusColor = theme.PrimaryColorNamed("Green")
 			case cryptodb.StatusFilled:
-				statusColor = colornames.Purple
+                statusName = "Filled"
+				statusColor = theme.PrimaryColorNamed("Magenta")
 			default:
 				statusColor = colornames.White
 			}
-			o.(*fyne.Container).Objects[1].(*fyne.Container).Objects[0].(*canvas.Text).Text = planList.Plans[i].Status.String()
-			o.(*fyne.Container).Objects[1].(*fyne.Container).Objects[0].(*canvas.Text).Color = statusColor
+			o.(*fyne.Container).Objects[1].(*fyne.Container).Objects[0].(*canvas.Text).Text = statusName
+            o.(*fyne.Container).Objects[1].(*fyne.Container).Objects[0].(*canvas.Text).Color = statusColor
 		})
 
 	selectPlanLabel := container.New(layout.NewCenterLayout(), canvas.NewText("Select a plan from the list, or press + to make a new plan.", nil))
@@ -94,11 +101,8 @@ func MakePlanListSplit() *container.Split {
 
 		planListSplit.Refresh()
 	})
-	planList.removePlanAction = widget.NewToolbarAction(theme.ContentRemoveIcon(), func() {
-		log.Print("Remove button pressed")
-	})
 
-	planList.actionBar = widget.NewToolbar(widget.NewToolbarSpacer(), planList.addPlanAction, planList.removePlanAction)
+	planList.actionBar = widget.NewToolbar(widget.NewToolbarSpacer(), planList.addPlanAction)
 	planList.actionBar.Refresh()
 	listAndButtons = container.New(layout.NewBorderLayout(nil, planList.actionBar, nil, nil), container.NewMax(planList.List), planList.actionBar)
 	planListSplit.Leading = listAndButtons

@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/BoRuDar/configuration/v3"
 	"github.com/dez11de/cryptodb"
 	"github.com/dez11de/exchange"
@@ -40,9 +38,7 @@ func readConfig(cfg *trademanConfig) error {
 		return err
 	}
 
-	configurator.EnableLogging(true)
 	configurator.InitValues()
 
-    fmt.Printf("Configuration:\n%+v", cfg)
 	return nil
 }

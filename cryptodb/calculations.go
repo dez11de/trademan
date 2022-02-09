@@ -1,7 +1,7 @@
 package cryptodb
 
 import (
-	"github.com/shopspring/decimal"
+	"github.com/bart613/decimal"
 )
 
 func (p *Plan) FinalizeOrders(available decimal.Decimal,activePair Pair, o []Order) {

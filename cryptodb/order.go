@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/shopspring/decimal"
+	"github.com/bart613/decimal"
 )
 
 type Order struct {

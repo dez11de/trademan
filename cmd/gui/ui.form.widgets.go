@@ -12,7 +12,7 @@ import (
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	xwidget "fyne.io/x/fyne/widget"
-	"github.com/shopspring/decimal"
+	"github.com/bart613/decimal"
 )
 
 func (pf *planForm) setQuoteCurrency(s string) {

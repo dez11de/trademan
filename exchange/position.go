@@ -1,6 +1,6 @@
 package exchange
 
-import "github.com/shopspring/decimal"
+import "github.com/bart613/decimal"
 
 type Position struct {
 	UserID              int             `json:"user_id"`

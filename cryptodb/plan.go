@@ -3,7 +3,7 @@ package cryptodb
 import (
 	"time"
 
-	"github.com/shopspring/decimal"
+	"github.com/bart613/decimal"
 )
 
 // TODO: consider including a seperate struct for statastics such as RRR @ start, Evolved RRR,

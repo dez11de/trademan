@@ -9,7 +9,7 @@ import (
 	"fyne.io/fyne/v2/widget"
 	xwidget "fyne.io/x/fyne/widget"
 	"github.com/dez11de/cryptodb"
-	"github.com/shopspring/decimal"
+	"github.com/bart613/decimal"
 )
 
 type planForm struct {

@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/dez11de/cryptodb"
-	"github.com/shopspring/decimal"
+	"github.com/bart613/decimal"
 )
 
 type Execution struct {

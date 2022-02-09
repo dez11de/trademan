@@ -5,7 +5,7 @@ import (
 
 	"fyne.io/fyne/v2/widget"
 	"github.com/dez11de/cryptodb"
-	"github.com/shopspring/decimal"
+	"github.com/bart613/decimal"
 )
 
 func (pf *planForm) gatherSetup() cryptodb.Setup {

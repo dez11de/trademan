@@ -6,7 +6,7 @@ import (
 
 	"github.com/dez11de/cryptodb"
 	"github.com/dez11de/exchange"
-	//	"github.com/shopspring/decimal"
+	//	"github.com/bart613/decimal"
 )
 
 func main() {

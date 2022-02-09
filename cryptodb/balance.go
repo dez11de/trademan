@@ -3,7 +3,7 @@ package cryptodb
 import (
 	"time"
 
-	"github.com/shopspring/decimal"
+	"github.com/bart613/decimal"
 )
 
 type Balance struct {

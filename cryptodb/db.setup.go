@@ -15,10 +15,18 @@ func (db *Database) CreateSetup(s *Setup) (err error) {
 
 	for i := range s.Orders {
 		s.Orders[i].PlanID = s.Plan.ID
-        s.Orders[i].ExchangeOrderID = fmt.Sprintf("TM-%d-%d-%d", s.Plan.ID, s.Orders[i].OrderKind, s.Plan.CreatedAt.Unix())
 	}
 
 	err = db.CreateOrders(s.Orders)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	for i := range s.Orders {
+        s.Orders[i].ExchangeOrderID = fmt.Sprintf("TM-%d-%d-%d", s.Plan.ID, s.Orders[i].ID, s.Plan.CreatedAt.Unix())
+	}
+	err = db.SaveOrders(s.Orders)
 	if err != nil {
 		tx.Rollback()
 		return err

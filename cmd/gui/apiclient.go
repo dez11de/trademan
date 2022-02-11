@@ -3,9 +3,8 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
+	"errors"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strconv"
 
@@ -16,7 +15,6 @@ import (
 const BaseURL = "http://localhost:8888/api/v1/"
 
 func getPairs() (pairs []cryptodb.Pair, err error) {
-	log.Print("Getting all pairs")
 	resp, err := http.Get(BaseURL + "pairs")
 	if err != nil {
 		return pairs, err
@@ -25,26 +23,36 @@ func getPairs() (pairs []cryptodb.Pair, err error) {
 
 	if resp.StatusCode != http.StatusOK {
 		errorMessage, _ := ioutil.ReadAll(resp.Body)
-		return pairs, fmt.Errorf("Error from server: " + string(errorMessage))
+		return pairs, errors.New(string(errorMessage))
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
-	json.Unmarshal(body, &pairs)
+	if err != nil {
+		return pairs, err
+	}
 
+	err = json.Unmarshal(body, &pairs)
 	return pairs, err
 }
 
 func searchPairs(s string) (pairs []string, err error) {
-	log.Print("Searching all pairs")
 	resp, err := http.Get(BaseURL + "pairs_search/" + s)
 	if err != nil {
 		return pairs, err
 	}
 	defer resp.Body.Close()
 
-	body, _ := ioutil.ReadAll(resp.Body)
-	json.Unmarshal(body, &pairs)
+	if resp.StatusCode != http.StatusOK {
+		errorMessage, _ := ioutil.ReadAll(resp.Body)
+		return pairs, errors.New(string(errorMessage))
+	}
 
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return pairs, err
+	}
+
+	err = json.Unmarshal(body, &pairs)
 	return pairs, err
 }
 
@@ -55,9 +63,17 @@ func getPair(id uint) (pair cryptodb.Pair, err error) {
 	}
 	defer resp.Body.Close()
 
-	body, _ := ioutil.ReadAll(resp.Body)
-	json.Unmarshal(body, &pair)
+	if resp.StatusCode != http.StatusOK {
+		errorMessage, _ := ioutil.ReadAll(resp.Body)
+		return pair, errors.New(string(errorMessage))
+	}
 
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return pair, err
+	}
+
+	err = json.Unmarshal(body, &pair)
 	return pair, err
 }
 
@@ -68,21 +84,39 @@ func getPlans() (plans []cryptodb.Plan, err error) {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	json.Unmarshal(body, &plans)
+	if resp.StatusCode != http.StatusOK {
+		errorMessage, _ := ioutil.ReadAll(resp.Body)
+		return plans, errors.New(string(errorMessage))
+	}
 
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return plans, err
+	}
+
+	err = json.Unmarshal(body, &plans)
 	return plans, err
 }
 
-func executePlan(id uint) (err error) {
-    log.Print("calling execute API on trademan server")
+func executePlan(id uint) (plan cryptodb.Plan, err error) {
 	resp, err := http.Get(BaseURL + "plan/execute/" + strconv.Itoa(int(id)))
 	if err != nil {
-		return  err
+		return plan, err
 	}
 	defer resp.Body.Close()
 
-	return err
+	if resp.StatusCode != http.StatusOK {
+		errorMessage, _ := ioutil.ReadAll(resp.Body)
+		return plan, errors.New(string(errorMessage))
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return plan, err
+	}
+
+	err = json.Unmarshal(body, &plan)
+	return plan, err
 }
 
 func getOrders(PlanID uint) (orders []cryptodb.Order, err error) {
@@ -92,22 +126,38 @@ func getOrders(PlanID uint) (orders []cryptodb.Order, err error) {
 		return orders, err
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		errorMessage, _ := ioutil.ReadAll(resp.Body)
+		return orders, errors.New(string(errorMessage))
+	}
 
 	body, err := ioutil.ReadAll(resp.Body)
-	json.Unmarshal(body, &orders)
+	if err != nil {
+		return orders, err
+	}
 
+	err = json.Unmarshal(body, &orders)
 	return orders, err
 }
 
-func storeSetup(s cryptodb.Setup) (err error) {
+func storeSetup(s cryptodb.Setup) (setup cryptodb.Setup, err error) {
 	setupJSON, _ := json.Marshal(s)
-	resp, err := http.Post(BaseURL+"setup", "", bytes.NewBuffer(setupJSON)) // TODO: should this include "application/json or Content-Type/json"
+	resp, err := http.Post(BaseURL+"setup", "application/json", bytes.NewBuffer(setupJSON))
 	if err != nil {
-		log.Printf("Error sending setup %s", err)
-		return err
+		return s, err
 	}
 	defer resp.Body.Close()
-    // TODO: this should reload plan with filled in ID's and such
 
-	return err
+	if resp.StatusCode != http.StatusOK {
+		errorMessage, _ := ioutil.ReadAll(resp.Body)
+		return setup, errors.New(string(errorMessage))
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return s, err
+	}
+
+	err = json.Unmarshal(body, &setup)
+	return setup, err
 }

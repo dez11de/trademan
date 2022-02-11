@@ -3,7 +3,7 @@ package exchange
 import "github.com/bart613/decimal"
 
 type Position struct {
-	UserID              int             `json:"user_id"`
+	UserID              int             `json:"user_id,string"`
 	Symbol              string          `json:"symbol"`
 	Side                string          `json:"side"`
 	Size                decimal.Decimal `json:"size"`

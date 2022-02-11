@@ -5,9 +5,9 @@ import (
 )
 
 func (db *Database) CreateOrders(o []Order) (err error) {
-    result := db.Create(&o)
+	result := db.Create(&o)
 
-    return result.Error
+	return result.Error
 }
 
 func (db *Database) SaveOrders(o []Order) (err error) {
@@ -16,11 +16,23 @@ func (db *Database) SaveOrders(o []Order) (err error) {
 	return result.Error
 }
 
+func (db *Database) SaveOrder(o *Order) (err error) {
+	result := db.Save(&o)
+
+	return result.Error
+}
+
+func (db *Database) MatchExchangeOrder(eID string) (o Order, err error) {
+	result := db.Where("exchange_order_id = ?", eID).Find(&o)
+
+	return o, result.Error
+}
+
 func (db *Database) GetOrders(PlanID uint) (orders []Order, err error) {
 	result := db.Where("plan_id = ?", PlanID).Find(&orders)
-    if result.RowsAffected == 0 {
-        orders = NewOrders(0)
-    }
+	if result.RowsAffected == 0 {
+		orders = NewOrders(0)
+	}
 
 	return orders, result.Error
 }

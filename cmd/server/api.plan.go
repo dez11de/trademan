@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -9,35 +10,75 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-// TODO: should only return 'open' plans. See GORM api documentation.
 func allPlansHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	allPlans, err := db.GetPlans()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
 	}
 	jsonResp, err := json.Marshal(allPlans)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
 	}
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.Write(jsonResp)
 }
 
 func executePlanHandler(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
-	id, _ := strconv.Atoi(params.ByName("ID"))
+	id, err := strconv.Atoi(params.ByName("ID"))
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
 
 	plan, _ := db.GetPlan(uint(id))
 	pair, _ := db.GetPair(plan.PairID)
 	orders, _ := db.GetOrders(plan.ID)
 	balance, _ := db.GetCurrentBalance(pair.QuoteCurrency)
 
+	tx := db.Begin()
+	db.CreateLog(&cryptodb.Log{PlanID: plan.ID, Source: cryptodb.SourceSoftware, Text: "Finalized orders."})
+	// TODO: this should handle an error
 	plan.FinalizeOrders(balance.Available, pair, orders)
-    // TODO: this should be in an transaction so that when sending to exchange fails the database gets rolledback
-
-	err := e.PlaceOrders(plan, pair, orders)
+	err = db.SaveOrders(orders)
 	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		tx.Rollback()
+		return
 	}
-    plan.Status = cryptodb.StatusOrdered
-	db.SaveOrders(orders)
-    // TODO: if no errors occured -> Commit
+
+	plan.Status = cryptodb.StatusOrdered
+	err = db.SavePlan(&plan)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		tx.Rollback()
+		return
+	}
+
+	jsonResp, err := json.Marshal(plan)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		tx.Rollback()
+		return
+	}
+	db.CreateLog(&cryptodb.Log{PlanID: plan.ID, Source: cryptodb.SourceSoftware, Text: "Sent plan to exchange."})
+	tx.Commit()
+
+	err = e.PlaceOrders(plan, pair, orders)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		db.CreateLog(&cryptodb.Log{PlanID: plan.ID, Source: cryptodb.SourceSoftware, Text: fmt.Sprintf("Exchange did not accept plan. %s", err)})
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Write(jsonResp)
 }

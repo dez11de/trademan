@@ -17,20 +17,21 @@ func (db *Database) savePair(p *Pair) (err error) {
 }
 
 func (db *Database) CrupdatePair(p *Pair) (err error) {
-    pair, err := db.GetPairByName(p.Name)
-    if err != nil {
-        return err
-    }
+	pair, err := db.GetPairByName(p.Name)
+	if err != nil {
+		return err
+	}
 
-    if pair.ID == 0 {
-        err = db.createPair(p)
-    } else {
-        err = db.savePair(p)
-    }
+	if pair.ID == 0 {
+		err = db.createPair(p)
+	} else {
+		err = db.savePair(p)
+	}
 
-    return err
+	return err
 }
 
+// TODO: should only return Active pairs. See GORM api documentation.
 func (db *Database) GetPairs() (pairs []Pair, err error) {
 	result := db.Order("ID ASC").Find(&pairs)
 

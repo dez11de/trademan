@@ -109,17 +109,16 @@ func (pf *planForm) makeSideItem() *widget.FormItem {
 func (pf *planForm) makeRiskItem() *widget.FormItem {
 	riskEntry := widget.NewEntry()
 	riskEntry.Disable()
-	riskEntry.SetPlaceHolder(pf.plan.Risk.StringFixed(2))
+	riskEntry.SetPlaceHolder(pf.plan.Risk.StringFixed(1))
 
 	riskEntry.OnChanged = func(s string) {
 		tempRisk, err := decimal.NewFromString(s)
 		if err != nil || tempRisk.Cmp(decimal.NewFromFloat(5)) != -1 || tempRisk.Cmp(decimal.NewFromFloat(0.499)) != 1 {
-			log.Printf("Invalid risk %s", s)
-			pf.riskItem.HintText = "enter a valid risk"
+			pf.riskItem.HintText = "enter a 0.5 > risk < 5.0"
 			pf.stopLossItem.Widget.(*widget.Entry).Disable()
 			pf.form.Refresh()
 		} else {
-			pf.riskItem.HintText = ""
+			pf.riskItem.HintText = " "
 			pf.stopLossItem.Widget.(*widget.Entry).Enable()
 			pf.form.Refresh()
 		}
@@ -187,6 +186,7 @@ func (pf *planForm) makeTradingViewLinkItem() *widget.FormItem {
 	editContainer := container.NewHBox(editEntry, saveButton)
 	editContainer.Hide()
 
+    // TODO: check error
 	tvurl.Parse(pf.plan.TradingViewPlan)
 	tradingViewLink := widget.NewHyperlink("Open", &tvurl)
 	createButton := widget.NewButtonWithIcon("", theme.DocumentCreateIcon(), func() {

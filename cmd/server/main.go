@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -23,29 +24,52 @@ func main() {
 		log.Fatalf("Error connecting to database: %s", err)
 	}
 
-    e, err = exchange.Connect(trademanCfg.Exchange)
+	e, err = exchange.Connect(trademanCfg.Exchange)
 	if err != nil {
 		log.Fatalf("Error connecting to exchange: %s", err)
 	}
 
-    if trademanCfg.Database.ResetTables {
-        // database tables will be recreated by cryptodb
-        // fill the `pairs` table again
-        exchangePairs, err := e.GetPairs()
-        if err != nil {
-            log.Fatalf("unable to reload pairs from exchange: %s", err)
-        }
-        for _, p := range exchangePairs {
-            db.CrupdatePair(&p) // eventhough tables have just been reset 
-        }
-        exchangeWallet, err := e.GetCurrentWallet()
-        if err != nil {
-            log.Fatalf("unable to get current wallet from exchange: %s", err)
-        }
-        for _, b := range exchangeWallet {
-            db.CreateBalance(&b)
-        }
-    }
+	if trademanCfg.Database.ResetTables {
+		exchangePairs, err := e.GetPairs()
+		if err != nil {
+			log.Fatalf("unable to reload pairs from exchange: %s", err)
+		}
+		for _, p := range exchangePairs {
+			db.CrupdatePair(&p) // eventhough tables have just been reset
+		}
+		exchangeWallet, err := e.GetCurrentWallet()
+		if err != nil {
+			log.Fatalf("unable to get current wallet from exchange: %s", err)
+		}
+		for _, b := range exchangeWallet {
+			db.CreateBalance(&b)
+		}
+	}
+	err = e.Subscribe("position")
+	if err != nil {
+		fmt.Println(err)
+	}
+	positionsUpdate := make(chan exchange.Position)
+
+	err = e.Subscribe("execution")
+	if err != nil {
+		fmt.Println(err)
+	}
+	executionsUpdate := make(chan exchange.Execution)
+
+	err = e.Subscribe("order")
+	if err != nil {
+		fmt.Println(err)
+	}
+    err = e.Subscribe("stop_order")
+	if err != nil {
+		fmt.Println(err)
+	}
+	ordersUpdate := make(chan exchange.Order)
+
+	// TODO: also subscribe to wallet socket?
+
+	errorMessages := make(chan error)
 
 	pingExchangeTicker := time.NewTicker(1 * time.Minute)
 	refreshWalletTicker := time.NewTicker(2 * time.Hour)
@@ -54,12 +78,12 @@ func main() {
 
 	// TODO: what if it can't open the port?
 	go HandleRequests(trademanCfg.RESTServer)
-	// go exchange.ProcessMessages()
+
+	go e.ProcessMessages(positionsUpdate, executionsUpdate, ordersUpdate, errorMessages)
 
 	for {
 		select {
 		case <-refreshWalletTicker.C:
-			log.Print("Getting balance from exchange")
 			currentBalances, err := e.GetCurrentWallet()
 			if err != nil {
 				log.Printf("error getting current wallet from exchange %v", err)
@@ -71,6 +95,7 @@ func main() {
 					}
 				}
 			}
+
 		case <-refreshPairsTicker.C:
 			currentPairs, err := e.GetPairs()
 			if err != nil {
@@ -83,12 +108,28 @@ func main() {
 					}
 				}
 			}
+
 		case <-pingExchangeTicker.C:
-			log.Print("Pinging exchange...")
 			e.Ping()
+
 		case <-quit:
 			refreshWalletTicker.Stop()
 			return
+
+		case _ = <-positionsUpdate:
+
+		case _ = <-executionsUpdate:
+
+		case o := <-ordersUpdate:
+            err := processOrder(o)
+            if err != nil {
+                errorMessages <- err
+            }
+
+		case e := <-errorMessages:
+            // TODO: should probably log these to file
+			log.Printf("Received error: %s", e)
 		}
 	}
 }
+

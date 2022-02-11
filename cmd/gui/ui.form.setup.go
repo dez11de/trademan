@@ -8,8 +8,8 @@ import (
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	xwidget "fyne.io/x/fyne/widget"
-	"github.com/dez11de/cryptodb"
 	"github.com/bart613/decimal"
+	"github.com/dez11de/cryptodb"
 )
 
 type planForm struct {
@@ -28,7 +28,7 @@ type planForm struct {
 	riskItem                *widget.FormItem
 	stopLossItem            *widget.FormItem
 	entryItem               *widget.FormItem
-	takeProfitItems         [5]*widget.FormItem // TODO: restore MaxTakeProfits to it's former glory
+	takeProfitItems         [cryptodb.MaxTakeProfits]*widget.FormItem
 	notesMultilineEntryItem *widget.FormItem
 	tradingViewPlanItem     *widget.FormItem
 }
@@ -73,15 +73,17 @@ func NewForm() *planForm {
 	pf.setQuoteCurrency(" . . . ")
 	pf.setPriceScale(0)
 
-    executeAction := widget.NewToolbarAction(theme.UploadIcon(), pf.executeAction)
-    cancelAction := widget.NewToolbarAction(theme.CancelIcon(), pf.cancelAction)
-    okAction := widget.NewToolbarAction(theme.ConfirmIcon(), pf.okAction)
-    
-    formActionBar := widget.NewToolbar(widget.NewToolbarSpacer(), executeAction, cancelAction, okAction)
+	executeAction := widget.NewToolbarAction(theme.UploadIcon(), pf.executeAction)
+	cancelAction := widget.NewToolbarAction(theme.CancelIcon(), pf.cancelAction)
+	okAction := widget.NewToolbarAction(theme.ConfirmIcon(), pf.okAction)
+
+	formActionBar := widget.NewToolbar(widget.NewToolbarSpacer(), executeAction, cancelAction, okAction)
 
 	pf.statisticsContainer = pf.makeStatContainer()
 
 	pf.formContainer = container.New(layout.NewBorderLayout(pf.statisticsContainer, formActionBar, nil, nil), pf.statisticsContainer, formActionBar, pf.form)
+
+    pf.form.Refresh()
 	return pf
 }
 
@@ -90,9 +92,11 @@ func (pf *planForm) FillForm(p cryptodb.Plan) {
 	pf.plan = p
 	pf.activePair, err = getPair(pf.plan.PairID)
 	if err != nil {
+		dialog.ShowError(err, mainWindow)
 	}
 	pf.orders, err = getOrders(pf.plan.ID)
 	if err != nil {
+		dialog.ShowError(err, mainWindow)
 	}
 
 	if pf.plan.ID != 0 {

@@ -6,11 +6,10 @@ Refactor!
     Is it actually worth it to keep everything in seperate modules?
 
 Investigate 
-    Configuration toolkit that supports ENV, FILE (and PARAMETERS) and is small
     Trading break-even (win-rate/rrr)
 
 Properly configure enumer
-	make use of transforme and/or trim options?
+	make use of transform and/or trim options?
 
 Unit testing for 
 	database

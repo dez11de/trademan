@@ -8,20 +8,37 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-// TODO: error handling
 func setupHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	setup := cryptodb.NewSetup()
 
 	err := json.NewDecoder(r.Body).Decode(&setup)
 	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
 	}
 
 	if setup.Plan.ID == 0 {
-		db.CreateSetup(&setup)
+		err = db.CreateSetup(&setup)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
+			return
+		}
 	} else {
-		db.SaveSetup(cryptodb.SourceUser, &setup)
+		err = db.SaveSetup(cryptodb.SourceUser, &setup)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
+			return
+		}
 	}
-
-	// TODO: return statusOK and updated Setup or something
+	jsonResp, err := json.Marshal(setup)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		return
+	}
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Write(jsonResp)
 }
-

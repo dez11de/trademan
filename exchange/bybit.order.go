@@ -2,7 +2,7 @@ package exchange
 
 import (
 	"encoding/json"
-	"log"
+	"errors"
 	"net/http"
 
 	"github.com/dez11de/cryptodb"
@@ -14,7 +14,7 @@ func (e *Exchange) PlaceOrders(p cryptodb.Plan, activePair cryptodb.Pair, o []cr
 		return err
 	}
 
-	for i := 3; i < 5+3; i++ {
+	for i := 3; i < 3+cryptodb.MaxTakeProfits; i++ {
 		if !o[i].Price.IsZero() {
 			err = e.placeTakeProfit(p, activePair, o[cryptodb.KindEntry], o[i])
 			if err != nil {
@@ -28,6 +28,7 @@ func (e *Exchange) PlaceOrders(p cryptodb.Plan, activePair cryptodb.Pair, o []cr
 
 func (e *Exchange) placeEntry(plan cryptodb.Plan, pair cryptodb.Pair, marketStopLoss, limitStopLoss, entry cryptodb.Order) (err error) {
 	var result OrderResponse
+	var orderResult OrderResponse
 	entryParams := make(RequestParameters)
 
 	// Set entry and HardStopLoss
@@ -46,13 +47,16 @@ func (e *Exchange) placeEntry(plan cryptodb.Plan, pair cryptodb.Pair, marketStop
 	entryParams["time_in_force"] = "GoodTillCancel"
 	entryParams["stop_loss"] = marketStopLoss.Price.InexactFloat64()
 
-	fullURL, resp, err := e.SignedRequest(http.MethodPost, "/private/linear/order/create", entryParams, &result)
-	json.Unmarshal(resp, &result)
-	if err != nil || result.ReturnMessage != "OK" {
-		log.Printf("Entry not accepted: %s", err)
-		log.Printf("URL: %s", fullURL)
-		log.Printf("Response: %v", result)
-		return err // TODO: if no error but ReturnMessage not "OK" return that
+	_, resp, err := e.SignedRequest(http.MethodPost, "/private/linear/order/create", entryParams, &result)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(resp, &orderResult)
+	if err != nil {
+		return err
+	}
+	if result.ReturnMessage != "OK" {
+		return errors.New(result.ReturnMessage)
 	}
 
 	// Set LimitStopLoss
@@ -74,13 +78,16 @@ func (e *Exchange) placeEntry(plan cryptodb.Plan, pair cryptodb.Pair, marketStop
 	sslParams["reduce_only"] = true                           // TODO: i have no idea
 	sslParams["time_in_force"] = "GoodTillCancel"
 
-	fullURL, resp, err = e.SignedRequest(http.MethodPost, "/private/linear/stop-order/create", sslParams, &result)
-	json.Unmarshal(resp, &result)
-	if err != nil || result.ReturnMessage != "OK" {
-		log.Printf("Soft stoploss not accepted: %s", err)
-		log.Printf("URL: %s", fullURL)
-		log.Printf("Response: %s", string(resp))
-		return err // TODO: if no error but ReturnMessage not "OK" return that
+	_, resp, err = e.SignedRequest(http.MethodPost, "/private/linear/stop-order/create", sslParams, &result)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(resp, &result)
+	if err != nil {
+		return err
+	}
+	if result.ReturnMessage != "OK" {
+		return errors.New(result.ReturnMessage)
 	}
 
 	return nil
@@ -88,6 +95,7 @@ func (e *Exchange) placeEntry(plan cryptodb.Plan, pair cryptodb.Pair, marketStop
 
 func (e *Exchange) placeTakeProfit(plan cryptodb.Plan, pair cryptodb.Pair, entry, takeProfit cryptodb.Order) (err error) {
 	var result OrderResponse
+	var orderResult OrderResponse
 	takeProfitParams := make(RequestParameters)
 
 	takeProfitParams["order_link_id"] = takeProfit.ExchangeOrderID
@@ -107,13 +115,16 @@ func (e *Exchange) placeTakeProfit(plan cryptodb.Plan, pair cryptodb.Pair, entry
 	takeProfitParams["reduce_only"] = true                        // TODO: figure out what exactly this means
 	takeProfitParams["time_in_force"] = "GoodTillCancel"
 
-	fullURL, resp, err := e.SignedRequest(http.MethodPost, "/private/linear/stop-order/create", takeProfitParams, &result)
-	json.Unmarshal(resp, &result)
-	if err != nil || result.ReturnMessage != "OK" {
-		log.Printf("Entry not accepted: %s", err)
-		log.Printf("URL: %s", fullURL)
-		log.Printf("Response: %v", result)
-		return err // TODO: if no error but ReturnMessage not "OK" return that
+	_, resp, err := e.SignedRequest(http.MethodPost, "/private/linear/stop-order/create", takeProfitParams, &result)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(resp, &orderResult)
+	if err != nil {
+		return err
+	}
+	if result.ReturnMessage != "OK" {
+		return errors.New(result.ReturnMessage)
 	}
 	return nil
 }

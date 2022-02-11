@@ -243,11 +243,11 @@ func (i *Side) Scan(value interface{}) error {
 	return nil
 }
 
-const _StatusName = "StatusPlannedStatusOrderedStatusFilledStatusStoppedStatusClosedStatusCancelledStatusLiquidatedStatusLogged"
+const _StatusName = "StatusPlannedStatusOrderedStatusUntriggeredStatusFilledStatusStoppedStatusClosedStatusCancelledStatusLiquidatedStatusLogged"
 
-var _StatusIndex = [...]uint8{0, 13, 26, 38, 51, 63, 78, 94, 106}
+var _StatusIndex = [...]uint8{0, 13, 26, 43, 55, 68, 80, 95, 111, 123}
 
-const _StatusLowerName = "statusplannedstatusorderedstatusfilledstatusstoppedstatusclosedstatuscancelledstatusliquidatedstatuslogged"
+const _StatusLowerName = "statusplannedstatusorderedstatusuntriggeredstatusfilledstatusstoppedstatusclosedstatuscancelledstatusliquidatedstatuslogged"
 
 func (i Status) String() string {
 	if i < 0 || i >= Status(len(_StatusIndex)-1) {
@@ -262,44 +262,48 @@ func _StatusNoOp() {
 	var x [1]struct{}
 	_ = x[StatusPlanned-(0)]
 	_ = x[StatusOrdered-(1)]
-	_ = x[StatusFilled-(2)]
-	_ = x[StatusStopped-(3)]
-	_ = x[StatusClosed-(4)]
-	_ = x[StatusCancelled-(5)]
-	_ = x[StatusLiquidated-(6)]
-	_ = x[StatusLogged-(7)]
+	_ = x[StatusUntriggered-(2)]
+	_ = x[StatusFilled-(3)]
+	_ = x[StatusStopped-(4)]
+	_ = x[StatusClosed-(5)]
+	_ = x[StatusCancelled-(6)]
+	_ = x[StatusLiquidated-(7)]
+	_ = x[StatusLogged-(8)]
 }
 
-var _StatusValues = []Status{StatusPlanned, StatusOrdered, StatusFilled, StatusStopped, StatusClosed, StatusCancelled, StatusLiquidated, StatusLogged}
+var _StatusValues = []Status{StatusPlanned, StatusOrdered, StatusUntriggered, StatusFilled, StatusStopped, StatusClosed, StatusCancelled, StatusLiquidated, StatusLogged}
 
 var _StatusNameToValueMap = map[string]Status{
-	_StatusName[0:13]:        StatusPlanned,
-	_StatusLowerName[0:13]:   StatusPlanned,
-	_StatusName[13:26]:       StatusOrdered,
-	_StatusLowerName[13:26]:  StatusOrdered,
-	_StatusName[26:38]:       StatusFilled,
-	_StatusLowerName[26:38]:  StatusFilled,
-	_StatusName[38:51]:       StatusStopped,
-	_StatusLowerName[38:51]:  StatusStopped,
-	_StatusName[51:63]:       StatusClosed,
-	_StatusLowerName[51:63]:  StatusClosed,
-	_StatusName[63:78]:       StatusCancelled,
-	_StatusLowerName[63:78]:  StatusCancelled,
-	_StatusName[78:94]:       StatusLiquidated,
-	_StatusLowerName[78:94]:  StatusLiquidated,
-	_StatusName[94:106]:      StatusLogged,
-	_StatusLowerName[94:106]: StatusLogged,
+	_StatusName[0:13]:         StatusPlanned,
+	_StatusLowerName[0:13]:    StatusPlanned,
+	_StatusName[13:26]:        StatusOrdered,
+	_StatusLowerName[13:26]:   StatusOrdered,
+	_StatusName[26:43]:        StatusUntriggered,
+	_StatusLowerName[26:43]:   StatusUntriggered,
+	_StatusName[43:55]:        StatusFilled,
+	_StatusLowerName[43:55]:   StatusFilled,
+	_StatusName[55:68]:        StatusStopped,
+	_StatusLowerName[55:68]:   StatusStopped,
+	_StatusName[68:80]:        StatusClosed,
+	_StatusLowerName[68:80]:   StatusClosed,
+	_StatusName[80:95]:        StatusCancelled,
+	_StatusLowerName[80:95]:   StatusCancelled,
+	_StatusName[95:111]:       StatusLiquidated,
+	_StatusLowerName[95:111]:  StatusLiquidated,
+	_StatusName[111:123]:      StatusLogged,
+	_StatusLowerName[111:123]: StatusLogged,
 }
 
 var _StatusNames = []string{
 	_StatusName[0:13],
 	_StatusName[13:26],
-	_StatusName[26:38],
-	_StatusName[38:51],
-	_StatusName[51:63],
-	_StatusName[63:78],
-	_StatusName[78:94],
-	_StatusName[94:106],
+	_StatusName[26:43],
+	_StatusName[43:55],
+	_StatusName[55:68],
+	_StatusName[68:80],
+	_StatusName[80:95],
+	_StatusName[95:111],
+	_StatusName[111:123],
 }
 
 // StatusString retrieves an enum value from the enum constants string name.
@@ -384,11 +388,11 @@ func (i *Status) Scan(value interface{}) error {
 	return nil
 }
 
-const _OrderTypeName = "TypeMarketTypeLimit"
+const _OrderTypeName = "MarketLimit"
 
-var _OrderTypeIndex = [...]uint8{0, 10, 19}
+var _OrderTypeIndex = [...]uint8{0, 6, 11}
 
-const _OrderTypeLowerName = "typemarkettypelimit"
+const _OrderTypeLowerName = "marketlimit"
 
 func (i OrderType) String() string {
 	if i < 0 || i >= OrderType(len(_OrderTypeIndex)-1) {
@@ -401,22 +405,22 @@ func (i OrderType) String() string {
 // Re-run the stringer command to generate them again.
 func _OrderTypeNoOp() {
 	var x [1]struct{}
-	_ = x[TypeMarket-(0)]
-	_ = x[TypeLimit-(1)]
+	_ = x[Market-(0)]
+	_ = x[Limit-(1)]
 }
 
-var _OrderTypeValues = []OrderType{TypeMarket, TypeLimit}
+var _OrderTypeValues = []OrderType{Market, Limit}
 
 var _OrderTypeNameToValueMap = map[string]OrderType{
-	_OrderTypeName[0:10]:       TypeMarket,
-	_OrderTypeLowerName[0:10]:  TypeMarket,
-	_OrderTypeName[10:19]:      TypeLimit,
-	_OrderTypeLowerName[10:19]: TypeLimit,
+	_OrderTypeName[0:6]:       Market,
+	_OrderTypeLowerName[0:6]:  Market,
+	_OrderTypeName[6:11]:      Limit,
+	_OrderTypeLowerName[6:11]: Limit,
 }
 
 var _OrderTypeNames = []string{
-	_OrderTypeName[0:10],
-	_OrderTypeName[10:19],
+	_OrderTypeName[0:6],
+	_OrderTypeName[6:11],
 }
 
 // OrderTypeString retrieves an enum value from the enum constants string name.

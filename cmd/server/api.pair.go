@@ -8,17 +8,18 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-// TODO: should only return Active pairs. See GORM api documentation.
 func allPairsHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	allPairs, err := db.GetPairs()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
         w.Write([]byte(err.Error()))
+        return
 	}
 	jsonResp, err := json.Marshal(allPairs)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
         w.Write([]byte(err.Error()))
+        return
 	}
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.Write(jsonResp)
@@ -29,10 +30,14 @@ func pairHandler(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	pair, err := db.GetPair(uint(pairID))
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+        w.Write([]byte(err.Error()))
+        return
 	}
 	jsonResp, err := json.Marshal(pair)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+        w.Write([]byte(err.Error()))
+        return
 	}
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.Write(jsonResp)
@@ -43,10 +48,14 @@ func searchPairsHandler(w http.ResponseWriter, r *http.Request, p httprouter.Par
 	pair, err := db.FindPairNames(part)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+        w.Write([]byte(err.Error()))
+        return
 	}
 	jsonResp, err := json.Marshal(pair)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+        w.Write([]byte(err.Error()))
+        return
 	}
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.Write(jsonResp)

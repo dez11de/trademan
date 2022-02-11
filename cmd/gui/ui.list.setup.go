@@ -41,7 +41,6 @@ func MakePlanListSplit() *container.Split {
 			return len(planList.Plans)
 		},
 		func() fyne.CanvasObject {
-			// TODO: change this to widget.RichText
 			pairText := canvas.NewText("Pair", theme.ForegroundColor())
 			pairText.TextStyle = fyne.TextStyle{Bold: true}
 			statusText := canvas.NewText("Status", colornames.White)
@@ -54,7 +53,6 @@ func MakePlanListSplit() *container.Split {
 		func(i widget.ListItemID, o fyne.CanvasObject) {
 			o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[0].(*canvas.Text).Text = planList.PairCache[int64(planList.Plans[i].PairID-1)].Name
 
-			// TODO: use theme colors
 			var directionColor color.Color
             var directionName string
 			switch planList.Plans[i].Direction {
@@ -70,7 +68,6 @@ func MakePlanListSplit() *container.Split {
 
 			var statusColor color.Color
             var statusName string
-			// TODO: give all posible statuses a different color
 			switch planList.Plans[i].Status {
 			case cryptodb.StatusPlanned:
                 statusName = "Planned"
@@ -92,7 +89,7 @@ func MakePlanListSplit() *container.Split {
 
 	listAndButtons := container.NewWithoutLayout(widget.NewLabel("Error loading plans.\nCheck internet connection."))
 	planListSplit := container.NewHSplit(listAndButtons, container.NewMax(selectPlanLabel))
-	planListSplit.SetOffset(0.20)
+	planListSplit.SetOffset(0.22)
 
 	planList.addPlanAction = widget.NewToolbarAction(theme.ContentAddIcon(), func() {
 		f := NewForm()

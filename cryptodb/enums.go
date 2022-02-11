@@ -21,6 +21,7 @@ type Status int
 const (
 	StatusPlanned Status = iota
 	StatusOrdered
+    StatusUntriggered
 	StatusFilled
 	StatusStopped
 	StatusClosed
@@ -32,8 +33,8 @@ const (
 type OrderType int
 
 const (
-	TypeMarket OrderType = iota
-	TypeLimit
+	Market OrderType = iota
+	Limit
 )
 
 type OrderKind int

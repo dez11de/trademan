@@ -1,8 +1,6 @@
 package main
 
 import (
-	"image/color"
-
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
@@ -24,7 +22,7 @@ type UI struct {
 	activeOrders []cryptodb.Order
 
 	List                *widget.List
-	 statisticsContainer *fyne.Container
+	statisticsContainer *fyne.Container
 }
 
 var ui UI
@@ -56,41 +54,32 @@ func MakePlanListSplit() *container.Split {
 		func(i widget.ListItemID, o fyne.CanvasObject) {
 			o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[0].(*canvas.Text).Text = ui.Pairs[int64(ui.Plans[i].PairID-1)].Name
 
-			var directionColor color.Color
 			var directionName string
 			switch ui.Plans[i].Direction {
 			case cryptodb.DirectionLong:
 				directionName = "Long"
-				directionColor = theme.PrimaryColorNamed("Green")
 			case cryptodb.DirectionShort:
 				directionName = "Short"
-				directionColor = theme.PrimaryColorNamed("Red")
 			}
 			o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[2].(*canvas.Text).Text = directionName
-			o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[2].(*canvas.Text).Color = directionColor
+			o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[2].(*canvas.Text).Color = DirectionColor(ui.Plans[i].Direction)
 
-			var statusColor color.Color
 			var statusName string
 			switch ui.Plans[i].Status {
 			case cryptodb.StatusPlanned:
 				statusName = "Planned"
-				statusColor = theme.PrimaryColorNamed("Blue")
 			case cryptodb.StatusOrdered:
 				statusName = "Ordered"
-				statusColor = theme.PrimaryColorNamed("Green")
 			case cryptodb.StatusFilled:
 				statusName = "Filled"
-				statusColor = theme.PrimaryColorNamed("Magenta")
-			default:
-				statusColor = colornames.White
 			}
 			o.(*fyne.Container).Objects[1].(*fyne.Container).Objects[0].(*canvas.Text).Text = statusName
-			o.(*fyne.Container).Objects[1].(*fyne.Container).Objects[0].(*canvas.Text).Color = statusColor
+			o.(*fyne.Container).Objects[1].(*fyne.Container).Objects[0].(*canvas.Text).Color = StatusColor(ui.Plans[i].Status)
 		})
 
 	selectPlanLabel := container.New(layout.NewCenterLayout(), canvas.NewText("Select a plan from the list, or press + to make a new plan.", nil))
 
-    ListAndButtons := container.NewWithoutLayout(widget.NewLabel("Error loading plans.\nCheck internet connection."))
+	ListAndButtons := container.NewWithoutLayout(widget.NewLabel("Error loading plans.\nCheck internet connection."))
 	planListSplit := container.NewHSplit(ListAndButtons, container.NewMax(selectPlanLabel))
 	planListSplit.SetOffset(0.22)
 

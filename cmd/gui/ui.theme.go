@@ -6,12 +6,14 @@ import (
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/theme"
+	"github.com/dez11de/cryptodb"
 )
 
 type myTheme struct{}
 
 var _ fyne.Theme = (*myTheme)(nil)
 
+// TODO: remove this function and define values directly
 func ParseHexColor(s string) (c color.RGBA, err error) {
 	c.A = 0xff
 	switch len(s) {
@@ -43,22 +45,35 @@ func (m myTheme) Color(name fyne.ThemeColorName, variant fyne.ThemeVariant) colo
 		return rgbacolor
 	}
 
-    if name == theme.ColorGreen  {
+	return theme.DefaultTheme().Color(name, variant)
+}
+
+func DirectionColor(d cryptodb.Direction) color.Color {
+	switch d {
+	case cryptodb.DirectionLong:
 		rgbacolor, _ := ParseHexColor("#81b29a")
 		return rgbacolor
-	}
-
-    if name == theme.ColorRed  {
+	case cryptodb.DirectionShort:
 		rgbacolor, _ := ParseHexColor("#c94f6d")
 		return rgbacolor
 	}
+	return theme.PrimaryColor()
+}
 
-    if name == theme.ColorBlue  {
-		rgbacolor, _ := ParseHexColor("#719cd6")
+func StatusColor(s cryptodb.Status) color.Color {
+    // TODO: define colors for all statussus
+	switch s {
+	case cryptodb.StatusPlanned:
+		rgbacolor, _ := ParseHexColor("#84cee4")
+		return rgbacolor
+	case cryptodb.StatusOrdered:
+		rgbacolor, _ := ParseHexColor("#81b29a")
+		return rgbacolor
+	case cryptodb.StatusCancelled:
+		rgbacolor, _ := ParseHexColor("#dbc074")
 		return rgbacolor
 	}
-
-	return theme.DefaultTheme().Color(name, variant)
+	return theme.PrimaryColor()
 }
 
 func (m myTheme) Icon(name fyne.ThemeIconName) fyne.Resource {

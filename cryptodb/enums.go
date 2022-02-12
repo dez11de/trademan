@@ -12,8 +12,8 @@ const (
 type Side int
 
 const (
-	SideBuy Side = iota
-	SideSell
+	Buy Side = iota
+	Sell
 )
 
 type Status int

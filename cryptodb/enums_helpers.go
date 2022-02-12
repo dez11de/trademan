@@ -126,11 +126,11 @@ func (i *Direction) Scan(value interface{}) error {
 	return nil
 }
 
-const _SideName = "SideBuySideSell"
+const _SideName = "BuySell"
 
-var _SideIndex = [...]uint8{0, 7, 15}
+var _SideIndex = [...]uint8{0, 3, 7}
 
-const _SideLowerName = "sidebuysidesell"
+const _SideLowerName = "buysell"
 
 func (i Side) String() string {
 	if i < 0 || i >= Side(len(_SideIndex)-1) {
@@ -143,22 +143,22 @@ func (i Side) String() string {
 // Re-run the stringer command to generate them again.
 func _SideNoOp() {
 	var x [1]struct{}
-	_ = x[SideBuy-(0)]
-	_ = x[SideSell-(1)]
+	_ = x[Buy-(0)]
+	_ = x[Sell-(1)]
 }
 
-var _SideValues = []Side{SideBuy, SideSell}
+var _SideValues = []Side{Buy, Sell}
 
 var _SideNameToValueMap = map[string]Side{
-	_SideName[0:7]:       SideBuy,
-	_SideLowerName[0:7]:  SideBuy,
-	_SideName[7:15]:      SideSell,
-	_SideLowerName[7:15]: SideSell,
+	_SideName[0:3]:      Buy,
+	_SideLowerName[0:3]: Buy,
+	_SideName[3:7]:      Sell,
+	_SideLowerName[3:7]: Sell,
 }
 
 var _SideNames = []string{
-	_SideName[0:7],
-	_SideName[7:15],
+	_SideName[0:3],
+	_SideName[3:7],
 }
 
 // SideString retrieves an enum value from the enum constants string name.

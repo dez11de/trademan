@@ -5,7 +5,6 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
-	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	xwidget "fyne.io/x/fyne/widget"
 	"github.com/bart613/decimal"
@@ -13,18 +12,10 @@ import (
 )
 
 type planForm struct {
-	PairCache  []cryptodb.Pair
-	activePair cryptodb.Pair
-
-	plan   cryptodb.Plan
-	orders []cryptodb.Order
-
-	formContainer       *fyne.Container
-	statisticsContainer *fyne.Container
-
+	formContainer           *fyne.Container
 	form                    *widget.Form
 	pairItem                *widget.FormItem
-	sideItem                *widget.FormItem
+	directionItem           *widget.FormItem
 	riskItem                *widget.FormItem
 	stopLossItem            *widget.FormItem
 	entryItem               *widget.FormItem
@@ -34,21 +25,15 @@ type planForm struct {
 }
 
 func NewForm() *planForm {
-	pf := &planForm{}
-	var err error
-	pf.PairCache, err = getPairs()
-	if err != nil {
-		dialog.ShowError(err, mainWindow)
-		return pf
-	}
-	pf.orders = cryptodb.NewOrders(0)
-
+	pf := new(planForm)
 	pf.form = widget.NewForm()
+
+	// ui.activeOrders = cryptodb.NewOrders(0)
 
 	pf.pairItem = pf.makePairItem()
 	pf.form.AppendItem(pf.pairItem)
-	pf.sideItem = pf.makeSideItem()
-	pf.form.AppendItem(pf.sideItem)
+	pf.directionItem = pf.makeDirectionItem()
+	pf.form.AppendItem(pf.directionItem)
 	pf.riskItem = pf.makeRiskItem()
 	pf.form.AppendItem(pf.riskItem)
 	pf.stopLossItem = pf.makeStopLossItem()
@@ -56,13 +41,9 @@ func NewForm() *planForm {
 	pf.entryItem = pf.makeEntryItem()
 	pf.form.AppendItem(pf.entryItem)
 
-	takeProfitCount := 0
-	for _, order := range pf.orders {
-		if order.OrderKind == cryptodb.KindTakeProfit {
-			pf.takeProfitItems[takeProfitCount] = pf.makeTakeProfitItem(takeProfitCount)
-			pf.form.AppendItem(pf.takeProfitItems[takeProfitCount])
-			takeProfitCount++
-		}
+	for i := 0; i < cryptodb.MaxTakeProfits; i++ {
+		pf.takeProfitItems[i] = pf.makeTakeProfitItem(i)
+		pf.form.AppendItem(pf.takeProfitItems[i])
 	}
 
 	pf.tradingViewPlanItem = pf.makeTradingViewLinkItem()
@@ -73,79 +54,77 @@ func NewForm() *planForm {
 	pf.setQuoteCurrency(" . . . ")
 	pf.setPriceScale(0)
 
-	executeAction := widget.NewToolbarAction(theme.UploadIcon(), pf.executeAction)
-	cancelAction := widget.NewToolbarAction(theme.CancelIcon(), pf.cancelAction)
-	okAction := widget.NewToolbarAction(theme.ConfirmIcon(), pf.okAction)
+	toolBar := pf.makeToolBar()
 
-	formActionBar := widget.NewToolbar(widget.NewToolbarSpacer(), executeAction, cancelAction, okAction)
+	ui.statisticsContainer = pf.makeStatContainer()
 
-	pf.statisticsContainer = pf.makeStatContainer()
+	pf.formContainer = container.New(layout.NewBorderLayout(ui.statisticsContainer, toolBar, nil, nil), ui.statisticsContainer, toolBar, pf.form)
 
-	pf.formContainer = container.New(layout.NewBorderLayout(pf.statisticsContainer, formActionBar, nil, nil), pf.statisticsContainer, formActionBar, pf.form)
-
-    pf.form.Refresh()
+	pf.form.Refresh()
 	return pf
 }
 
 func (pf *planForm) FillForm(p cryptodb.Plan) {
 	var err error
-	pf.plan = p
-	pf.activePair, err = getPair(pf.plan.PairID)
+	ui.activePlan = p
+	if ui.activePlan.PairID != 0 {
+		ui.activePair = ui.Pairs[ui.activePlan.PairID-1]
+	}
 	if err != nil {
 		dialog.ShowError(err, mainWindow)
 	}
-	pf.orders, err = getOrders(pf.plan.ID)
+	ui.activeOrders, err = getOrders(ui.activePlan.ID)
 	if err != nil {
 		dialog.ShowError(err, mainWindow)
 	}
 
-	if pf.plan.ID != 0 {
+	if ui.activePlan.ID != 0 {
 		pf.pairItem.Widget.(*xwidget.CompletionEntry).Disable()
-		pf.pairItem.Widget.(*xwidget.CompletionEntry).SetText(pf.activePair.Name)
-		pf.setQuoteCurrency(pf.activePair.QuoteCurrency)
-		pf.setPriceScale(int32(pf.activePair.PriceScale))
+		pf.pairItem.Widget.(*xwidget.CompletionEntry).SetText(ui.activePair.Name)
+		pf.setQuoteCurrency(ui.activePair.QuoteCurrency)
+		pf.setPriceScale(ui.activePair.PriceScale)
 	}
 
-	if pf.plan.ID != 0 {
-		switch pf.plan.Direction {
+	if ui.activePlan.ID != 0 {
+		switch ui.activePlan.Direction {
 		case cryptodb.Direction(cryptodb.DirectionLong):
-			pf.sideItem.Widget.(*widget.RadioGroup).SetSelected("Long")
+			pf.directionItem.Widget.(*widget.RadioGroup).SetSelected("Long")
 		case cryptodb.Direction(cryptodb.DirectionShort):
-			pf.sideItem.Widget.(*widget.RadioGroup).SetSelected("Short")
+			pf.directionItem.Widget.(*widget.RadioGroup).SetSelected("Short")
 		}
-		pf.sideItem.Widget.(*widget.RadioGroup).Disable()
+		pf.directionItem.Widget.(*widget.RadioGroup).Disable()
 	}
 
 	// TODO: think about in which statusses changing is allowed
-	if pf.plan.Risk.Cmp(decimal.Zero) != 0 {
-		pf.riskItem.Widget.(*widget.Entry).SetText(pf.plan.Risk.StringFixed(2))
-		if pf.plan.Status != cryptodb.StatusPlanned {
+	if ui.activePlan.Risk.Cmp(decimal.Zero) != 0 {
+		pf.riskItem.Widget.(*widget.Entry).SetText(ui.activePlan.Risk.StringFixed(1))
+		if ui.activePlan.Status != cryptodb.StatusPlanned {
 			pf.riskItem.Widget.(*widget.Entry).Disable()
 		}
 	}
 
 	// TODO: think about in which statusses changing is allowed
-	if !pf.orders[cryptodb.KindMarketStopLoss].Price.Equal(decimal.Zero) {
-		pf.stopLossItem.Widget.(*widget.Entry).SetText(pf.orders[cryptodb.KindMarketStopLoss].Price.StringFixed(int32(pf.activePair.PriceScale)))
+	if !ui.activeOrders[cryptodb.KindMarketStopLoss].Price.Equal(decimal.Zero) {
+		pf.stopLossItem.Widget.(*widget.Entry).SetText(ui.activeOrders[cryptodb.KindMarketStopLoss].Price.StringFixed(ui.activePair.PriceScale))
 	}
 
 	// TODO: think about in which statusses changing is allowed, disable editting if required
-	if pf.orders[cryptodb.KindEntry].Price.Cmp(decimal.Zero) != 0 {
-		pf.entryItem.Widget.(*widget.Entry).SetText(pf.orders[cryptodb.KindEntry].Price.StringFixed(int32(pf.activePair.PriceScale)))
+	if ui.activeOrders[cryptodb.KindEntry].Price.Cmp(decimal.Zero) != 0 {
+		pf.entryItem.Widget.(*widget.Entry).SetText(ui.activeOrders[cryptodb.KindEntry].Price.StringFixed(ui.activePair.PriceScale))
 	}
 
 	// TODO: think about in which statusses changing is allowed, disable editting if required
 	takeProfitCount := 0
-	for _, o := range pf.orders {
+	for _, o := range ui.activeOrders {
 		if o.OrderKind == cryptodb.KindTakeProfit && o.Price.Cmp(decimal.Zero) != 0 {
-			pf.takeProfitItems[takeProfitCount].Widget.(*widget.Entry).SetText(o.Price.StringFixed(int32(pf.activePair.PriceScale)))
+			pf.takeProfitItems[takeProfitCount].Widget.(*widget.Entry).SetText(o.Price.StringFixed(ui.activePair.PriceScale))
 			takeProfitCount++
 		}
 	}
 
 	// TODO: think about in which statusses changing is allowed
 	if p.Notes != "" {
-		pf.notesMultilineEntryItem.Widget.(*widget.Entry).SetText(pf.plan.Notes)
+		pf.notesMultilineEntryItem.Widget.(*widget.Entry).SetText(ui.activePlan.Notes)
 	}
 
 	/*

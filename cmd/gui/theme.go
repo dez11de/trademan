@@ -33,59 +33,28 @@ func ParseHexColor(s string) (c color.RGBA, err error) {
 // colors based on https://github.com/EdenEast/nightfox.nvim/blob/main/extra/nightfox/nightfox_alacritty.yml
 // TODO: ok for now, but could use some optimization
 func (m myTheme) Color(name fyne.ThemeColorName, variant fyne.ThemeVariant) color.Color {
-	// log.Printf("Theme color requested: %+v", name)
 	if name == theme.ColorNameBackground {
-		if variant == theme.VariantLight {
-			// log.Printf("Light requested %+v", variant)
-			return color.White
-		}
-
 		rgbacolor, _ := ParseHexColor("#192330")
-
 		return rgbacolor
 	}
 
 	if name == theme.ColorNameForeground {
-		if variant == theme.VariantLight {
-			// log.Printf("Light requested %+v", variant)
-			return color.White
-		}
-
 		rgbacolor, _ := ParseHexColor("#cdcecf")
-
 		return rgbacolor
 	}
 
     if name == theme.ColorGreen  {
-		if variant == theme.VariantLight {
-			// log.Printf("Light requested %+v", variant)
-			return color.White
-		}
-
 		rgbacolor, _ := ParseHexColor("#81b29a")
-
 		return rgbacolor
 	}
 
     if name == theme.ColorRed  {
-		if variant == theme.VariantLight {
-			// log.Printf("Light requested %+v", variant)
-			return color.White
-		}
-
 		rgbacolor, _ := ParseHexColor("#c94f6d")
-
 		return rgbacolor
 	}
 
     if name == theme.ColorBlue  {
-		if variant == theme.VariantLight {
-			// log.Printf("Light requested %+v", variant)
-			return color.White
-		}
-
 		rgbacolor, _ := ParseHexColor("#719cd6")
-
 		return rgbacolor
 	}
 

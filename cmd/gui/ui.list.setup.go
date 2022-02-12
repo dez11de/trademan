@@ -14,31 +14,34 @@ import (
 	"golang.org/x/image/colornames"
 )
 
-type planListUI struct {
-	Plans []cryptodb.Plan
-    PairCache []cryptodb.Pair
-	List  *widget.List
+type UI struct {
+	Pairs      []cryptodb.Pair
+	activePair cryptodb.Pair
 
-	addPlanAction    widget.ToolbarItem
-	removePlanAction widget.ToolbarItem
-	actionBar        *widget.Toolbar
+	Plans      []cryptodb.Plan
+	activePlan cryptodb.Plan
+
+	activeOrders []cryptodb.Order
+
+	List                *widget.List
+	 statisticsContainer *fyne.Container
 }
 
+var ui UI
+
 func MakePlanListSplit() *container.Split {
-	planList := &planListUI{}
-    planList.Plans = make([]cryptodb.Plan,0)
-    var err error
-    planList.Plans, err = getPlans()
-    if err != nil {
-        dialog.ShowError(err, mainWindow)
-    }
-    planList.PairCache, err = getPairs()
-    if err != nil {
-        dialog.ShowError(err, mainWindow)
-    }
-	planList.List = widget.NewList(
+	var err error
+	ui.Plans, err = getPlans()
+	if err != nil {
+		dialog.ShowError(err, mainWindow)
+	}
+	ui.Pairs, err = getPairs()
+	if err != nil {
+		dialog.ShowError(err, mainWindow)
+	}
+	ui.List = widget.NewList(
 		func() int {
-			return len(planList.Plans)
+			return len(ui.Plans)
 		},
 		func() fyne.CanvasObject {
 			pairText := canvas.NewText("Pair", theme.ForegroundColor())
@@ -51,47 +54,47 @@ func MakePlanListSplit() *container.Split {
 			)
 		},
 		func(i widget.ListItemID, o fyne.CanvasObject) {
-			o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[0].(*canvas.Text).Text = planList.PairCache[int64(planList.Plans[i].PairID-1)].Name
+			o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[0].(*canvas.Text).Text = ui.Pairs[int64(ui.Plans[i].PairID-1)].Name
 
 			var directionColor color.Color
-            var directionName string
-			switch planList.Plans[i].Direction {
+			var directionName string
+			switch ui.Plans[i].Direction {
 			case cryptodb.DirectionLong:
-                directionName = "Long"
+				directionName = "Long"
 				directionColor = theme.PrimaryColorNamed("Green")
 			case cryptodb.DirectionShort:
-                directionName = "Short"
+				directionName = "Short"
 				directionColor = theme.PrimaryColorNamed("Red")
 			}
-			o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[2].(*canvas.Text).Text = directionName 
-			o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[2].(*canvas.Text).Color = directionColor 
+			o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[2].(*canvas.Text).Text = directionName
+			o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[2].(*canvas.Text).Color = directionColor
 
 			var statusColor color.Color
-            var statusName string
-			switch planList.Plans[i].Status {
+			var statusName string
+			switch ui.Plans[i].Status {
 			case cryptodb.StatusPlanned:
-                statusName = "Planned"
+				statusName = "Planned"
 				statusColor = theme.PrimaryColorNamed("Blue")
 			case cryptodb.StatusOrdered:
-                statusName = "Ordered"
+				statusName = "Ordered"
 				statusColor = theme.PrimaryColorNamed("Green")
 			case cryptodb.StatusFilled:
-                statusName = "Filled"
+				statusName = "Filled"
 				statusColor = theme.PrimaryColorNamed("Magenta")
 			default:
 				statusColor = colornames.White
 			}
 			o.(*fyne.Container).Objects[1].(*fyne.Container).Objects[0].(*canvas.Text).Text = statusName
-            o.(*fyne.Container).Objects[1].(*fyne.Container).Objects[0].(*canvas.Text).Color = statusColor
+			o.(*fyne.Container).Objects[1].(*fyne.Container).Objects[0].(*canvas.Text).Color = statusColor
 		})
 
 	selectPlanLabel := container.New(layout.NewCenterLayout(), canvas.NewText("Select a plan from the list, or press + to make a new plan.", nil))
 
-	listAndButtons := container.NewWithoutLayout(widget.NewLabel("Error loading plans.\nCheck internet connection."))
-	planListSplit := container.NewHSplit(listAndButtons, container.NewMax(selectPlanLabel))
+    ListAndButtons := container.NewWithoutLayout(widget.NewLabel("Error loading plans.\nCheck internet connection."))
+	planListSplit := container.NewHSplit(ListAndButtons, container.NewMax(selectPlanLabel))
 	planListSplit.SetOffset(0.22)
 
-	planList.addPlanAction = widget.NewToolbarAction(theme.ContentAddIcon(), func() {
+	addPlanAction := widget.NewToolbarAction(theme.ContentAddIcon(), func() {
 		f := NewForm()
 		f.FillForm(cryptodb.Plan{})
 		planListSplit.Trailing = f.formContainer
@@ -99,18 +102,15 @@ func MakePlanListSplit() *container.Split {
 		planListSplit.Refresh()
 	})
 
-	planList.actionBar = widget.NewToolbar(widget.NewToolbarSpacer(), planList.addPlanAction)
-	planList.actionBar.Refresh()
-	listAndButtons = container.New(layout.NewBorderLayout(nil, planList.actionBar, nil, nil), container.NewMax(planList.List), planList.actionBar)
-	planListSplit.Leading = listAndButtons
-	planList.List.Refresh()
-	listAndButtons.Refresh()
-	planListSplit.Leading.Refresh()
+	actionBar := widget.NewToolbar(widget.NewToolbarSpacer(), addPlanAction)
+	actionBar.Refresh()
+	ListAndButtons = container.New(layout.NewBorderLayout(nil, actionBar, nil, nil), container.NewMax(ui.List), actionBar)
+	planListSplit.Leading = ListAndButtons
 	planListSplit.Refresh()
 
-	planList.List.OnSelected = func(id widget.ListItemID) {
+	ui.List.OnSelected = func(id widget.ListItemID) {
 		f := NewForm()
-		f.FillForm(planList.Plans[id])
+		f.FillForm(ui.Plans[id])
 		planListSplit.Trailing = f.formContainer
 		planListSplit.Refresh()
 	}

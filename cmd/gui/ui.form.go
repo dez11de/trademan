@@ -8,21 +8,22 @@ import (
 )
 
 func (pf *planForm) gatherSetup() cryptodb.Setup {
-	pf.plan.PairID = pf.activePair.ID
-	pf.plan.Direction.Scan(pf.sideItem.Widget.(*widget.RadioGroup).Selected)
-	pf.plan.Risk = decimal.RequireFromString(pf.riskItem.Widget.(*widget.Entry).Text)
-	pf.orders[cryptodb.KindMarketStopLoss].Price = decimal.RequireFromString(pf.stopLossItem.Widget.(*widget.Entry).Text)
-	pf.orders[cryptodb.KindEntry].Price = decimal.RequireFromString(pf.entryItem.Widget.(*widget.Entry).Text)
+	ui.activePlan.PairID = ui.activePair.ID
+	ui.activePlan.Direction.Scan(pf.directionItem.Widget.(*widget.RadioGroup).Selected)
+	ui.activePlan.Risk = decimal.RequireFromString(pf.riskItem.Widget.(*widget.Entry).Text)
+	ui.activeOrders[cryptodb.KindMarketStopLoss].Price = decimal.RequireFromString(pf.stopLossItem.Widget.(*widget.Entry).Text)
+	ui.activeOrders[cryptodb.KindEntry].Price = decimal.RequireFromString(pf.entryItem.Widget.(*widget.Entry).Text)
 	for i := 0; i < cryptodb.MaxTakeProfits; i++ {
+		// TODO: make this more robust
 		tempPrice, err := decimal.NewFromString(pf.takeProfitItems[i].Widget.(*widget.Entry).Text)
 		if err == nil {
-			pf.orders[3+i].Price = tempPrice
+			ui.activeOrders[3+i].Price = tempPrice
 		} else {
-			pf.orders[3+i].Price = decimal.Zero
+			ui.activeOrders[3+i].Price = decimal.Zero
 		}
 	}
 
-	return cryptodb.Setup{Plan: pf.plan, Orders: pf.orders}
+	return cryptodb.Setup{Plan: ui.activePlan, Orders: ui.activeOrders}
 }
 
 func (pf *planForm) okAction() {
@@ -31,9 +32,10 @@ func (pf *planForm) okAction() {
 	if err != nil {
 		dialog.ShowError(err, mainWindow)
 	}
-	pf.plan = setup.Plan
-	pf.orders = setup.Orders
-	pf.form.Refresh()
+	ui.activePlan = setup.Plan
+	ui.activeOrders = setup.Orders
+	ui.Plans, _ = getPlans()
+	ui.List.Refresh()
 }
 
 func (pf *planForm) cancelAction() {
@@ -48,7 +50,8 @@ func (pf *planForm) executeAction() {
 	}
 
 	plan, err := executePlan(setup.Plan.ID)
-	pf.plan = plan
-	pf.orders = setup.Orders
-	pf.form.Refresh()
+	ui.activePlan = plan
+	ui.activeOrders = setup.Orders
+	ui.Plans, _ = getPlans()
+	ui.List.Refresh()
 }

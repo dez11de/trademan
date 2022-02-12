@@ -13,6 +13,7 @@ import (
 	"fyne.io/fyne/v2/widget"
 	xwidget "fyne.io/x/fyne/widget"
 	"github.com/bart613/decimal"
+	"github.com/dez11de/cryptodb"
 )
 
 func (pf *planForm) setQuoteCurrency(s string) {
@@ -39,7 +40,7 @@ func (pf *planForm) makeStatContainer() *fyne.Container {
 	evolvedRewardRiskRatioValue := widget.NewLabel(fmt.Sprintf("%.1f", 0.0))
 
 	currentPnLLabel := widget.NewLabel("PnL: ")
-	currentPnLValue := widget.NewLabel(fmt.Sprintf("%s%%", pf.plan.Profit.StringFixed(1))) // TODO: should be relative to entrySize.
+	currentPnLValue := widget.NewLabel(fmt.Sprintf("%s%%", ui.activePlan.Profit.StringFixed(1))) // TODO: should be relative to entrySize.
 	// TODO: figure out what this even means, see CryptoCred.
 	breakEvenLabel := widget.NewLabel("B/E: ")
 	breakEvenValue := widget.NewLabel(fmt.Sprintf("%.0f%%", 0.0))
@@ -77,39 +78,40 @@ func (pf *planForm) makePairItem() *widget.FormItem {
 	CompletionEntry.OnSubmitted = func(s string) {
 		ok := false
 		s = strings.ToUpper(s)
-		for _, p := range pf.PairCache {
+		for _, p := range ui.Pairs {
 			if s == p.Name {
-				pf.activePair = p
+				ui.activePair = p
 				ok = true
 				break // No need to look further
 			}
 		}
 		if ok {
-			pf.plan.PairID = pf.activePair.ID
-			pf.setQuoteCurrency(pf.activePair.QuoteCurrency)
-			pf.setPriceScale(int32(pf.activePair.PriceScale))
-			pf.sideItem.Widget.(*widget.RadioGroup).Enable()
+			ui.activePlan.PairID = ui.activePair.ID
+			pf.setQuoteCurrency(ui.activePair.QuoteCurrency)
+			pf.setPriceScale(ui.activePair.PriceScale)
+			pf.directionItem.Widget.(*widget.RadioGroup).Enable()
 			pf.form.Refresh()
 		}
 	}
 	return widget.NewFormItem("Pair", CompletionEntry)
 }
 
-func (pf *planForm) makeSideItem() *widget.FormItem {
-	sideRadio := widget.NewRadioGroup([]string{"Long", "Short"},
+func (pf *planForm) makeDirectionItem() *widget.FormItem {
+	directionRadio := widget.NewRadioGroup([]string{"Long", "Short"},
 		func(s string) {
 			pf.riskItem.Widget.(*widget.Entry).Enable()
 			pf.form.Refresh()
 		})
-	sideRadio.Horizontal = true
-	sideRadio.Disable()
-	return widget.NewFormItem("Side", sideRadio)
+	directionRadio.Horizontal = true
+	directionRadio.Disable()
+	return widget.NewFormItem("Direction", directionRadio)
 }
 
+// TODO: think about in which statusses changing is allowed
 func (pf *planForm) makeRiskItem() *widget.FormItem {
 	riskEntry := widget.NewEntry()
 	riskEntry.Disable()
-	riskEntry.SetPlaceHolder(pf.plan.Risk.StringFixed(1))
+	riskEntry.SetPlaceHolder(ui.activePlan.Risk.StringFixed(1))
 
 	riskEntry.OnChanged = func(s string) {
 		tempRisk, err := decimal.NewFromString(s)
@@ -130,6 +132,7 @@ func (pf *planForm) makeRiskItem() *widget.FormItem {
 	return item
 }
 
+// TODO: think about in which statusses changing is allowed
 func (pf *planForm) makeStopLossItem() *widget.FormItem {
 	StopLossEntry := widget.NewEntry()
 	StopLossEntry.Disable()
@@ -138,11 +141,12 @@ func (pf *planForm) makeStopLossItem() *widget.FormItem {
 		pf.entryItem.Widget.(*widget.Entry).Enable()
 		pf.form.Refresh()
 	}
-	item := widget.NewFormItem(fmt.Sprintf("Stop Loss (%s)", pf.activePair.QuoteCurrency), StopLossEntry)
+	item := widget.NewFormItem(fmt.Sprintf("Stop Loss (%s)", ui.activePair.QuoteCurrency), StopLossEntry)
 	item.HintText = " "
 	return item
 }
 
+// TODO: think about in which statusses changing is allowed
 func (pf *planForm) makeEntryItem() *widget.FormItem {
 	entryEntry := widget.NewEntry()
 	entryEntry.Disable()
@@ -151,11 +155,12 @@ func (pf *planForm) makeEntryItem() *widget.FormItem {
 		pf.takeProfitItems[0].Widget.(*widget.Entry).Enable()
 		pf.form.Refresh()
 	}
-	item := widget.NewFormItem(fmt.Sprintf("Entry (%s)", pf.activePair.QuoteCurrency), entryEntry)
+	item := widget.NewFormItem(fmt.Sprintf("Entry (%s)", ui.activePair.QuoteCurrency), entryEntry)
 	item.HintText = " "
 	return item
 }
 
+// TODO: think about in which statusses changing is allowed
 func (pf *planForm) makeTakeProfitItem(n int) *widget.FormItem {
 	takeProfitEntry := widget.NewEntry()
 	takeProfitEntry.Disable()
@@ -163,14 +168,13 @@ func (pf *planForm) makeTakeProfitItem(n int) *widget.FormItem {
 		// TODO: properly validate input
 		// TODO: show % difference with entry and previous take profit
 		if !decimal.RequireFromString(s).IsZero() && s != "" {
-			pf.takeProfitItems[n+1].Widget.(*widget.Entry).Enable()
-			if n >= 1 {
-				pf.form.Enable()
+			if n < cryptodb.MaxTakeProfits-1 {
+				pf.takeProfitItems[n+1].Widget.(*widget.Entry).Enable()
+				pf.form.Refresh()
 			}
-			pf.form.Refresh()
 		}
 	}
-	item := widget.NewFormItem(fmt.Sprintf("Take profit #%d (%s)", n+1, pf.activePair.QuoteCurrency), takeProfitEntry)
+	item := widget.NewFormItem(fmt.Sprintf("Take profit #%d (%s)", n+1, ui.activePair.QuoteCurrency), takeProfitEntry)
 	item.HintText = " "
 	return item
 }
@@ -186,8 +190,8 @@ func (pf *planForm) makeTradingViewLinkItem() *widget.FormItem {
 	editContainer := container.NewHBox(editEntry, saveButton)
 	editContainer.Hide()
 
-    // TODO: check error
-	tvurl.Parse(pf.plan.TradingViewPlan)
+	// TODO: check error
+	tvurl.Parse(ui.activePlan.TradingViewPlan)
 	tradingViewLink := widget.NewHyperlink("Open", &tvurl)
 	createButton := widget.NewButtonWithIcon("", theme.DocumentCreateIcon(), func() {
 		log.Printf("Create button clicked.")
@@ -203,8 +207,16 @@ func (pf *planForm) makeTradingViewLinkItem() *widget.FormItem {
 func (pf *planForm) makeNotesMultilineItem() *widget.FormItem {
 	notesMultiLineEntry := widget.NewMultiLineEntry()
 	notesMultiLineEntry.SetPlaceHolder("Enter notes...")
-	notesMultiLineEntry.SetText(pf.plan.Notes)
+	notesMultiLineEntry.SetText(ui.activePlan.Notes)
 	notesMultiLineEntry.Wrapping = fyne.TextWrapWord
 
 	return widget.NewFormItem("Notes", notesMultiLineEntry)
+}
+
+func (pf *planForm) makeToolBar() *widget.Toolbar {
+	executeAction := widget.NewToolbarAction(theme.UploadIcon(), pf.executeAction)
+	cancelAction := widget.NewToolbarAction(theme.CancelIcon(), pf.cancelAction)
+	okAction := widget.NewToolbarAction(theme.ConfirmIcon(), pf.okAction)
+
+	return widget.NewToolbar(widget.NewToolbarSpacer(), executeAction, cancelAction, okAction)
 }

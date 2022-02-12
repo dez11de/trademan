@@ -54,14 +54,7 @@ func MakePlanListSplit() *container.Split {
 		func(i widget.ListItemID, o fyne.CanvasObject) {
 			o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[0].(*canvas.Text).Text = ui.Pairs[int64(ui.Plans[i].PairID-1)].Name
 
-			var directionName string
-			switch ui.Plans[i].Direction {
-			case cryptodb.DirectionLong:
-				directionName = "Long"
-			case cryptodb.DirectionShort:
-				directionName = "Short"
-			}
-			o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[2].(*canvas.Text).Text = directionName
+			o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[2].(*canvas.Text).Text = ui.Plans[i].Direction.String()
 			o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[2].(*canvas.Text).Color = DirectionColor(ui.Plans[i].Direction)
 
 			var statusName string

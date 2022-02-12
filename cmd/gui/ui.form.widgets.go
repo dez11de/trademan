@@ -97,7 +97,7 @@ func (pf *planForm) makePairItem() *widget.FormItem {
 }
 
 func (pf *planForm) makeDirectionItem() *widget.FormItem {
-	directionRadio := widget.NewRadioGroup([]string{"Long", "Short"},
+	directionRadio := widget.NewRadioGroup(cryptodb.DirectionStrings(),
 		func(s string) {
 			pf.riskItem.Widget.(*widget.Entry).Enable()
 			pf.form.Refresh()
@@ -152,10 +152,23 @@ func (pf *planForm) makeEntryItem() *widget.FormItem {
 	entryEntry.Disable()
 	entryEntry.OnChanged = func(s string) {
 		// TODO: properly validate input
-		pf.takeProfitItems[0].Widget.(*widget.Entry).Enable()
+		pf.takeProfitStrategyItem.Widget.(*widget.Select).Enable()
 		pf.form.Refresh()
 	}
 	item := widget.NewFormItem(fmt.Sprintf("Entry (%s)", ui.activePair.QuoteCurrency), entryEntry)
+	item.HintText = " "
+	return item
+}
+
+// TODO: think about in which statusses changing is allowed
+func (pf *planForm) makeTakeProfitStrategyItem() *widget.FormItem {
+	takeProfitStrategySelect := widget.NewSelect(cryptodb.TakeProfitStrategyStrings(), func(s string) {
+		pf.takeProfitItems[0].Widget.(*widget.Entry).Enable()
+		pf.form.Refresh()
+	})
+    takeProfitStrategySelect.SetSelectedIndex(int(cryptodb.AutoLinear))
+	takeProfitStrategySelect.Disable()
+	item := widget.NewFormItem("TP Strategy", takeProfitStrategySelect)
 	item.HintText = " "
 	return item
 }

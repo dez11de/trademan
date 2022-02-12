@@ -50,10 +50,10 @@ func (m myTheme) Color(name fyne.ThemeColorName, variant fyne.ThemeVariant) colo
 
 func DirectionColor(d cryptodb.Direction) color.Color {
 	switch d {
-	case cryptodb.DirectionLong:
+	case cryptodb.Long:
 		rgbacolor, _ := ParseHexColor("#81b29a")
 		return rgbacolor
-	case cryptodb.DirectionShort:
+	case cryptodb.Short:
 		rgbacolor, _ := ParseHexColor("#c94f6d")
 		return rgbacolor
 	}

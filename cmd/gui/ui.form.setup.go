@@ -17,6 +17,7 @@ type planForm struct {
 	pairItem                *widget.FormItem
 	directionItem           *widget.FormItem
 	riskItem                *widget.FormItem
+	takeProfitStrategyItem  *widget.FormItem
 	stopLossItem            *widget.FormItem
 	entryItem               *widget.FormItem
 	takeProfitItems         [cryptodb.MaxTakeProfits]*widget.FormItem
@@ -40,6 +41,8 @@ func NewForm() *planForm {
 	pf.form.AppendItem(pf.stopLossItem)
 	pf.entryItem = pf.makeEntryItem()
 	pf.form.AppendItem(pf.entryItem)
+	pf.takeProfitStrategyItem = pf.makeTakeProfitStrategyItem()
+	pf.form.AppendItem(pf.takeProfitStrategyItem)
 
 	for i := 0; i < cryptodb.MaxTakeProfits; i++ {
 		pf.takeProfitItems[i] = pf.makeTakeProfitItem(i)
@@ -86,12 +89,7 @@ func (pf *planForm) FillForm(p cryptodb.Plan) {
 	}
 
 	if ui.activePlan.ID != 0 {
-		switch ui.activePlan.Direction {
-		case cryptodb.Direction(cryptodb.DirectionLong):
-			pf.directionItem.Widget.(*widget.RadioGroup).SetSelected("Long")
-		case cryptodb.Direction(cryptodb.DirectionShort):
-			pf.directionItem.Widget.(*widget.RadioGroup).SetSelected("Short")
-		}
+		pf.directionItem.Widget.(*widget.RadioGroup).SetSelected(ui.activePlan.Direction.String())
 		pf.directionItem.Widget.(*widget.RadioGroup).Disable()
 	}
 
@@ -111,6 +109,11 @@ func (pf *planForm) FillForm(p cryptodb.Plan) {
 	// TODO: think about in which statusses changing is allowed, disable editting if required
 	if ui.activeOrders[cryptodb.KindEntry].Price.Cmp(decimal.Zero) != 0 {
 		pf.entryItem.Widget.(*widget.Entry).SetText(ui.activeOrders[cryptodb.KindEntry].Price.StringFixed(ui.activePair.PriceScale))
+	}
+
+	// TODO: think about in which statusses changing is allowed, disable editting if required
+	if ui.activePlan.ID != 0 {
+		pf.takeProfitStrategyItem.Widget.(*widget.Select).SetSelected(ui.activePlan.TakeProfitStrategy.String())
 	}
 
 	// TODO: think about in which statusses changing is allowed, disable editting if required

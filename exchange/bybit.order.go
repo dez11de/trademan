@@ -34,7 +34,7 @@ func (e *Exchange) placeEntry(plan cryptodb.Plan, pair cryptodb.Pair, marketStop
 	// Set entry and HardStopLoss
 	entryParams["order_link_id"] = entry.ExchangeOrderID
 	entryParams["symbol"] = pair.Name
-	if plan.Direction == cryptodb.DirectionLong {
+	if plan.Direction == cryptodb.Long {
 		entryParams["side"] = "Buy"
 	} else {
 		entryParams["side"] = "Sell"
@@ -63,7 +63,7 @@ func (e *Exchange) placeEntry(plan cryptodb.Plan, pair cryptodb.Pair, marketStop
 	sslParams := make(RequestParameters)
 	sslParams["order_link_id"] = limitStopLoss.ExchangeOrderID
 	sslParams["symbol"] = pair.Name
-	if plan.Direction == cryptodb.DirectionLong {
+	if plan.Direction == cryptodb.Long {
 		sslParams["side"] = "Sell"
 	} else {
 		sslParams["side"] = "Buy"
@@ -100,7 +100,7 @@ func (e *Exchange) placeTakeProfit(plan cryptodb.Plan, pair cryptodb.Pair, entry
 
 	takeProfitParams["order_link_id"] = takeProfit.ExchangeOrderID
 	takeProfitParams["symbol"] = pair.Name
-	if plan.Direction == cryptodb.DirectionLong {
+	if plan.Direction == cryptodb.Long {
 		takeProfitParams["side"] = "Sell"
 	} else {
 		takeProfitParams["side"] = "Buy"

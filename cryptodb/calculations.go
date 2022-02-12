@@ -10,11 +10,11 @@ func (p *Plan) FinalizeOrders(available decimal.Decimal, activePair Pair, o []Or
 	// positionSize = (entryPrice - stopLossPrice) * a vailable_balance * riskPerc * (1 - (pair.TakerFee * 2))
 	maxFee := decimal.NewFromFloat(1.0).Sub(activePair.TakerFee.Mul(decimal.NewFromInt(2)))
 	maxRisk := available.Mul(p.Risk.Div(decimal.NewFromInt(100))).Mul(maxFee)
-	entryStopLossDistance := o[KindMarketStopLoss].Price.Sub(o[KindEntry].Price).Abs()
+	entryStopLossDistance := o[MarketStopLoss].Price.Sub(o[Entry].Price).Abs()
 	positionSize := maxRisk.Div(entryStopLossDistance).RoundStep(activePair.Order.Step, false)
-	o[KindMarketStopLoss].Size = positionSize
-	o[KindLimitStopLoss].Size = positionSize
-	o[KindEntry].Size = positionSize
+	o[MarketStopLoss].Size = positionSize
+	o[LimitStopLoss].Size = positionSize
+	o[Entry].Size = positionSize
 
 	takeProfitsCount := int64(0)
 	for i := 1; i < 5; i++ {
@@ -38,18 +38,18 @@ func (p *Plan) FinalizeOrders(available decimal.Decimal, activePair Pair, o []Or
         log.Printf("Take profit strategy %s is not (yet) implemented, sizes not set!", p.TakeProfitStrategy.String())
 	}
 
-	o[KindLimitStopLoss].Price = o[KindMarketStopLoss].Price.Add(entryStopLossDistance.Div(decimal.NewFromInt(100)).Mul(decimal.NewFromInt(5))).RoundStep(activePair.Price.Tick, false)
+	o[LimitStopLoss].Price = o[MarketStopLoss].Price.Add(entryStopLossDistance.Div(decimal.NewFromInt(100)).Mul(decimal.NewFromInt(5))).RoundStep(activePair.Price.Tick, false)
 }
 
 // TODO: this should be done with "virtual" positionSizes since they are unknown at time of planning,
 // and be set with real ordersizes at time of execution, although there should be no difference
 func (p *Plan) SetRewardRiskRatio(o []Order) (rrr float64) {
 	// TODO: see above for better calculation
-	maxRisk := (o[KindEntry].Price.Mul(o[KindEntry].Size)).Sub(o[KindMarketStopLoss].Price.Mul(o[KindMarketStopLoss].Size))
+	maxRisk := (o[Entry].Price.Mul(o[Entry].Size)).Sub(o[MarketStopLoss].Price.Mul(o[MarketStopLoss].Size))
 	maxProfit := decimal.Zero
 	for _, order := range o {
-		if OrderType(order.OrderKind) == OrderType(KindTakeProfit) {
-			maxProfit = maxProfit.Add(order.Price.Sub(o[KindEntry].Price).Mul(order.Size))
+		if OrderType(order.OrderKind) == OrderType(TakeProfit) {
+			maxProfit = maxProfit.Add(order.Price.Sub(o[Entry].Price).Mul(order.Size))
 		}
 	}
 	rrr = maxProfit.Div(maxRisk).InexactFloat64()

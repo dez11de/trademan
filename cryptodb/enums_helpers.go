@@ -360,11 +360,11 @@ func (i *TakeProfitStrategy) Scan(value interface{}) error {
 	return nil
 }
 
-const _StatusName = "StatusPlannedStatusOrderedStatusUntriggeredStatusFilledStatusStoppedStatusClosedStatusCancelledStatusLiquidatedStatusLogged"
+const _StatusName = "PlannedOrderedUntriggeredFilledStoppedCancelledClosedLiquidatedLogged"
 
-var _StatusIndex = [...]uint8{0, 13, 26, 43, 55, 68, 80, 95, 111, 123}
+var _StatusIndex = [...]uint8{0, 7, 14, 25, 31, 38, 47, 53, 63, 69}
 
-const _StatusLowerName = "statusplannedstatusorderedstatusuntriggeredstatusfilledstatusstoppedstatusclosedstatuscancelledstatusliquidatedstatuslogged"
+const _StatusLowerName = "plannedordereduntriggeredfilledstoppedcancelledclosedliquidatedlogged"
 
 func (i Status) String() string {
 	if i < 0 || i >= Status(len(_StatusIndex)-1) {
@@ -377,50 +377,50 @@ func (i Status) String() string {
 // Re-run the stringer command to generate them again.
 func _StatusNoOp() {
 	var x [1]struct{}
-	_ = x[StatusPlanned-(0)]
-	_ = x[StatusOrdered-(1)]
-	_ = x[StatusUntriggered-(2)]
-	_ = x[StatusFilled-(3)]
-	_ = x[StatusStopped-(4)]
-	_ = x[StatusClosed-(5)]
-	_ = x[StatusCancelled-(6)]
-	_ = x[StatusLiquidated-(7)]
-	_ = x[StatusLogged-(8)]
+	_ = x[Planned-(0)]
+	_ = x[Ordered-(1)]
+	_ = x[Untriggered-(2)]
+	_ = x[Filled-(3)]
+	_ = x[Stopped-(4)]
+	_ = x[Cancelled-(5)]
+	_ = x[Closed-(6)]
+	_ = x[Liquidated-(7)]
+	_ = x[Logged-(8)]
 }
 
-var _StatusValues = []Status{StatusPlanned, StatusOrdered, StatusUntriggered, StatusFilled, StatusStopped, StatusClosed, StatusCancelled, StatusLiquidated, StatusLogged}
+var _StatusValues = []Status{Planned, Ordered, Untriggered, Filled, Stopped, Cancelled, Closed, Liquidated, Logged}
 
 var _StatusNameToValueMap = map[string]Status{
-	_StatusName[0:13]:         StatusPlanned,
-	_StatusLowerName[0:13]:    StatusPlanned,
-	_StatusName[13:26]:        StatusOrdered,
-	_StatusLowerName[13:26]:   StatusOrdered,
-	_StatusName[26:43]:        StatusUntriggered,
-	_StatusLowerName[26:43]:   StatusUntriggered,
-	_StatusName[43:55]:        StatusFilled,
-	_StatusLowerName[43:55]:   StatusFilled,
-	_StatusName[55:68]:        StatusStopped,
-	_StatusLowerName[55:68]:   StatusStopped,
-	_StatusName[68:80]:        StatusClosed,
-	_StatusLowerName[68:80]:   StatusClosed,
-	_StatusName[80:95]:        StatusCancelled,
-	_StatusLowerName[80:95]:   StatusCancelled,
-	_StatusName[95:111]:       StatusLiquidated,
-	_StatusLowerName[95:111]:  StatusLiquidated,
-	_StatusName[111:123]:      StatusLogged,
-	_StatusLowerName[111:123]: StatusLogged,
+	_StatusName[0:7]:        Planned,
+	_StatusLowerName[0:7]:   Planned,
+	_StatusName[7:14]:       Ordered,
+	_StatusLowerName[7:14]:  Ordered,
+	_StatusName[14:25]:      Untriggered,
+	_StatusLowerName[14:25]: Untriggered,
+	_StatusName[25:31]:      Filled,
+	_StatusLowerName[25:31]: Filled,
+	_StatusName[31:38]:      Stopped,
+	_StatusLowerName[31:38]: Stopped,
+	_StatusName[38:47]:      Cancelled,
+	_StatusLowerName[38:47]: Cancelled,
+	_StatusName[47:53]:      Closed,
+	_StatusLowerName[47:53]: Closed,
+	_StatusName[53:63]:      Liquidated,
+	_StatusLowerName[53:63]: Liquidated,
+	_StatusName[63:69]:      Logged,
+	_StatusLowerName[63:69]: Logged,
 }
 
 var _StatusNames = []string{
-	_StatusName[0:13],
-	_StatusName[13:26],
-	_StatusName[26:43],
-	_StatusName[43:55],
-	_StatusName[55:68],
-	_StatusName[68:80],
-	_StatusName[80:95],
-	_StatusName[95:111],
-	_StatusName[111:123],
+	_StatusName[0:7],
+	_StatusName[7:14],
+	_StatusName[14:25],
+	_StatusName[25:31],
+	_StatusName[31:38],
+	_StatusName[38:47],
+	_StatusName[47:53],
+	_StatusName[53:63],
+	_StatusName[63:69],
 }
 
 // StatusString retrieves an enum value from the enum constants string name.
@@ -622,11 +622,11 @@ func (i *OrderType) Scan(value interface{}) error {
 	return nil
 }
 
-const _OrderKindName = "KindMarketStopLossKindLimitStopLossKindEntryKindTakeProfit"
+const _OrderKindName = "MarketStopLossLimitStopLossEntryTakeProfit"
 
-var _OrderKindIndex = [...]uint8{0, 18, 35, 44, 58}
+var _OrderKindIndex = [...]uint8{0, 14, 27, 32, 42}
 
-const _OrderKindLowerName = "kindmarketstoplosskindlimitstoplosskindentrykindtakeprofit"
+const _OrderKindLowerName = "marketstoplosslimitstoplossentrytakeprofit"
 
 func (i OrderKind) String() string {
 	if i < 0 || i >= OrderKind(len(_OrderKindIndex)-1) {
@@ -639,30 +639,30 @@ func (i OrderKind) String() string {
 // Re-run the stringer command to generate them again.
 func _OrderKindNoOp() {
 	var x [1]struct{}
-	_ = x[KindMarketStopLoss-(0)]
-	_ = x[KindLimitStopLoss-(1)]
-	_ = x[KindEntry-(2)]
-	_ = x[KindTakeProfit-(3)]
+	_ = x[MarketStopLoss-(0)]
+	_ = x[LimitStopLoss-(1)]
+	_ = x[Entry-(2)]
+	_ = x[TakeProfit-(3)]
 }
 
-var _OrderKindValues = []OrderKind{KindMarketStopLoss, KindLimitStopLoss, KindEntry, KindTakeProfit}
+var _OrderKindValues = []OrderKind{MarketStopLoss, LimitStopLoss, Entry, TakeProfit}
 
 var _OrderKindNameToValueMap = map[string]OrderKind{
-	_OrderKindName[0:18]:       KindMarketStopLoss,
-	_OrderKindLowerName[0:18]:  KindMarketStopLoss,
-	_OrderKindName[18:35]:      KindLimitStopLoss,
-	_OrderKindLowerName[18:35]: KindLimitStopLoss,
-	_OrderKindName[35:44]:      KindEntry,
-	_OrderKindLowerName[35:44]: KindEntry,
-	_OrderKindName[44:58]:      KindTakeProfit,
-	_OrderKindLowerName[44:58]: KindTakeProfit,
+	_OrderKindName[0:14]:       MarketStopLoss,
+	_OrderKindLowerName[0:14]:  MarketStopLoss,
+	_OrderKindName[14:27]:      LimitStopLoss,
+	_OrderKindLowerName[14:27]: LimitStopLoss,
+	_OrderKindName[27:32]:      Entry,
+	_OrderKindLowerName[27:32]: Entry,
+	_OrderKindName[32:42]:      TakeProfit,
+	_OrderKindLowerName[32:42]: TakeProfit,
 }
 
 var _OrderKindNames = []string{
-	_OrderKindName[0:18],
-	_OrderKindName[18:35],
-	_OrderKindName[35:44],
-	_OrderKindName[44:58],
+	_OrderKindName[0:14],
+	_OrderKindName[14:27],
+	_OrderKindName[27:32],
+	_OrderKindName[32:42],
 }
 
 // OrderKindString retrieves an enum value from the enum constants string name.
@@ -747,11 +747,11 @@ func (i *OrderKind) Scan(value interface{}) error {
 	return nil
 }
 
-const _LogSourceName = "SourceExchangeSourceSoftwareSourceUser"
+const _LogSourceName = "ExchangeServerUser"
 
-var _LogSourceIndex = [...]uint8{0, 14, 28, 38}
+var _LogSourceIndex = [...]uint8{0, 8, 14, 18}
 
-const _LogSourceLowerName = "sourceexchangesourcesoftwaresourceuser"
+const _LogSourceLowerName = "exchangeserveruser"
 
 func (i LogSource) String() string {
 	if i < 0 || i >= LogSource(len(_LogSourceIndex)-1) {
@@ -764,26 +764,26 @@ func (i LogSource) String() string {
 // Re-run the stringer command to generate them again.
 func _LogSourceNoOp() {
 	var x [1]struct{}
-	_ = x[SourceExchange-(0)]
-	_ = x[SourceSoftware-(1)]
-	_ = x[SourceUser-(2)]
+	_ = x[Exchange-(0)]
+	_ = x[Server-(1)]
+	_ = x[User-(2)]
 }
 
-var _LogSourceValues = []LogSource{SourceExchange, SourceSoftware, SourceUser}
+var _LogSourceValues = []LogSource{Exchange, Server, User}
 
 var _LogSourceNameToValueMap = map[string]LogSource{
-	_LogSourceName[0:14]:       SourceExchange,
-	_LogSourceLowerName[0:14]:  SourceExchange,
-	_LogSourceName[14:28]:      SourceSoftware,
-	_LogSourceLowerName[14:28]: SourceSoftware,
-	_LogSourceName[28:38]:      SourceUser,
-	_LogSourceLowerName[28:38]: SourceUser,
+	_LogSourceName[0:8]:        Exchange,
+	_LogSourceLowerName[0:8]:   Exchange,
+	_LogSourceName[8:14]:       Server,
+	_LogSourceLowerName[8:14]:  Server,
+	_LogSourceName[14:18]:      User,
+	_LogSourceLowerName[14:18]: User,
 }
 
 var _LogSourceNames = []string{
-	_LogSourceName[0:14],
-	_LogSourceName[14:28],
-	_LogSourceName[28:38],
+	_LogSourceName[0:8],
+	_LogSourceName[8:14],
+	_LogSourceName[14:18],
 }
 
 // LogSourceString retrieves an enum value from the enum constants string name.

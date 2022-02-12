@@ -41,7 +41,7 @@ func executePlanHandler(w http.ResponseWriter, r *http.Request, params httproute
 	balance, _ := db.GetCurrentBalance(pair.QuoteCurrency)
 
 	tx := db.Begin()
-	db.CreateLog(&cryptodb.Log{PlanID: plan.ID, Source: cryptodb.SourceSoftware, Text: "Finalized orders."})
+	db.CreateLog(&cryptodb.Log{PlanID: plan.ID, Source: cryptodb.Server, Text: "Finalized orders."})
 	// TODO: this should handle an error
 	plan.FinalizeOrders(balance.Available, pair, orders)
 	err = db.SaveOrders(orders)
@@ -52,7 +52,7 @@ func executePlanHandler(w http.ResponseWriter, r *http.Request, params httproute
 		return
 	}
 
-	plan.Status = cryptodb.StatusOrdered
+	plan.Status = cryptodb.Ordered
 	err = db.SavePlan(&plan)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -68,14 +68,14 @@ func executePlanHandler(w http.ResponseWriter, r *http.Request, params httproute
 		tx.Rollback()
 		return
 	}
-	db.CreateLog(&cryptodb.Log{PlanID: plan.ID, Source: cryptodb.SourceSoftware, Text: "Sent plan to exchange."})
+	db.CreateLog(&cryptodb.Log{PlanID: plan.ID, Source: cryptodb.Server, Text: "Sent plan to exchange."})
 	tx.Commit()
 
 	err = e.PlaceOrders(plan, pair, orders)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
-		db.CreateLog(&cryptodb.Log{PlanID: plan.ID, Source: cryptodb.SourceSoftware, Text: fmt.Sprintf("Exchange did not accept plan. %s", err)})
+		db.CreateLog(&cryptodb.Log{PlanID: plan.ID, Source: cryptodb.Server, Text: fmt.Sprintf("Exchange did not accept plan. %s", err)})
 		return
 	}
 

@@ -23,14 +23,14 @@ const MaxTakeProfits = 5
 
 func NewOrders(PlanID uint) []Order {
 	return []Order{
-		{PlanID: PlanID, Status: StatusPlanned, OrderKind: KindMarketStopLoss},
-		{PlanID: PlanID, Status: StatusPlanned, OrderKind: KindLimitStopLoss},
-		{PlanID: PlanID, Status: StatusPlanned, OrderKind: KindEntry},
-		{PlanID: PlanID, Status: StatusPlanned, OrderKind: KindTakeProfit},
-		{PlanID: PlanID, Status: StatusPlanned, OrderKind: KindTakeProfit},
-		{PlanID: PlanID, Status: StatusPlanned, OrderKind: KindTakeProfit},
-		{PlanID: PlanID, Status: StatusPlanned, OrderKind: KindTakeProfit},
-		{PlanID: PlanID, Status: StatusPlanned, OrderKind: KindTakeProfit},
+		{PlanID: PlanID, Status: Planned, OrderKind: MarketStopLoss},
+		{PlanID: PlanID, Status: Planned, OrderKind: LimitStopLoss},
+		{PlanID: PlanID, Status: Planned, OrderKind: Entry},
+		{PlanID: PlanID, Status: Planned, OrderKind: TakeProfit},
+		{PlanID: PlanID, Status: Planned, OrderKind: TakeProfit},
+		{PlanID: PlanID, Status: Planned, OrderKind: TakeProfit},
+		{PlanID: PlanID, Status: Planned, OrderKind: TakeProfit},
+		{PlanID: PlanID, Status: Planned, OrderKind: TakeProfit},
 	}
 }
 

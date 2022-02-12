@@ -19,15 +19,15 @@ const (
 type Status int
 
 const (
-	StatusPlanned Status = iota
-	StatusOrdered
-	StatusUntriggered
-	StatusFilled
-	StatusStopped
-	StatusClosed
-	StatusCancelled
-	StatusLiquidated
-	StatusLogged
+	Planned Status = iota
+	Ordered
+	Untriggered
+	Filled
+	Stopped
+	Cancelled
+	Closed
+	Liquidated
+	Logged
 )
 
 type TakeProfitStrategy int
@@ -47,16 +47,16 @@ const (
 type OrderKind int
 
 const (
-	KindMarketStopLoss OrderKind = iota
-	KindLimitStopLoss
-	KindEntry
-	KindTakeProfit
+	MarketStopLoss OrderKind = iota
+	LimitStopLoss
+	Entry
+	TakeProfit
 )
 
 type LogSource int
 
 const (
-	SourceExchange LogSource = iota
-	SourceSoftware
-	SourceUser
+	Exchange LogSource = iota
+	Server
+	User
 )

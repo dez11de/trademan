@@ -9,14 +9,14 @@ import (
 )
 
 func (e *Exchange) PlaceOrders(p cryptodb.Plan, activePair cryptodb.Pair, o []cryptodb.Order) (err error) {
-	err = e.placeEntry(p, activePair, o[cryptodb.KindMarketStopLoss], o[cryptodb.KindLimitStopLoss], o[cryptodb.KindEntry])
+	err = e.placeEntry(p, activePair, o[cryptodb.MarketStopLoss], o[cryptodb.LimitStopLoss], o[cryptodb.Entry])
 	if err != nil {
 		return err
 	}
 
 	for i := 3; i < 3+cryptodb.MaxTakeProfits; i++ {
 		if !o[i].Price.IsZero() {
-			err = e.placeTakeProfit(p, activePair, o[cryptodb.KindEntry], o[i])
+			err = e.placeTakeProfit(p, activePair, o[cryptodb.Entry], o[i])
 			if err != nil {
 				return err
 			}

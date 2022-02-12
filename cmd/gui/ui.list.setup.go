@@ -57,22 +57,13 @@ func MakePlanListSplit() *container.Split {
 			o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[2].(*canvas.Text).Text = ui.Plans[i].Direction.String()
 			o.(*fyne.Container).Objects[0].(*fyne.Container).Objects[2].(*canvas.Text).Color = DirectionColor(ui.Plans[i].Direction)
 
-			var statusName string
-			switch ui.Plans[i].Status {
-			case cryptodb.StatusPlanned:
-				statusName = "Planned"
-			case cryptodb.StatusOrdered:
-				statusName = "Ordered"
-			case cryptodb.StatusFilled:
-				statusName = "Filled"
-			}
-			o.(*fyne.Container).Objects[1].(*fyne.Container).Objects[0].(*canvas.Text).Text = statusName
+			o.(*fyne.Container).Objects[1].(*fyne.Container).Objects[0].(*canvas.Text).Text = ui.Plans[i].Status.String()
 			o.(*fyne.Container).Objects[1].(*fyne.Container).Objects[0].(*canvas.Text).Color = StatusColor(ui.Plans[i].Status)
 		})
 
 	selectPlanLabel := container.New(layout.NewCenterLayout(), canvas.NewText("Select a plan from the list, or press + to make a new plan.", nil))
 
-	ListAndButtons := container.NewWithoutLayout(widget.NewLabel("Error loading plans.\nCheck internet connection."))
+	ListAndButtons := container.NewWithoutLayout(widget.NewLabel("Error loading plans. Check internet connection."))
 	planListSplit := container.NewHSplit(ListAndButtons, container.NewMax(selectPlanLabel))
 	planListSplit.SetOffset(0.22)
 

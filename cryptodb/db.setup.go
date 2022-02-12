@@ -34,7 +34,7 @@ func (db *Database) CreateSetup(s *Setup) (err error) {
 
 	var logEntry Log
 	logEntry.PlanID = s.Plan.ID
-	logEntry.Source = SourceUser
+	logEntry.Source = User
 	logEntry.Text = "Plan created."
 	err = db.CreateLog(&logEntry)
 	if err != nil {
@@ -146,13 +146,13 @@ func (db *Database) logOrderDifferences(logSource LogSource, pair Pair, oldOrder
 	for i := 0; i <= len(oldOrders)-1; i++ {
 		var orderName string
 		switch oldOrders[i].OrderKind {
-		case KindMarketStopLoss:
+		case MarketStopLoss:
 			orderName = "(market)StopLoss"
-		case KindLimitStopLoss:
+		case LimitStopLoss:
 			orderName = "(limit)StopLoss"
-		case KindEntry:
+		case Entry:
 			orderName = "Entry"
-		case KindTakeProfit:
+		case TakeProfit:
 			orderName = fmt.Sprintf("Take profit #%d", i-2)
 		}
 		if oldOrders[i].Status != newOrders[i].Status {

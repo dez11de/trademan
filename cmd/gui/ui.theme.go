@@ -33,7 +33,6 @@ func ParseHexColor(s string) (c color.RGBA, err error) {
 }
 
 // colors based on https://github.com/EdenEast/nightfox.nvim/blob/main/extra/nightfox/nightfox_alacritty.yml
-// TODO: ok for now, but could use some optimization
 func (m myTheme) Color(name fyne.ThemeColorName, variant fyne.ThemeVariant) color.Color {
 	if name == theme.ColorNameBackground {
 		rgbacolor, _ := ParseHexColor("#192330")
@@ -63,13 +62,13 @@ func DirectionColor(d cryptodb.Direction) color.Color {
 func StatusColor(s cryptodb.Status) color.Color {
     // TODO: define colors for all statussus
 	switch s {
-	case cryptodb.StatusPlanned:
+	case cryptodb.Planned:
 		rgbacolor, _ := ParseHexColor("#84cee4")
 		return rgbacolor
-	case cryptodb.StatusOrdered:
+	case cryptodb.Ordered:
 		rgbacolor, _ := ParseHexColor("#81b29a")
 		return rgbacolor
-	case cryptodb.StatusCancelled:
+	case cryptodb.Cancelled:
 		rgbacolor, _ := ParseHexColor("#dbc074")
 		return rgbacolor
 	}

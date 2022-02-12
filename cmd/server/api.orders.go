@@ -35,12 +35,12 @@ func processOrder(o exchange.Order) (err error) {
 	if err != nil {
 		return err
 	}
-	if tradeManOrder.Status == cryptodb.StatusPlanned && (o.OrderStatus == "New" || o.OrderStatus == "Untriggered") {
-		tradeManOrder.Status = cryptodb.StatusOrdered
-		if tradeManOrder.OrderKind == cryptodb.KindEntry {
-			db.Where("order_kind = ?", cryptodb.KindMarketStopLoss).Where("plan_id = ?", tradeManOrder.PlanID).Find(&marketStopLossOrder)
+	if o.OrderStatus == "New" || o.OrderStatus == "Untriggered" {
+		tradeManOrder.Status.Scan(o.OrderStatus)
+		if tradeManOrder.OrderKind == cryptodb.Entry {
+			db.Where("order_kind = ?", cryptodb.MarketStopLoss).Where("plan_id = ?", tradeManOrder.PlanID).Find(&marketStopLossOrder)
 			if o.StopLoss.Equal(marketStopLossOrder.Price) {
-				marketStopLossOrder.Status = cryptodb.StatusOrdered
+				marketStopLossOrder.Status.Scan(o.OrderStatus)
 			} else {
 				// TODO: think about raising hell or just quitely logging this situation. This should never ever happen.
 			}
@@ -59,7 +59,7 @@ func processOrder(o exchange.Order) (err error) {
 
 		var tmLog cryptodb.Log
 		tmLog.PlanID = tradeManOrder.PlanID
-		tmLog.Source = cryptodb.SourceExchange
+		tmLog.Source = cryptodb.Exchange
 
 		var ExchangeOrderID string
 		if o.OrderID != "" {
@@ -68,7 +68,7 @@ func processOrder(o exchange.Order) (err error) {
 			ExchangeOrderID = o.StopOrderID
 		}
 		var stopLossSetMsg string
-		if marketStopLossOrder.Status == cryptodb.StatusOrdered {
+		if marketStopLossOrder.Status == cryptodb.Ordered {
 			stopLossSetMsg = "and"
 		} else {
 			stopLossSetMsg = "but DID NOT"

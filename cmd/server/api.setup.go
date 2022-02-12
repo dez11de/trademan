@@ -26,7 +26,7 @@ func setupHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 			return
 		}
 	} else {
-		err = db.SaveSetup(cryptodb.SourceUser, &setup)
+		err = db.SaveSetup(cryptodb.User, &setup)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))

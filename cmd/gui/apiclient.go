@@ -35,27 +35,6 @@ func getPairs() (pairs []cryptodb.Pair, err error) {
 	return pairs, err
 }
 
-func searchPairs(s string) (pairs []string, err error) {
-	resp, err := http.Get(BaseURL + "pairs_search/" + s)
-	if err != nil {
-		return pairs, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		errorMessage, _ := ioutil.ReadAll(resp.Body)
-		return pairs, errors.New(string(errorMessage))
-	}
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return pairs, err
-	}
-
-	err = json.Unmarshal(body, &pairs)
-	return pairs, err
-}
-
 func getPair(id uint) (pair cryptodb.Pair, err error) {
 	resp, err := http.Get(BaseURL + "pair/" + strconv.Itoa(int(id)))
 	if err != nil {

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"sort"
 	"strings"
 
 	"fyne.io/fyne/v2"
@@ -14,6 +15,7 @@ import (
 	xwidget "fyne.io/x/fyne/widget"
 	"github.com/bart613/decimal"
 	"github.com/dez11de/cryptodb"
+	"github.com/lithammer/fuzzysearch/fuzzy"
 )
 
 func (pf *planForm) setQuoteCurrency(s string) {
@@ -55,21 +57,33 @@ func (pf *planForm) makeStatContainer() *fyne.Container {
 	return container
 }
 
+func (ui *UI) fzfPairs(s string) (possiblePairs []string) {
+	var pairNames []string
+	for _, p := range ui.Pairs {
+		pairNames = append(pairNames, p.Name)
+	}
+
+	matches := fuzzy.RankFind(s, pairNames)
+	sort.Sort(matches)
+
+	for _, p := range matches {
+		possiblePairs = append(possiblePairs, p.Target)
+	}
+
+	return possiblePairs
+}
+
 func (pf *planForm) makePairItem() *widget.FormItem {
 	CompletionEntry := xwidget.NewCompletionEntry([]string{})
 	CompletionEntry.SetPlaceHolder("Select pair from list")
 	CompletionEntry.OnChanged = func(s string) {
-		if len(s) < 1 {
-			CompletionEntry.HideCompletion()
-		}
-		possiblePairs, err := searchPairs(strings.ToUpper(s))
-		if err != nil {
-			return
-		}
+		CompletionEntry.SetText(strings.ToUpper(s))
+		possiblePairs := ui.fzfPairs(strings.ToUpper(s))
+
 		if len(possiblePairs) == 1 {
 			CompletionEntry.SetText(possiblePairs[0])
 			CompletionEntry.HideCompletion()
-		} else {
+		} else if len(s) >= 2 {
 			CompletionEntry.SetOptions(possiblePairs)
 			CompletionEntry.ShowCompletion()
 		}
@@ -115,7 +129,10 @@ func (pf *planForm) makeRiskItem() *widget.FormItem {
 
 	riskEntry.OnChanged = func(s string) {
 		tempRisk, err := decimal.NewFromString(s)
-		if err != nil || tempRisk.Cmp(decimal.NewFromFloat(5)) != -1 || tempRisk.Cmp(decimal.NewFromFloat(0.499)) != 1 {
+		if (err != nil ||
+			tempRisk.Cmp(decimal.NewFromFloat(5)) != -1 ||
+			tempRisk.Cmp(decimal.NewFromFloat(0.499)) != 1) &&
+			!tempRisk.IsZero() {
 			pf.riskItem.HintText = "enter a 0.5 > risk < 5.0"
 			pf.stopLossItem.Widget.(*widget.Entry).Disable()
 			pf.form.Refresh()
@@ -166,7 +183,7 @@ func (pf *planForm) makeTakeProfitStrategyItem() *widget.FormItem {
 		pf.takeProfitItems[0].Widget.(*widget.Entry).Enable()
 		pf.form.Refresh()
 	})
-    takeProfitStrategySelect.SetSelectedIndex(int(cryptodb.AutoLinear))
+	// takeProfitStrategySelect.SetSelectedIndex(int(cryptodb.AutoLinear))
 	takeProfitStrategySelect.Disable()
 	item := widget.NewFormItem("TP Strategy", takeProfitStrategySelect)
 	item.HintText = " "

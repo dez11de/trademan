@@ -42,21 +42,3 @@ func pairHandler(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.Write(jsonResp)
 }
-
-func searchPairsHandler(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	part := p.ByName("part")
-	pair, err := db.FindPairNames(part)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-        w.Write([]byte(err.Error()))
-        return
-	}
-	jsonResp, err := json.Marshal(pair)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-        w.Write([]byte(err.Error()))
-        return
-	}
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.Write(jsonResp)
-}

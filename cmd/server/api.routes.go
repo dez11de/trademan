@@ -15,7 +15,6 @@ func HandleRequests(c RESTServerConfig) {
 
 	router.GET(APIv1Base+"pairs", allPairsHandler)
 	router.GET(APIv1Base+"pair/:PairID", pairHandler)
-	router.GET(APIv1Base+"pairs_search/:part", searchPairsHandler)
 
 	router.GET(APIv1Base+"plans", allPlansHandler)
 	router.GET(APIv1Base+"plan/execute/:ID", executePlanHandler)

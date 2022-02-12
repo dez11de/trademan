@@ -27,9 +27,8 @@ type planForm struct {
 
 func NewForm() *planForm {
 	pf := new(planForm)
-	pf.form = widget.NewForm()
 
-	// ui.activeOrders = cryptodb.NewOrders(0)
+	pf.form = widget.NewForm()
 
 	pf.pairItem = pf.makePairItem()
 	pf.form.AppendItem(pf.pairItem)

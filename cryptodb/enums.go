@@ -20,7 +20,7 @@ type Status int
 
 const (
 	Planned Status = iota
-	Ordered
+	Ordered        // TODO: is this the same as New? see paracetamol example
 	Untriggered
 	Filled
 	Stopped
@@ -33,8 +33,9 @@ const (
 type TakeProfitStrategy int
 
 const (
-	Manual TakeProfitStrategy = iota // NOT implemented yet
+	Manual TakeProfitStrategy = iota // NOT implemented yet, this requires an extra field in orders, don't reuse Size
 	AutoLinear
+    // for auto-rejection trading use Fibonacci retracement, see https://www.investopedia.com/terms/f/fibonacciretracement.asp for values
 )
 
 type OrderType int

@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
-	"net/http"
 	"strconv"
 	"time"
 
@@ -89,9 +88,4 @@ func (e *Exchange) Subscribe(topic string) error {
         return errors.New(response.ReturnMessage)
 	}
 	return nil
-}
-
-func (e *Exchange) Close() {
-	e.context.Done()
-	e.connection.Close(http.StatusConflict, "weirdness")
 }

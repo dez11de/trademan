@@ -10,6 +10,9 @@ import (
 func (e *Exchange) ProcessMessages(positionChannel chan<- Position, executionChannel chan<- Execution, orderChannel chan<- Order, errorChannel chan<- error) {
 	for {
 		_, data, err := e.connection.Read(e.context)
+		if e.debugMode {
+			e.logger.Write([]byte(fmt.Sprintf("%s [exchange] Raw:       %v\n", time.Now().Format("2006-01-02 15:04:05.000"), string(data))))
+		}
 
 		if err != nil {
 			errorChannel <- err
@@ -42,7 +45,7 @@ func (e *Exchange) ProcessMessages(positionChannel chan<- Position, executionCha
 					errorChannel <- err
 				}
 				for _, position := range positions {
-                    e.logger.Write([]byte(fmt.Sprintf("%s [exchange] Position:  %v\n", time.Now().Format("2006-01-02 15:04:05.000"), position)))
+					e.logger.Write([]byte(fmt.Sprintf("%s [exchange] Position:  %v\n", time.Now().Format("2006-01-02 15:04:05.000"), position)))
 					positionChannel <- position
 				}
 			case "execution":
@@ -51,7 +54,7 @@ func (e *Exchange) ProcessMessages(positionChannel chan<- Position, executionCha
 					errorChannel <- err
 				}
 				for _, execution := range executions {
-                    e.logger.Write([]byte(fmt.Sprintf("%s [exchange] Execution: %v\n", time.Now().Format("2006-01-02 15:04:05.000"), execution)))
+					e.logger.Write([]byte(fmt.Sprintf("%s [exchange] Execution: %v\n", time.Now().Format("2006-01-02 15:04:05.000"), execution)))
 					executionChannel <- execution
 				}
 			case "order", "stop_order":
@@ -60,7 +63,7 @@ func (e *Exchange) ProcessMessages(positionChannel chan<- Position, executionCha
 					errorChannel <- err
 				}
 				for _, order := range orders {
-                    e.logger.Write([]byte(fmt.Sprintf("%s [exchange] Order:     %v\n", time.Now().Format("2006-01-02 15:04:05.000"), order)))
+					e.logger.Write([]byte(fmt.Sprintf("%s [exchange] Order:     %v\n", time.Now().Format("2006-01-02 15:04:05.000"), order)))
 					orderChannel <- order
 				}
 			default:

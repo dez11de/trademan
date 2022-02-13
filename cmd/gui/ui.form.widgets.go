@@ -125,7 +125,7 @@ func (pf *planForm) makeDirectionItem() *widget.FormItem {
 func (pf *planForm) makeRiskItem() *widget.FormItem {
 	riskEntry := widget.NewEntry()
 	riskEntry.Disable()
-	riskEntry.SetPlaceHolder(ui.activePlan.Risk.StringFixed(1))
+	riskEntry.SetPlaceHolder("0.0")
 
 	riskEntry.OnChanged = func(s string) {
 		tempRisk, err := decimal.NewFromString(s)

@@ -3,15 +3,15 @@ package exchange
 import (
 	"time"
 
-	"github.com/dez11de/cryptodb"
 	"github.com/bart613/decimal"
+	"github.com/dez11de/cryptodb"
 )
 
 type Execution struct {
 	Symbol         string          `json:"symbol"`
 	Side           cryptodb.Side   `json:"side"`
-	OrderID        uint            `json:"order_id,string"`
-	ExecID         uint            `json:"exec_id,string"`
+	OrderID        string          `json:"order_id"`
+	ExecID         string          `json:"exec_id"`
 	OrderLinkID    string          `json:"order_link_id"`
 	Price          decimal.Decimal `json:"price"`
 	OrderQuantity  decimal.Decimal `json:"order_qty"`

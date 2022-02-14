@@ -45,7 +45,7 @@ func Connect(c ExchangeConfig) (e *Exchange, err error) {
 		},
 		context: context.Background(),
 
-		debugMode: true,
+		debugMode: false,
 	}
 
 	e.connection, _, err = websocket.Dial(e.context, e.websocketHost, nil)

@@ -3,6 +3,7 @@ package exchange
 import (
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 
 	"github.com/dez11de/cryptodb"
@@ -23,6 +24,7 @@ func (e *Exchange) PlaceOrders(p cryptodb.Plan, activePair cryptodb.Pair, o []cr
 		}
 	}
 
+    log.Print("function PlaceOrders finished")
 	return nil
 }
 

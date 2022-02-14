@@ -13,7 +13,7 @@ var db *cryptodb.Database
 var e *exchange.Exchange
 
 func main() {
-    // TODO: respond to os.Signal messages in the exepected way. See https://pace.dev/blog/2020/02/17/repond-to-ctrl-c-interrupt-signals-gracefully-with-context-in-golang-by-mat-ryer.html
+	// TODO: respond to os.Signal messages in the exepected way. See https://pace.dev/blog/2020/02/17/repond-to-ctrl-c-interrupt-signals-gracefully-with-context-in-golang-by-mat-ryer.html
 	var trademanCfg trademanConfig
 	err := readConfig(&trademanCfg)
 	if err != nil {
@@ -50,27 +50,27 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	}
-	positionsUpdate := make(chan exchange.Position)
+	positionUpdate := make(chan exchange.Position)
 
 	err = e.Subscribe("execution")
 	if err != nil {
 		fmt.Println(err)
 	}
-	executionsUpdate := make(chan exchange.Execution)
+	executionUpdate := make(chan exchange.Execution)
 
 	err = e.Subscribe("order")
 	if err != nil {
 		fmt.Println(err)
 	}
-    err = e.Subscribe("stop_order")
+	err = e.Subscribe("stop_order")
 	if err != nil {
 		fmt.Println(err)
 	}
-	ordersUpdate := make(chan exchange.Order)
+	orderUpdate := make(chan exchange.Order)
 
 	// TODO: also subscribe to wallet socket?
 
-	errorMessages := make(chan error)
+	errorMessage := make(chan error)
 
 	pingExchangeTicker := time.NewTicker(1 * time.Minute)
 	refreshWalletTicker := time.NewTicker(2 * time.Hour)
@@ -80,7 +80,7 @@ func main() {
 	// TODO: what if it can't open the port?
 	go HandleRequests(trademanCfg.RESTServer)
 
-	go e.ProcessMessages(positionsUpdate, executionsUpdate, ordersUpdate, errorMessages)
+	go e.ProcessMessages(positionUpdate, executionUpdate, orderUpdate, errorMessage)
 
 	for {
 		select {
@@ -117,20 +117,27 @@ func main() {
 			refreshWalletTicker.Stop()
 			return
 
-		case _ = <-positionsUpdate:
+        case p := <-positionUpdate:
+			err := processPosition(p)
+			if err != nil {
+				errorMessage <- err
+			} 
 
-		case _ = <-executionsUpdate:
+        case e := <-executionUpdate:
+			err := processExecution(e)
+			if err != nil {
+				errorMessage <- err
+			}
 
-		case o := <-ordersUpdate:
-            err := processOrder(o)
-            if err != nil {
-                errorMessages <- err
-            }
+		case o := <-orderUpdate:
+			err := processOrder(o)
+			if err != nil {
+				errorMessage <- err
+			}
 
-		case e := <-errorMessages:
-            // TODO: should probably log these to file
+		case e := <-errorMessage:
+			// TODO: should probably log these to file
 			log.Printf("Received error: %s", e)
 		}
 	}
 }
-

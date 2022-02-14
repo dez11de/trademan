@@ -81,4 +81,6 @@ func executePlanHandler(w http.ResponseWriter, r *http.Request, params httproute
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.Write(jsonResp)
+
+	return
 }

@@ -22,12 +22,6 @@ func (db *Database) SaveOrder(o *Order) (err error) {
 	return result.Error
 }
 
-func (db *Database) MatchExchangeOrder(eID string) (o Order, err error) {
-	result := db.Where("exchange_order_id = ?", eID).Find(&o)
-
-	return o, result.Error
-}
-
 func (db *Database) GetOrders(PlanID uint) (orders []Order, err error) {
 	result := db.Where("plan_id = ?", PlanID).Find(&orders)
 	if result.RowsAffected == 0 {

@@ -29,15 +29,15 @@ func (e *Exchange) ProcessMessages(positionChannel chan<- Position, executionCha
 		case true:
 			switch wsresp.ReturnMessage {
 			case "pong":
-				// TODO: IF haven't received pong in 2 minutes reconnect, ELSE Reset timer?
+				// TODO: IF haven't received pong in 2 minutes (re)connect, ELSE Reset timer?
 			}
 		}
 
 		if !wsresp.Success {
-
 			var positions []Position
 			var executions []Execution
 			var orders []Order
+
 			switch wsresp.Topic {
 			case "position":
 				err = json.Unmarshal(rawData, &positions)

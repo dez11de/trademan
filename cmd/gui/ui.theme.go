@@ -65,10 +65,10 @@ func StatusColor(s cryptodb.Status) color.Color {
 	case cryptodb.Planned:
 		rgbacolor, _ := ParseHexColor("#84cee4")
 		return rgbacolor
-	case cryptodb.Ordered:
+	case cryptodb.Ordered, cryptodb.New, cryptodb.Untriggered:
 		rgbacolor, _ := ParseHexColor("#81b29a")
 		return rgbacolor
-	case cryptodb.Cancelled:
+	case cryptodb.Cancelled, cryptodb.Deactivated:
 		rgbacolor, _ := ParseHexColor("#dbc074")
 		return rgbacolor
 	}

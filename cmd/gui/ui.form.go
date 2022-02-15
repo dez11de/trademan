@@ -13,7 +13,7 @@ func (pf *planForm) gatherSetup() cryptodb.Setup {
 	ui.activePlan.Risk = decimal.RequireFromString(pf.riskItem.Widget.(*widget.Entry).Text)
 	ui.activeOrders[cryptodb.MarketStopLoss].Price = decimal.RequireFromString(pf.stopLossItem.Widget.(*widget.Entry).Text)
 	ui.activeOrders[cryptodb.Entry].Price = decimal.RequireFromString(pf.entryItem.Widget.(*widget.Entry).Text)
-	ui.activePlan.TakeProfitStrategy.Scan(pf.takeProfitStrategyItem.Text)
+	ui.activePlan.TakeProfitStrategy.Scan(pf.TPStratItem.Widget.(*widget.Select).Selected)
 
 	for i := 0; i < cryptodb.MaxTakeProfits; i++ {
 		// TODO: make this more robust

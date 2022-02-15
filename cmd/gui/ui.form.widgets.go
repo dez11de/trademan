@@ -169,7 +169,7 @@ func (pf *planForm) makeEntryItem() *widget.FormItem {
 	entryEntry.Disable()
 	entryEntry.OnChanged = func(s string) {
 		// TODO: properly validate input
-		pf.takeProfitStrategyItem.Widget.(*widget.Select).Enable()
+		pf.TPStratItem.Widget.(*widget.Select).Enable()
 		pf.form.Refresh()
 	}
 	item := widget.NewFormItem(fmt.Sprintf("Entry (%s)", ui.activePair.QuoteCurrency), entryEntry)
@@ -179,13 +179,12 @@ func (pf *planForm) makeEntryItem() *widget.FormItem {
 
 // TODO: think about in which statusses changing is allowed
 func (pf *planForm) makeTakeProfitStrategyItem() *widget.FormItem {
-	takeProfitStrategySelect := widget.NewSelect(cryptodb.TakeProfitStrategyStrings(), func(s string) {
+	tPStratSelect := widget.NewSelect(cryptodb.TakeProfitStrategyStrings(), func(s string) {
 		pf.takeProfitItems[0].Widget.(*widget.Entry).Enable()
 		pf.form.Refresh()
 	})
-	// takeProfitStrategySelect.SetSelectedIndex(int(cryptodb.AutoLinear))
-	takeProfitStrategySelect.Disable()
-	item := widget.NewFormItem("TP Strategy", takeProfitStrategySelect)
+	tPStratSelect.Disable()
+	item := widget.NewFormItem("TP Strategy", tPStratSelect)
 	item.HintText = " "
 	return item
 }

@@ -17,7 +17,7 @@ type planForm struct {
 	pairItem                *widget.FormItem
 	directionItem           *widget.FormItem
 	riskItem                *widget.FormItem
-	takeProfitStrategyItem  *widget.FormItem
+	TPStratItem             *widget.FormItem
 	stopLossItem            *widget.FormItem
 	entryItem               *widget.FormItem
 	takeProfitItems         [cryptodb.MaxTakeProfits]*widget.FormItem
@@ -40,8 +40,8 @@ func NewForm() *planForm {
 	pf.form.AppendItem(pf.stopLossItem)
 	pf.entryItem = pf.makeEntryItem()
 	pf.form.AppendItem(pf.entryItem)
-	pf.takeProfitStrategyItem = pf.makeTakeProfitStrategyItem()
-	pf.form.AppendItem(pf.takeProfitStrategyItem)
+	pf.TPStratItem = pf.makeTakeProfitStrategyItem()
+	pf.form.AppendItem(pf.TPStratItem)
 
 	for i := 0; i < cryptodb.MaxTakeProfits; i++ {
 		pf.takeProfitItems[i] = pf.makeTakeProfitItem(i)
@@ -113,7 +113,7 @@ func (pf *planForm) FillForm(p cryptodb.Plan) {
 
 	// TODO: think about in which statusses changing is allowed, disable editting if required
 	if ui.activePlan.ID != 0 {
-		pf.takeProfitStrategyItem.Widget.(*widget.Select).SetSelected(ui.activePlan.TakeProfitStrategy.String())
+		pf.TPStratItem.Widget.(*widget.Select).SetSelected(ui.activePlan.TakeProfitStrategy.String())
 	}
 
 	// TODO: think about in which statusses changing is allowed, disable editting if required

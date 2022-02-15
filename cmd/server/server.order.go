@@ -7,9 +7,9 @@ import (
 	"github.com/dez11de/exchange"
 )
 
-func matchExchangeOrder(eID string) (o cryptodb.Order, err error) {
+func matchExchangeOrder(exchangeID string) (o cryptodb.Order, err error) {
 	// TODO: marketStopLossOrder ExchangeOrderID is the same as entryOrder ExchangeOrderID. Figure out how to deal with this
-	result := db.Where("exchange_order_id = ?", eID).Find(&o)
+	result := db.Where("exchange_order_id = ?", exchangeID).Last(&o)
 
 	return o, result.Error
 }
@@ -36,11 +36,11 @@ func processOpenOrder(o exchange.Order) (err error) {
 
 	marketStopLossOrder.Status.Scan(o.OrderStatus)
 
-	var tmLog cryptodb.Log
-	tmLog.PlanID = openOrder.PlanID
-	tmLog.Source = cryptodb.Exchange
+	var logEntry cryptodb.Log
+	logEntry.PlanID = openOrder.PlanID
+	logEntry.Source = cryptodb.Exchange
 
-	tmLog.Text = fmt.Sprintf("Exchange processed %s order %d %s set stoploss as OrderID: %s, at %s.", openOrder.Status.String(), openOrder.ID, stopLossSetMsg, openOrder.ExchangeOrderID, o.CreatedAt.Format("2006-01-02 15:04:05.000"))
+	logEntry.Text = fmt.Sprintf("Exchange processed %s order %d %s set stoploss as OrderID: %s, at %s.", openOrder.Status.String(), openOrder.ID, stopLossSetMsg, openOrder.ExchangeOrderID, o.CreatedAt.Format("2006-01-02 15:04:05.000"))
 
 	tx := db.Begin()
 
@@ -56,7 +56,7 @@ func processOpenOrder(o exchange.Order) (err error) {
 		return result.Error
 	}
 
-	result = tx.Create(&tmLog)
+	result = tx.Create(&logEntry)
 	if result.Error != nil {
 		tx.Rollback()
 		return result.Error
@@ -75,12 +75,12 @@ func processCloseOrder(o exchange.Order) (err error) {
 
 	tx := db.Begin()
 
-	var tmLog cryptodb.Log
+	var logEntry cryptodb.Log
 	closeOrder.ExchangeOrderID = o.ExchangeOrderID
 	closeOrder.Status.Scan(o.OrderStatus)
-	tmLog.PlanID = closeOrder.PlanID
-	tmLog.Source = cryptodb.Exchange
-	tmLog.Text = fmt.Sprintf("Exchange processed %s order %d as OrderID: %s, at %s.", closeOrder.Status.String(), closeOrder.ID, closeOrder.ExchangeOrderID, o.CreatedAt.Format("2006-01-02 15:04:05.000"))
+	logEntry.PlanID = closeOrder.PlanID
+	logEntry.Source = cryptodb.Exchange
+	logEntry.Text = fmt.Sprintf("Exchange processed %s order %d as OrderID: %s, at %s.", closeOrder.Status.String(), closeOrder.ID, closeOrder.ExchangeOrderID, o.CreatedAt.Format("2006-01-02 15:04:05.000"))
 
 	result := tx.Save(&closeOrder)
 	if result.Error != nil {
@@ -88,7 +88,7 @@ func processCloseOrder(o exchange.Order) (err error) {
 		return result.Error
 	}
 
-	result = tx.Create(&tmLog)
+	result = tx.Create(&logEntry)
 	if result.Error != nil {
 		tx.Rollback()
 		return result.Error

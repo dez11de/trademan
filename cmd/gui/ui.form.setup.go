@@ -1,6 +1,8 @@
 package main
 
 import (
+	"log"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
@@ -126,15 +128,20 @@ func (pf *planForm) FillForm(p cryptodb.Plan) {
 	}
 
 	// TODO: think about in which statusses changing is allowed
-	if p.Notes != "" {
+	if ui.activePlan.TradingViewPlan != "" {
+        log.Printf("Showing object[1]")
+        pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[0].(*fyne.Container).Show()
+        pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[1].(*fyne.Container).Show()
+	} else {
+        log.Printf("Showing object[0]")
+        pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[1].(*fyne.Container).Show()
+        pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[0].(*fyne.Container).Show()
+	}
+
+	// TODO: think about in which statusses changing is allowed
+	if ui.activePlan.Notes != "" {
 		pf.notesMultilineEntryItem.Widget.(*widget.Entry).SetText(ui.activePlan.Notes)
 	}
 
-	/*
-		if pf.plan.TradingViewPlan == "" {
-			pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[1].Show()
-		} else {
-			pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[0].Show()
-		}
-	*/
+    pf.form.Refresh()
 }

@@ -34,29 +34,6 @@ func (pf *planForm) setPriceScale(i int32) {
 	}
 }
 
-func (pf *planForm) makeStatContainer() *fyne.Container {
-	// TODO: make distinction between start RRR and evolved RRR
-	startRewardRiskRatioLabel := widget.NewLabel("Start RRR: ")
-	startRewardRiskRatioValue := widget.NewLabel(fmt.Sprintf("%.1f", 0.0))
-	evolvedRewardRiskRatioLabel := widget.NewLabel("Current RRR: ")
-	evolvedRewardRiskRatioValue := widget.NewLabel(fmt.Sprintf("%.1f", 0.0))
-
-	currentPnLLabel := widget.NewLabel("PnL: ")
-	currentPnLValue := widget.NewLabel(fmt.Sprintf("%s%%", ui.activePlan.Profit.StringFixed(1))) // TODO: should be relative to entrySize.
-	// TODO: figure out what this even means, see CryptoCred.
-	breakEvenLabel := widget.NewLabel("B/E: ")
-	breakEvenValue := widget.NewLabel(fmt.Sprintf("%.0f%%", 0.0))
-	container := container.NewHBox(
-		layout.NewSpacer(),
-		startRewardRiskRatioLabel, startRewardRiskRatioValue,
-		evolvedRewardRiskRatioLabel, evolvedRewardRiskRatioValue,
-		currentPnLLabel, currentPnLValue,
-		breakEvenLabel, breakEvenValue,
-		layout.NewSpacer())
-
-	return container
-}
-
 func (ui *UI) fzfPairs(s string) (possiblePairs []string) {
 	var pairNames []string
 	for _, p := range ui.Pairs {
@@ -107,7 +84,33 @@ func (pf *planForm) makePairItem() *widget.FormItem {
 			pf.form.Refresh()
 		}
 	}
-	return widget.NewFormItem("Pair", CompletionEntry)
+	item := widget.NewFormItem("Pair", CompletionEntry)
+	item.HintText = " "
+
+	return item
+}
+
+func (pf *planForm) makeStatContainer() *fyne.Container {
+	// TODO: make distinction between start RRR and evolved RRR
+	startRewardRiskRatioLabel := widget.NewLabel("Start RRR: ")
+	startRewardRiskRatioValue := widget.NewLabel(fmt.Sprintf("%.1f", 0.0))
+	evolvedRewardRiskRatioLabel := widget.NewLabel("Current RRR: ")
+	evolvedRewardRiskRatioValue := widget.NewLabel(fmt.Sprintf("%.1f", 0.0))
+
+	currentPnLLabel := widget.NewLabel("PnL: ")
+	currentPnLValue := widget.NewLabel(fmt.Sprintf("%s%%", ui.activePlan.Profit.StringFixed(1))) // TODO: should be relative to entrySize.
+	// TODO: figure out what this even means, see CryptoCred.
+	breakEvenLabel := widget.NewLabel("B/E: ")
+	breakEvenValue := widget.NewLabel(fmt.Sprintf("%.0f%%", 0.0))
+	container := container.NewHBox(
+		layout.NewSpacer(),
+		startRewardRiskRatioLabel, startRewardRiskRatioValue,
+		evolvedRewardRiskRatioLabel, evolvedRewardRiskRatioValue,
+		currentPnLLabel, currentPnLValue,
+		breakEvenLabel, breakEvenValue,
+		layout.NewSpacer())
+
+	return container
 }
 
 func (pf *planForm) makeDirectionItem() *widget.FormItem {
@@ -118,7 +121,11 @@ func (pf *planForm) makeDirectionItem() *widget.FormItem {
 		})
 	directionRadio.Horizontal = true
 	directionRadio.Disable()
-	return widget.NewFormItem("Direction", directionRadio)
+
+	item := widget.NewFormItem("Direction", directionRadio)
+	item.HintText = " "
+
+	return item
 }
 
 // TODO: think about in which statusses changing is allowed
@@ -158,8 +165,10 @@ func (pf *planForm) makeStopLossItem() *widget.FormItem {
 		pf.entryItem.Widget.(*widget.Entry).Enable()
 		pf.form.Refresh()
 	}
+
 	item := widget.NewFormItem(fmt.Sprintf("Stop Loss (%s)", ui.activePair.QuoteCurrency), StopLossEntry)
 	item.HintText = " "
+
 	return item
 }
 
@@ -172,8 +181,10 @@ func (pf *planForm) makeEntryItem() *widget.FormItem {
 		pf.TPStratItem.Widget.(*widget.Select).Enable()
 		pf.form.Refresh()
 	}
+
 	item := widget.NewFormItem(fmt.Sprintf("Entry (%s)", ui.activePair.QuoteCurrency), entryEntry)
 	item.HintText = " "
+
 	return item
 }
 
@@ -186,6 +197,7 @@ func (pf *planForm) makeTakeProfitStrategyItem() *widget.FormItem {
 	tPStratSelect.Disable()
 	item := widget.NewFormItem("TP Strategy", tPStratSelect)
 	item.HintText = " "
+
 	return item
 }
 
@@ -203,8 +215,10 @@ func (pf *planForm) makeTakeProfitItem(n int) *widget.FormItem {
 			}
 		}
 	}
+
 	item := widget.NewFormItem(fmt.Sprintf("Take profit #%d (%s)", n+1, ui.activePair.QuoteCurrency), takeProfitEntry)
 	item.HintText = " "
+
 	return item
 }
 
@@ -213,24 +227,41 @@ func (pf *planForm) makeTradingViewLinkItem() *widget.FormItem {
 	var tvurl url.URL
 
 	editEntry := widget.NewEntry()
-	saveButton := widget.NewButtonWithIcon("", theme.DocumentSaveIcon(), func() {
-		log.Printf("Save button clicked.")
-	})
-	editContainer := container.NewHBox(editEntry, saveButton)
-	editContainer.Hide()
+	saveButton := widget.NewButtonWithIcon("", theme.DocumentSaveIcon(), nil)
 
 	// TODO: check error
 	tvurl.Parse(ui.activePlan.TradingViewPlan)
 	tradingViewLink := widget.NewHyperlink("Open", &tvurl)
-	createButton := widget.NewButtonWithIcon("", theme.DocumentCreateIcon(), func() {
-		log.Printf("Create button clicked.")
-	})
-	showContainer := container.NewHBox(tradingViewLink, createButton)
-	showContainer.Hide()
+	createButton := widget.NewButtonWithIcon("", theme.DocumentCreateIcon(), nil)
 
-	holdingContainer := container.NewWithoutLayout(editContainer, showContainer)
+	saveButton.OnTapped = func() {
+		log.Printf("saveButton tapped")
+		editEntry.Hide()
+		tradingViewLink.Show()
+		saveButton.Hide()
+		createButton.Show()
+	}
+	createButton.OnTapped = func() {
+		log.Printf("createButton tapped")
+		createButton.Hide()
+		tradingViewLink.Hide()
+		saveButton.Show()
+		editEntry.Show()
 
-	return widget.NewFormItem("TradingView", holdingContainer)
+	}
+
+	holdingContainer := container.New(layout.NewHBoxLayout())
+
+    buttonContainer := container.NewWithoutLayout(saveButton, createButton)
+    entryContainer := container.NewWithoutLayout(editEntry, tradingViewLink)
+
+	holdingContainer.Add(entryContainer)
+	holdingContainer.Add(buttonContainer)
+
+	item := widget.NewFormItem("TradingView", holdingContainer)
+	item.HintText = " "
+
+	return item
 }
 
 func (pf *planForm) makeNotesMultilineItem() *widget.FormItem {
@@ -239,7 +270,10 @@ func (pf *planForm) makeNotesMultilineItem() *widget.FormItem {
 	notesMultiLineEntry.SetText(ui.activePlan.Notes)
 	notesMultiLineEntry.Wrapping = fyne.TextWrapWord
 
-	return widget.NewFormItem("Notes", notesMultiLineEntry)
+	item := widget.NewFormItem("Notes", notesMultiLineEntry)
+	item.HintText = " "
+
+	return item
 }
 
 func (pf *planForm) makeToolBar() *widget.Toolbar {

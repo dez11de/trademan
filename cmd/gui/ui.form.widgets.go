@@ -194,8 +194,15 @@ func (pf *planForm) makeTakeProfitStrategyItem() *widget.FormItem {
 		pf.takeProfitItems[0].Widget.(*widget.Entry).Enable()
 		pf.form.Refresh()
 	})
+<<<<<<< Updated upstream
 	tPStratSelect.Disable()
 	item := widget.NewFormItem("TP Strategy", tPStratSelect)
+=======
+	// takeProfitStrategySelect.SetSelectedIndex(int(cryptodb.AutoLinear))
+	takeProfitStrategySelect.Disable()
+
+	item := widget.NewFormItem("TP Strategy", takeProfitStrategySelect)
+>>>>>>> Stashed changes
 	item.HintText = " "
 
 	return item

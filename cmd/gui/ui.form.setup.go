@@ -74,13 +74,15 @@ func (pf *planForm) FillForm(p cryptodb.Plan) {
 
 	if ui.activePlan.PairID != 0 {
 		ui.activePair = ui.Pairs[ui.activePlan.PairID-1]
-	}
-	if err != nil {
-		dialog.ShowError(err, mainWindow)
-	}
-	ui.activeOrders, err = getOrders(ui.activePlan.ID)
-	if err != nil {
-		dialog.ShowError(err, mainWindow)
+		if err != nil {
+			dialog.ShowError(err, mainWindow)
+		}
+		ui.activeOrders, err = getOrders(ui.activePlan.ID)
+		if err != nil {
+			dialog.ShowError(err, mainWindow)
+		}
+	} else {
+	    ui.activeOrders = cryptodb.NewOrders(0)
 	}
 
 	if ui.activePlan.ID != 0 {
@@ -129,17 +131,17 @@ func (pf *planForm) FillForm(p cryptodb.Plan) {
 
 	// TODO: think about in which statusses changing is allowed
 	if ui.activePlan.TradingViewPlan != "" {
-        log.Printf("Showing object[1]")
-        pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[0].Hide()
-        pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[1].Hide()
-        pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[2].Show()
-        pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[3].Show()
+		log.Printf("Showing object[1]")
+		pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[0].Hide()
+		pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[1].Hide()
+		pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[2].Show()
+		pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[3].Show()
 	} else {
-        log.Printf("Showing object[0]")
-        pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[0].Show()
-        pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[1].Show()
-        pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[2].Hide()
-        pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[3].Hide()
+		log.Printf("Showing object[0]")
+		pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[0].Show()
+		pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[1].Show()
+		pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[2].Hide()
+		pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[3].Hide()
 	}
 
 	// TODO: think about in which statusses changing is allowed
@@ -147,5 +149,5 @@ func (pf *planForm) FillForm(p cryptodb.Plan) {
 		pf.notesMultilineEntryItem.Widget.(*widget.Entry).SetText(ui.activePlan.Notes)
 	}
 
-    pf.form.Refresh()
+	pf.form.Refresh()
 }

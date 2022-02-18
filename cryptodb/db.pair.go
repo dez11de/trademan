@@ -4,16 +4,10 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func (db *Database) createPair(p *Pair) (err error) {
-	result := db.Create(p)
+func (db *Database) GetPairByName(s string) (pair Pair, err error) {
+	result := db.Where("name = ?", s).Find(&pair)
 
-	return result.Error
-}
-
-func (db *Database) savePair(p *Pair) (err error) {
-	result := db.Save(p)
-
-	return result.Error
+	return pair, result.Error
 }
 
 func (db *Database) CrupdatePair(p *Pair) (err error) {
@@ -23,36 +17,23 @@ func (db *Database) CrupdatePair(p *Pair) (err error) {
 	}
 
 	if pair.ID == 0 {
-		err = db.createPair(p)
+		result := db.Create(&p)
+		return result.Error
 	} else {
-		err = db.savePair(p)
+		result := db.Save(&p)
+		return result.Error
 	}
-
-	return err
 }
 
 // TODO: should only return Active pairs. See GORM api documentation.
 func (db *Database) GetPairs() (pairs []Pair, err error) {
-	result := db.Order("ID ASC").Find(&pairs)
+	result := db.Where("status = ?", "Trading").Order("ID ASC").Find(&pairs)
 
 	return pairs, result.Error
 }
 
 func (db *Database) GetPair(id uint) (pair Pair, err error) {
-	result := db.Where("ID = ?", id).Find(&pair)
+	result := db.Where("ID = ?", id).First(&pair)
 
 	return pair, result.Error
-}
-
-func (db *Database) GetPairByName(s string) (pair Pair, err error) {
-	result := db.Where("name = ?", s).Find(&pair)
-
-	return pair, result.Error
-}
-
-// find Pair.Name containing s
-func (db *Database) FindPairNames(s string) (pairs []string, err error) {
-	result := db.Model(&Pair{}).Select("name").Where("name LIKE ?", "%"+s+"%").Find(&pairs)
-
-	return pairs, result.Error
 }

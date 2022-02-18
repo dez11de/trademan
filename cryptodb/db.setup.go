@@ -4,173 +4,85 @@ import (
 	"fmt"
 )
 
-func (db *Database) CreateSetup(s *Setup) (err error) {
+func (db *Database) CreateSetup(s *Setup) error {
 	tx := db.Begin()
 
-	err = db.CreatePlan(&s.Plan)
-	if err != nil {
+	result := db.Create(&s.Plan)
+	if result.Error != nil {
 		tx.Rollback()
-		return err
+		return result.Error
 	}
 
 	for i := range s.Orders {
 		s.Orders[i].PlanID = s.Plan.ID
 	}
 
-	err = db.CreateOrders(s.Orders)
-	if err != nil {
+	result = db.Create(&s.Orders)
+	if result.Error != nil {
 		tx.Rollback()
-		return err
+		return result.Error
 	}
 
 	for i := range s.Orders {
 		s.Orders[i].ExchangeOrderID = fmt.Sprintf("TM-%04d-%05d-%d", s.Plan.ID, s.Orders[i].ID, s.Plan.CreatedAt.Unix())
 	}
-	err = db.SaveOrders(s.Orders)
-	if err != nil {
+
+	result = db.Save(&s.Orders)
+	if result.Error != nil {
 		tx.Rollback()
-		return err
+		return result.Error
 	}
 
 	var logEntry Log
 	logEntry.PlanID = s.Plan.ID
 	logEntry.Source = User
 	logEntry.Text = "Plan created."
-	err = db.CreateLog(&logEntry)
-	if err != nil {
+	result = db.Create(&logEntry)
+	if result.Error != nil {
 		tx.Rollback()
-		return err
+		return result.Error
 	}
 
 	tx.Commit()
 
-	return err
+	return nil
 }
 
-func (db *Database) SaveSetup(logSource LogSource, newSetup *Setup) (err error) {
+func (db *Database) SaveSetup(logSource LogSource, newSetup *Setup) error {
 	pair, err := db.GetPair(newSetup.Plan.PairID)
 	if err != nil {
 		return err
 	}
-	oldPlan, err := db.GetPlan(newSetup.Plan.ID)
-	if err != nil {
-		return err
+
+	var oldPlan Plan
+	result := db.Where("ID = ?", newSetup.Plan.ID).First(&oldPlan)
+	if result.Error != nil {
+		return result.Error
 	}
 
 	tx := db.Begin()
 
-	err = db.SavePlan(&newSetup.Plan)
-	if err != nil {
+	result = tx.Save(&newSetup.Plan)
+	if result.Error != nil {
 		tx.Rollback()
-		return err
+		return result.Error
 	}
 
-	db.logPlanDifferences(logSource, pair, oldPlan, newSetup.Plan)
+	logPlanDifferences(tx, logSource, pair, oldPlan, newSetup.Plan)
 
-	oldOrders, err := db.GetOrders(newSetup.Plan.ID)
+	var oldOrders []Order
+	result = db.Where("plan_id = ?", newSetup.Plan.ID).Find(oldOrders)
 
-	err = db.SaveOrders(newSetup.Orders)
-	if err != nil {
+	result = tx.Save(&newSetup.Orders)
+	if result.Error != nil {
 		tx.Rollback()
-		return err
+		return result.Error
 	}
 
-	db.logOrderDifferences(logSource, pair, oldOrders, newSetup.Orders)
+	logOrderDifferences(tx, logSource, pair, oldOrders, newSetup.Orders)
 
 	tx.Commit()
 
 	return err
 }
 
-func (db *Database) logPlanDifferences(logSource LogSource, pair Pair, oldPlan, newPlan Plan) {
-	var logEntry Log
-	logEntry.PlanID = oldPlan.ID
-	logEntry.Source = logSource
-
-	tx := db.Begin()
-	if oldPlan.Status != newPlan.Status {
-		logEntry.Text = fmt.Sprintf("\tStatus changed from %s to %s.", oldPlan.Status.String(), newPlan.Status.String())
-		err := db.CreateLog(&logEntry)
-		if err != nil {
-			tx.Rollback()
-			return
-		}
-	}
-
-	if !oldPlan.Risk.Equal(newPlan.Risk) {
-		logEntry.Text = fmt.Sprintf("Risk changed from %s to %s.", oldPlan.Risk.StringFixed(2), newPlan.Risk.StringFixed(2))
-		err := db.CreateLog(&logEntry)
-		if err != nil {
-			tx.Rollback()
-			return
-		}
-	}
-
-	if oldPlan.Status != newPlan.Status {
-		logEntry.Text = fmt.Sprintf("Tradingview plan changed from %s to %s.", oldPlan.TradingViewPlan, newPlan.TradingViewPlan)
-		err := db.CreateLog(&logEntry)
-		if err != nil {
-			tx.Rollback()
-			return
-		}
-	}
-
-	if oldPlan.RewardRiskRatio != newPlan.RewardRiskRatio {
-		logEntry.Text = fmt.Sprintf("RRR changed from %.2f to %.2f.", oldPlan.RewardRiskRatio, newPlan.RewardRiskRatio)
-		err := db.CreateLog(&logEntry)
-		if err != nil {
-			tx.Rollback()
-			return
-		}
-	}
-
-	if !oldPlan.Profit.Equal(newPlan.Profit) {
-		logEntry.Text = fmt.Sprintf("Profit changed from %s to %s.",
-			oldPlan.Profit.StringFixed(pair.PriceScale),
-			newPlan.Profit.StringFixed(2))
-		err := db.CreateLog(&logEntry)
-		if err != nil {
-			tx.Rollback()
-			return
-		}
-	}
-	tx.Commit()
-}
-
-func (db *Database) logOrderDifferences(logSource LogSource, pair Pair, oldOrders, newOrders []Order) {
-	var logEntry Log
-	logEntry.PlanID = oldOrders[0].PlanID
-	logEntry.Source = logSource
-
-	tx := db.Begin()
-	for i := 0; i <= len(oldOrders)-1; i++ {
-		var orderName string
-		switch oldOrders[i].OrderKind {
-		case MarketStopLoss:
-			orderName = "(market)StopLoss"
-		case LimitStopLoss:
-			orderName = "(limit)StopLoss"
-		case Entry:
-			orderName = "Entry"
-		case TakeProfit:
-			orderName = fmt.Sprintf("Take profit #%d", i-2)
-		}
-		if oldOrders[i].Status != newOrders[i].Status {
-			logEntry.Text = fmt.Sprintf("Status of %s changed from %s to %s.", orderName, oldOrders[i].Status.String(), newOrders[i].Status.String())
-			err := db.CreateLog(&logEntry)
-			if err != nil {
-				tx.Rollback()
-				return
-			}
-		}
-		if !oldOrders[i].Price.Equal(newOrders[i].Price) {
-			logEntry.Text = fmt.Sprintf("Price of %s changed from %s to %s.", orderName, oldOrders[i].Price.StringFixed(pair.PriceScale), newOrders[i].Price.StringFixed(pair.PriceScale))
-			err := db.CreateLog(&logEntry)
-			if err != nil {
-				tx.Rollback()
-				return
-			}
-		}
-	}
-	tx.Commit()
-}

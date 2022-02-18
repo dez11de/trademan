@@ -17,14 +17,14 @@ func (p *Plan) FinalizeOrders(available decimal.Decimal, activePair Pair, o []Or
 	o[Entry].Size = positionSize
 
 	if available.LessThan(positionSize.Mul(o[Entry].Price)) {
-        // HACK: multiply by 2 is nonsensical
+		// HACK: multiply by 2 is nonsensical
 		p.Leverage = positionSize.Mul(o[Entry].Price).Div(available).RoundStep(activePair.Leverage.Step.Mul(decimal.NewFromInt(2)), false)
 	} else {
 		p.Leverage = decimal.NewFromInt(1)
 	}
 
 	takeProfitsCount := int64(0)
-	for i := 1; i < 5; i++ {
+	for i := 1; i <= MaxTakeProfits; i++ {
 		if !o[2+i].Price.IsZero() {
 			takeProfitsCount++
 		}

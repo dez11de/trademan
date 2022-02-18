@@ -54,13 +54,13 @@ func TestShouldSavePair(t *testing.T) {
 		for n, p := range mockPairs {
 			mock.ExpectBegin()
 			mock.ExpectExec("INSERT INTO `pairs` (.+) VALUES (.+)").
-				WithArgs(p.Name, p.Alias, p.Status, p.BaseCurrency, p.QuoteCurrency, p.PriceScale, p.TakerFee, p.MakerFee, p.Leverage.Min, p.Leverage.Max, p.Leverage.Step, p.Price.Min, p.Price.Max, p.Price.Tick, p.Order.Min, p.Order.Max, p.Order.Step, AnyTime{}, AnyTime{}, p.ID).
+				WithArgs(p.Name, p.Alias, p.Status, p.BaseCurrency, p.QuoteCurrency, p.PriceScale, p.TakerFee, p.MakerFee, p.Leverage.Buy, p.Leverage.Sell, p.Leverage.Min, p.Leverage.Max, p.Leverage.Step, p.Price.Min, p.Price.Max, p.Price.Tick, p.Order.Min, p.Order.Max, p.Order.Step, AnyTime{}, AnyTime{}, p.ID).
 				WillReturnResult(sqlmock.NewResult(1, 1))
 			mock.ExpectCommit()
 
-			err := db.createPair(&mockPairs[n])
-			if err != nil {
-				t.Errorf("received unexpected error %s", err)
+			result := db.Create(&mockPairs[n])
+			if result.Error != nil {
+				t.Errorf("received unexpected error %s", result.Error)
 			}
 		}
 	})
@@ -68,18 +68,18 @@ func TestShouldSavePair(t *testing.T) {
 		for n, p := range mockPairs {
 			mock.ExpectBegin()
 			mock.ExpectExec("UPDATE `pairs` SET .+ WHERE `id` = .+").
-				WithArgs(p.Name, p.Alias, p.Status, p.BaseCurrency, p.QuoteCurrency, p.PriceScale, p.TakerFee, p.MakerFee, p.Leverage.Min, p.Leverage.Max, p.Leverage.Step, p.Price.Min, p.Price.Max, p.Price.Tick, p.Order.Min, p.Order.Max, p.Order.Step, AnyTime{}, AnyTime{}, p.ID).
+				WithArgs(p.Name, p.Alias, p.Status, p.BaseCurrency, p.QuoteCurrency, p.PriceScale, p.TakerFee, p.MakerFee, p.Leverage.Buy, p.Leverage.Sell, p.Leverage.Min, p.Leverage.Max, p.Leverage.Step, p.Price.Min, p.Price.Max, p.Price.Tick, p.Order.Min, p.Order.Max, p.Order.Step, AnyTime{}, AnyTime{}, p.ID).
 				WillReturnResult(sqlmock.NewResult(1, 1))
 			mock.ExpectCommit()
 
-			err := db.savePair(&mockPairs[n])
-			if err != nil {
-				t.Errorf("received unexpected error %s", err)
+			result := db.Save(&mockPairs[n])
+			if result.Error != nil {
+				t.Errorf("received unexpected error %s", result.Error)
 			}
 		}
 	})
 
-    // TODO: should also create test for Crupdate
+	// TODO: should also create test for Crupdate
 
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("there were unmet expectations: %s", err)
@@ -102,7 +102,7 @@ func TestShouldGetPairs(t *testing.T) {
 	mockRow := sqlmock.NewRows([]string{"ID", "Name", "Alias", "BaseCurrency", "QuoteCurrency"}).AddRow(0, "BTCUSDT", "BTCUSDT", "BTC", "USDT")
 
 	t.Run("Should SELECT all pairs", func(t *testing.T) {
-		mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `pairs` ORDER BY ID ASC")).
+		mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM `pairs` WHERE status = Trading ORDER BY ID ASC")).
 			WillReturnRows(mockRow)
 
 		_, err := db.GetPairs()
@@ -115,38 +115,3 @@ func TestShouldGetPairs(t *testing.T) {
 		t.Errorf("there were unmet expectations: %s", err)
 	}
 }
-
-/*
-Doesn't work, problem with % in argument
-func TestShouldSearchPairs(t *testing.T) {
-	mockdb, mock, err := sqlmock.New()
-
-	if err != nil {
-		t.Fatalf("an error '%s' was not expected when opening a mock database connection", err)
-	}
-	defer mockdb.Close()
-
-	dialector := mysql.New(mysql.Config{Conn: mockdb, DriverName: "mysql", SkipInitializeWithVersion: true})
-	gdb, err := gorm.Open(dialector, &gorm.Config{})
-
-	db := &Database{gdb}
-
-	mockSearch := "AD"
-	mockRow := sqlmock.NewRows([]string{"ID", "Name", "Alias", "BaseCurrency", "QuoteCurrency"}).AddRow(15, "ADAUSDT", "ADAUSDT", "ADA", "USDT")
-
-	t.Run("Should SEARCH for pairs", func(t *testing.T) {
-		mock.ExpectQuery(regexp.QuoteMeta("SELECT `name` FROM `pairs` WHERE name LIKE ?")).
-			WithArgs("%" + mockSearch + "%").
-			WillReturnRows(mockRow)
-
-		_, err := db.FindPairNames(mockSearch)
-		if err != nil {
-			t.Errorf("received unexpected error %s", err)
-		}
-	})
-
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unmet expectations: %s", err)
-	}
-}
-*/

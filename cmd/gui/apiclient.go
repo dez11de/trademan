@@ -99,7 +99,6 @@ func executePlan(id uint) (plan cryptodb.Plan, err error) {
 }
 
 func getOrders(PlanID uint) (orders []cryptodb.Order, err error) {
-	orders = cryptodb.NewOrders(PlanID) // TODO: is this really necessary here?
 	resp, err := http.Get(BaseURL + "orders/" + strconv.Itoa(int(PlanID)))
 	if err != nil {
 		return orders, err

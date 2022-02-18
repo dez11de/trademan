@@ -1,17 +1,101 @@
 package cryptodb
 
 import (
+	"fmt"
+
 	_ "github.com/go-sql-driver/mysql"
+	"gorm.io/gorm"
 )
 
-func (db *Database) CreateLog(l *Log) (err error) {
-	result := db.Create(l)
+func logPlanDifferences(tx *gorm.DB, logSource LogSource, pair Pair, oldPlan, newPlan Plan) {
+	var logEntry Log
+	logEntry.PlanID = oldPlan.ID
+	logEntry.Source = logSource
 
-	return result.Error
+	subTx := tx.Begin()
+	if oldPlan.Status != newPlan.Status {
+		logEntry.Text = fmt.Sprintf("\tStatus changed from %s to %s.", oldPlan.Status.String(), newPlan.Status.String())
+		result := subTx.Create(&logEntry)
+		if result.Error != nil {
+			subTx.Rollback()
+			return
+		}
+	}
+
+	if !oldPlan.Risk.Equal(newPlan.Risk) {
+		logEntry.Text = fmt.Sprintf("Risk changed from %s to %s.", oldPlan.Risk.StringFixed(2), newPlan.Risk.StringFixed(2))
+		result := subTx.Create(&logEntry)
+		if result.Error != nil {
+			subTx.Rollback()
+			return
+		}
+	}
+
+	if oldPlan.Status != newPlan.Status {
+		logEntry.Text = fmt.Sprintf("Tradingview plan changed from %s to %s.", oldPlan.TradingViewPlan, newPlan.TradingViewPlan)
+		result := subTx.Create(&logEntry)
+		if result.Error != nil {
+			subTx.Rollback()
+			return
+		}
+	}
+
+	if oldPlan.RewardRiskRatio != newPlan.RewardRiskRatio {
+		logEntry.Text = fmt.Sprintf("RRR changed from %.2f to %.2f.", oldPlan.RewardRiskRatio, newPlan.RewardRiskRatio)
+		result := subTx.Create(&logEntry)
+		if result.Error != nil {
+			subTx.Rollback()
+			return
+		}
+	}
+
+	if !oldPlan.Profit.Equal(newPlan.Profit) {
+		logEntry.Text = fmt.Sprintf("Profit changed from %s to %s.",
+			oldPlan.Profit.StringFixed(pair.PriceScale),
+			newPlan.Profit.StringFixed(2))
+		result := subTx.Create(&logEntry)
+		if result.Error != nil {
+			subTx.Rollback()
+			return
+		}
+	}
+	subTx.Commit()
 }
 
-func (db *Database) GetLogs(PlanID uint) (logs []Log, err error) {
-	result := db.Where("plan_id = ?", PlanID).Find(&logs)
+func logOrderDifferences(tx *gorm.DB, logSource LogSource, pair Pair, oldOrders, newOrders []Order) {
+	var logEntry Log
+	logEntry.PlanID = oldOrders[0].PlanID
+	logEntry.Source = logSource
 
-	return logs, result.Error
+	subTx := tx.Begin()
+	for i := 0; i <= len(oldOrders)-1; i++ {
+		var orderName string
+		switch oldOrders[i].OrderKind {
+		case MarketStopLoss:
+			orderName = "(market)StopLoss"
+		case LimitStopLoss:
+			orderName = "(limit)StopLoss"
+		case Entry:
+			orderName = "Entry"
+		case TakeProfit:
+			orderName = fmt.Sprintf("Take profit #%d", i-2)
+		}
+		if oldOrders[i].Status != newOrders[i].Status {
+			logEntry.Text = fmt.Sprintf("Status of %s changed from %s to %s.", orderName, oldOrders[i].Status.String(), newOrders[i].Status.String())
+			result := subTx.Create(&logEntry)
+			if result.Error != nil {
+				subTx.Rollback()
+				return
+			}
+		}
+		if !oldOrders[i].Price.Equal(newOrders[i].Price) {
+			logEntry.Text = fmt.Sprintf("Price of %s changed from %s to %s.", orderName, oldOrders[i].Price.StringFixed(pair.PriceScale), newOrders[i].Price.StringFixed(pair.PriceScale))
+			result := subTx.Create(&logEntry)
+			if result.Error != nil {
+				subTx.Rollback()
+				return
+			}
+		}
+	}
+	subTx.Commit()
 }

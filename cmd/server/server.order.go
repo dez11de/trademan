@@ -101,19 +101,19 @@ func processCloseOrder(o exchange.Order) (err error) {
 }
 
 func processOrder(o exchange.Order) (err error) {
-	// TODO: check if this works for Short orders the same way or, in reverse
-	// this is Entry with MarketStopLoss
 	if !o.StopLoss.IsZero() {
 		log.Printf("Processing Entry w/ MarketStopLoss")
+		err := processEntryOrder(o)
+		return err
 	}
+
+    // TODO: figure this shit out
 	if o.Side == "Sell" {
 		err := processCloseOrder(o)
 		return err
 	}
 
 	if o.Side == "Buy" {
-		err := processEntryOrder(o)
-		return err
 	}
 
 	return nil

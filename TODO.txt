@@ -7,7 +7,9 @@ Refactor!
     Is it actually worth it to keep everything in seperate modules?
 
 Investigate 
+    Evolving RRR
     Trading break-even (win-rate/rrr)
+    Laddered entry
 
 Properly configure enumer
 	make use of transform and/or trim options?

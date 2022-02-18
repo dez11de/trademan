@@ -51,7 +51,7 @@ func main() {
 			log.Fatalf("unable to get current wallet from exchange: %s", err)
 		}
 		for _, b := range exchangeWallet {
-			db.CreateBalance(&b)
+			db.Create(&b)
 		}
 	}
 
@@ -104,9 +104,9 @@ func main() {
 				log.Printf("error getting current wallet from exchange %v", err)
 			} else {
 				for _, b := range currentBalances {
-					err = db.CreateBalance(&b)
-					if err != nil {
-						log.Printf("error writing balance to database %v", err)
+                    result := db.Create(&b)
+					if result.Error != nil {
+						log.Printf("error writing balance to database %v", result.Error)
 					}
 				}
 			}

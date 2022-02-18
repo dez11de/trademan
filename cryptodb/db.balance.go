@@ -6,17 +6,17 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func (db *Database) CreateBalance(b *Balance) (err error) {
-	result := db.Create(b)
+// func (db *Database) CreateBalance(b *Balance) (err error) {
+// 	result := db.Create(b)
+// 
+// 	return result.Error
+// }
 
-	return result.Error
-}
-
-func (db *Database) GetCurrentBalance(s string) (balance Balance, err error) {
-	result := db.Where("Symbol = ?", s).Last(&balance)
-
-	return balance, result.Error
-}
+// func (db *Database) GetCurrentBalance(s string) (balance Balance, err error) {
+// 	result := db.Where("Symbol = ?", s).Last(&balance)
+// 
+// 	return balance, result.Error
+// }
 
 func (db *Database) GetPerformance(s string, periodStart time.Time) (performance float64, err error) {
 	var currentBalance, previousBalance Balance

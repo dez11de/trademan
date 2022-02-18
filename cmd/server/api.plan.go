@@ -39,6 +39,7 @@ func executePlanHandler(w http.ResponseWriter, r *http.Request, params httproute
 	pair, _ := db.GetPair(plan.PairID)
 	orders, _ := db.GetOrders(plan.ID)
 	balance, _ := db.GetCurrentBalance(pair.QuoteCurrency)
+	ticker, _ := e.GetTicker(pair.Name)
 
 	tx := db.Begin()
 	db.CreateLog(&cryptodb.Log{PlanID: plan.ID, Source: cryptodb.Server, Text: "Finalized orders."})
@@ -71,7 +72,7 @@ func executePlanHandler(w http.ResponseWriter, r *http.Request, params httproute
 	db.CreateLog(&cryptodb.Log{PlanID: plan.ID, Source: cryptodb.Server, Text: "Sent plan to exchange."})
 	tx.Commit()
 
-	err = e.PlaceOrders(plan, pair, orders)
+	err = e.PlaceOrders(plan, pair, ticker, orders)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))

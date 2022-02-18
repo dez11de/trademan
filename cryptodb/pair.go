@@ -7,7 +7,7 @@ import (
 )
 
 type Pair struct {
-	ID            uint    
+	ID            uint
 	Name          string          `gorm:"uniqueIndex; size:15; unique; not null" json:"name"`
 	Alias         string          `gorm:"size:15" json:"alias"`
 	Status        string          `gorm:"size:15" json:"status"` // TODO: make enum
@@ -18,6 +18,8 @@ type Pair struct {
 	MakerFee      decimal.Decimal `gorm:"type:decimal(20, 8)" json:"maker_fee,string"`
 
 	Leverage struct {
+		Buy  decimal.Decimal `gorm:"type:decimal(20, 8)"`
+		Sell decimal.Decimal `gorm:"type:decimal(20, 8)"`
 		Min  decimal.Decimal `gorm:"type:decimal(20, 8)" json:"min_leverage"`
 		Max  decimal.Decimal `gorm:"type:decimal(20, 8)" json:"max_leverage"`
 		Step decimal.Decimal `gorm:"type:decimal(20, 8)" json:"leverage_step,string"`

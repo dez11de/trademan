@@ -16,6 +16,13 @@ func (p *Plan) FinalizeOrders(available decimal.Decimal, activePair Pair, o []Or
 	o[LimitStopLoss].Size = positionSize
 	o[Entry].Size = positionSize
 
+	if available.LessThan(positionSize.Mul(o[Entry].Price)) {
+        // HACK: multiply by 2 is nonsensical
+		p.Leverage = positionSize.Mul(o[Entry].Price).Div(available).RoundStep(activePair.Leverage.Step.Mul(decimal.NewFromInt(2)), false)
+	} else {
+		p.Leverage = decimal.NewFromInt(1)
+	}
+
 	takeProfitsCount := int64(0)
 	for i := 1; i < 5; i++ {
 		if !o[2+i].Price.IsZero() {
@@ -35,10 +42,14 @@ func (p *Plan) FinalizeOrders(available decimal.Decimal, activePair Pair, o []Or
 		}
 		o[2+i].Size = remainingSize.RoundStep(activePair.Order.Step, false)
 	default:
-        log.Printf("Take profit strategy %s is not (yet) implemented, sizes not set!", p.TakeProfitStrategy.String())
+		log.Printf("Take profit strategy %s is not (yet) implemented, sizes not set!", p.TakeProfitStrategy.String())
 	}
 
-	o[LimitStopLoss].Price = o[MarketStopLoss].Price.Add(entryStopLossDistance.Div(decimal.NewFromInt(100)).Mul(decimal.NewFromInt(5))).RoundStep(activePair.Price.Tick, false)
+	deltaMarketLimitStopLoss := entryStopLossDistance.Div(decimal.NewFromInt(100)).Mul(decimal.NewFromInt(5))
+	if p.Direction == Short {
+		deltaMarketLimitStopLoss = deltaMarketLimitStopLoss.Neg()
+	}
+	o[LimitStopLoss].Price = o[MarketStopLoss].Price.Add(deltaMarketLimitStopLoss).RoundStep(activePair.Price.Tick, false)
 }
 
 // TODO: this should be done with "virtual" positionSizes since they are unknown at time of planning,

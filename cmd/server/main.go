@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/bart613/decimal"
 	"github.com/dez11de/cryptodb"
 	"github.com/dez11de/exchange"
 )
@@ -30,14 +31,21 @@ func main() {
 		log.Fatalf("Error connecting to exchange: %s", err)
 	}
 
-	if trademanCfg.Database.ResetTables {
+	if trademanCfg.Database.CreateTables {
+		db.CreateTables()
 		exchangePairs, err := e.GetPairs()
 		if err != nil {
 			log.Fatalf("unable to reload pairs from exchange: %s", err)
 		}
 		for _, p := range exchangePairs {
 			db.CrupdatePair(&p) // eventhough tables have just been reset
+			time.Sleep(1543 * time.Millisecond)
+			p.Leverage.Buy = decimal.NewFromInt(1)
+			p.Leverage.Sell = decimal.NewFromInt(1)
+			e.SetLeverage(p.Name, p.Leverage.Buy, p.Leverage.Sell)
+			db.CrupdatePair(&p)
 		}
+
 		exchangeWallet, err := e.GetCurrentWallet()
 		if err != nil {
 			log.Fatalf("unable to get current wallet from exchange: %s", err)
@@ -46,6 +54,12 @@ func main() {
 			db.CreateBalance(&b)
 		}
 	}
+
+	if trademanCfg.Database.TruncTables {
+        log.Printf("Truncating most tables.")
+		db.TruncTables()
+	}
+
 	err = e.Subscribe("position")
 	if err != nil {
 		fmt.Println(err)
@@ -117,13 +131,13 @@ func main() {
 			refreshWalletTicker.Stop()
 			return
 
-        case p := <-positionUpdate:
+		case p := <-positionUpdate:
 			err := processPosition(p)
 			if err != nil {
 				errorMessage <- err
-			} 
+			}
 
-        case e := <-executionUpdate:
+		case e := <-executionUpdate:
 			err := processExecution(e)
 			if err != nil {
 				errorMessage <- err

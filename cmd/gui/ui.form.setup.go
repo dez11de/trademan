@@ -130,12 +130,16 @@ func (pf *planForm) FillForm(p cryptodb.Plan) {
 	// TODO: think about in which statusses changing is allowed
 	if ui.activePlan.TradingViewPlan != "" {
         log.Printf("Showing object[1]")
-        pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[0].(*fyne.Container).Show()
-        pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[1].(*fyne.Container).Show()
+        pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[0].Hide()
+        pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[1].Hide()
+        pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[2].Show()
+        pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[3].Show()
 	} else {
         log.Printf("Showing object[0]")
-        pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[1].(*fyne.Container).Show()
-        pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[0].(*fyne.Container).Show()
+        pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[0].Show()
+        pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[1].Show()
+        pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[2].Hide()
+        pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[3].Hide()
 	}
 
 	// TODO: think about in which statusses changing is allowed

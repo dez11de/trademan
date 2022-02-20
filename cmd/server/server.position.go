@@ -9,8 +9,8 @@ import (
 )
 
 func processPosition(p exchange.Position) (err error) {
-	log.Printf("Processing position %+v", p)
 
+	log.Printf("Processing position %+v", p)
 	var plan cryptodb.Plan
 	result := db.Joins("JOIN pairs ON pairs.id = plans.pair_id").Where("pairs.name = ?", p.Pair).Last(&plan)
 
@@ -21,16 +21,22 @@ func processPosition(p exchange.Position) (err error) {
 
 	log.Printf("Found plan: %v", plan)
 
+	if (plan.Direction == cryptodb.Long && p.Side == cryptodb.Sell.String()) ||
+		(plan.Direction == cryptodb.Short && p.Side == cryptodb.Buy.String()) {
+		log.Printf("Useless position update... skipping processing.")
+		return
+	}
+
 	tx := db.Begin()
 
 	if !plan.AverageEntryPrice.Equal(p.EntryPrice) {
 		plan.AverageEntryPrice = p.EntryPrice
 
-		var logEntry cryptodb.Log
-		logEntry.Source = cryptodb.Exchange
-		logEntry.PlanID = plan.ID
-		logEntry.Text = fmt.Sprintf("Updated Average Entry Price to %s", plan.AverageEntryPrice.String()) // TODO: format to pair
-
+		logEntry := &cryptodb.Log{
+			Source: cryptodb.Exchange,
+			PlanID: plan.ID,
+			Text:   fmt.Sprintf("Updated Average Entry Price to %s", plan.AverageEntryPrice.String()), // TODO: format to pair
+		}
 		result = tx.Create(&logEntry)
 		if result.Error != nil {
 			log.Printf("Error writing log to db: %s", result.Error)
@@ -39,23 +45,7 @@ func processPosition(p exchange.Position) (err error) {
 		}
 	}
 
-	if !plan.LatestValue.Equal(p.PositionValue) {
-		plan.LatestValue = p.PositionValue
-
-		var logEntry cryptodb.Log
-		logEntry.Source = cryptodb.Exchange
-		logEntry.PlanID = plan.ID
-		logEntry.Text = fmt.Sprintf("Updated Position Value to %s", plan.LatestValue.String()) // TODO: format to pair
-
-		result = tx.Create(&logEntry)
-		if result.Error != nil {
-			log.Printf("Error writing log to db: %s", result.Error)
-			tx.Rollback()
-			return result.Error
-		}
-	}
-
-    // TODO: if Size > 0 Plan.Status = partially if Size = EntrySize Plan Status = Filled 
+	// TODO: if Size > 0 Plan.Status = partially if Size = EntrySize Plan Status = Filled
 
 	result = tx.Save(&plan)
 	if result.Error != nil {
@@ -64,7 +54,8 @@ func processPosition(p exchange.Position) (err error) {
 		return result.Error
 	}
 
-    result = tx.Commit()
+	result = tx.Commit()
 
+	log.Print("Processing position completed")
 	return result.Error
 }

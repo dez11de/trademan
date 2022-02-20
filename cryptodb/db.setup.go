@@ -24,7 +24,7 @@ func (db *Database) CreateSetup(s *Setup) error {
 	}
 
 	for i := range s.Orders {
-		s.Orders[i].ExchangeOrderID = fmt.Sprintf("TM-%04d-%05d-%d", s.Plan.ID, s.Orders[i].ID, s.Plan.CreatedAt.Unix())
+		s.Orders[i].LinkOrderID = fmt.Sprintf("TM-%04d-%05d-%d", s.Plan.ID, s.Orders[i].ID, s.Plan.CreatedAt.Unix())
 	}
 
 	result = db.Save(&s.Orders)
@@ -85,4 +85,3 @@ func (db *Database) SaveSetup(logSource LogSource, newSetup *Setup) error {
 
 	return err
 }
-

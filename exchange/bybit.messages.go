@@ -2,12 +2,12 @@ package exchange
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
+	"log"
 	"time"
 )
 
-func (e *Exchange) ProcessMessages(positionChannel chan<- Position, executionChannel chan<- Execution, orderChannel chan<- Order, errorChannel chan<- error) {
+func (e *Exchange) ProcessMessages(positionChannel chan<- Position, executionChannel chan<- Execution, orderChannel chan<- Order) {
 	for {
 		_, data, err := e.connection.Read(e.context)
 		if e.debugMode {
@@ -15,14 +15,14 @@ func (e *Exchange) ProcessMessages(positionChannel chan<- Position, executionCha
 		}
 
 		if err != nil {
-			errorChannel <- err
+			log.Printf("Error reading websocket.")
 		}
 
 		var rawData json.RawMessage
 		wsresp := websocketResponse{Data: &rawData}
 		err = json.Unmarshal(data, &wsresp)
 		if err != nil {
-			errorChannel <- err
+			log.Printf("Error unmarshalling response %s", err)
 		}
 
 		switch wsresp.Success {
@@ -42,7 +42,7 @@ func (e *Exchange) ProcessMessages(positionChannel chan<- Position, executionCha
 			case "position":
 				err = json.Unmarshal(rawData, &positions)
 				if err != nil {
-					errorChannel <- err
+					log.Printf("Error unmarshalling position.")
 				}
 				for _, position := range positions {
 					e.logger.Write([]byte(fmt.Sprintf("%s [exchange] Position:  %v\n", time.Now().Format("2006-01-02 15:04:05.000"), position)))
@@ -51,7 +51,7 @@ func (e *Exchange) ProcessMessages(positionChannel chan<- Position, executionCha
 			case "execution":
 				err = json.Unmarshal(rawData, &executions)
 				if err != nil {
-					errorChannel <- err
+					log.Printf("Error unmarshalling execution.")
 				}
 				for _, execution := range executions {
 					e.logger.Write([]byte(fmt.Sprintf("%s [exchange] Execution: %v\n", time.Now().Format("2006-01-02 15:04:05.000"), execution)))
@@ -60,14 +60,13 @@ func (e *Exchange) ProcessMessages(positionChannel chan<- Position, executionCha
 			case "order", "stop_order":
 				err = json.Unmarshal(rawData, &orders)
 				if err != nil {
-					errorChannel <- err
+					log.Printf("Error unmarshalling order %s", err)
+                    log.Printf("rawData: %s", string(rawData))
 				}
 				for _, order := range orders {
 					e.logger.Write([]byte(fmt.Sprintf("%s [exchange] Order:     %v\n", time.Now().Format("2006-01-02 15:04:05.000"), order)))
 					orderChannel <- order
 				}
-			default:
-				errorChannel <- errors.New(fmt.Sprintf("This should NEVER happen: Error: %s or unknown topic: %s\n", err, wsresp.Topic))
 			}
 		}
 	}

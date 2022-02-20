@@ -19,7 +19,9 @@ const (
 type Status int
 
 const (
-	Planned Status = iota
+    Unplanned Status = iota
+	Planned
+    Created
 	Ordered
 	New         
 	Untriggered

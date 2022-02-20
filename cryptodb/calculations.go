@@ -12,13 +12,18 @@ func (p *Plan) FinalizeOrders(available decimal.Decimal, activePair Pair, o []Or
 	maxRisk := available.Mul(p.Risk.Div(decimal.NewFromInt(100))).Mul(maxFee)
 	entryStopLossDistance := o[MarketStopLoss].Price.Sub(o[Entry].Price).Abs()
 	positionSize := maxRisk.Div(entryStopLossDistance).RoundStep(activePair.Order.Step, false)
+	positionValue := positionSize.Mul(o[Entry].Price)
 	o[MarketStopLoss].Size = positionSize
 	o[LimitStopLoss].Size = positionSize
 	o[Entry].Size = positionSize
 
 	if available.LessThan(positionSize.Mul(o[Entry].Price)) {
-		// HACK: multiply by 2 is nonsensical
-		p.Leverage = positionSize.Mul(o[Entry].Price).Div(available).RoundStep(activePair.Leverage.Step.Mul(decimal.NewFromInt(2)), false)
+		// TODO: find out how to included costs and risk bybit calculates
+		log.Printf("Position value: %s", positionValue.String())
+		log.Printf("Available:      %s", available.String())
+		log.Printf("Max risk:       %s", maxRisk.String())
+		p.Leverage = positionValue.Add(maxRisk.Mul(decimal.NewFromInt(2))).Div(available).RoundStep(activePair.Leverage.Step, false)
+		log.Printf("Leverage:       %s", p.Leverage.String())
 	} else {
 		p.Leverage = decimal.NewFromInt(1)
 	}

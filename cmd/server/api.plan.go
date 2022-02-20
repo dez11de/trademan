@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -45,7 +46,7 @@ func executePlanHandler(w http.ResponseWriter, r *http.Request, params httproute
 	db.Where("id = ?", id).First(&plan)
 	db.Where("id = ?", plan.PairID).First(&pair)
 	db.Where("plan_id = ?", plan.ID).Find(&orders)
-	db.Where("symbol = ?", pair.QuoteCurrency).Last(&balance)
+	db.Where("symbol = ?", pair.QuoteCurrency).Order("created_at DESC").First(&balance)
 	ticker, _ := e.GetTicker(pair.Name)
 
 	tx := db.Begin()
@@ -80,7 +81,12 @@ func executePlanHandler(w http.ResponseWriter, r *http.Request, params httproute
 	tx.Create(&cryptodb.Log{PlanID: plan.ID, Source: cryptodb.Server, Text: "Sent plan to exchange."})
 	tx.Commit()
 
-	err = e.PlaceOrders(plan, pair, ticker, orders)
+    log.Printf("Pausing main routine")
+    pause <- struct{}{}
+	err = PlaceOrders(plan, pair, ticker, orders)
+    play <- struct{}{}
+    log.Printf("Continue main routine")
+
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))

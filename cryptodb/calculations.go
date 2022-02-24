@@ -19,11 +19,7 @@ func (p *Plan) FinalizeOrders(available decimal.Decimal, activePair Pair, o []Or
 
 	if available.LessThan(positionSize.Mul(o[Entry].Price)) {
 		// TODO: find out how to included costs and risk bybit calculates
-		log.Printf("Position value: %s", positionValue.String())
-		log.Printf("Available:      %s", available.String())
-		log.Printf("Max risk:       %s", maxRisk.String())
 		p.Leverage = positionValue.Add(maxRisk.Mul(decimal.NewFromInt(2))).Div(available).RoundStep(activePair.Leverage.Step, false)
-		log.Printf("Leverage:       %s", p.Leverage.String())
 	} else {
 		p.Leverage = decimal.NewFromInt(1)
 	}

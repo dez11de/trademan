@@ -1,6 +1,11 @@
 package exchange
 
 import (
+	"errors"
+	"log"
+	"net/http"
+
+	"github.com/bart613/decimal"
 	"github.com/dez11de/cryptodb"
 )
 
@@ -12,20 +17,26 @@ func (e *Exchange) GetPairs() (pairs []cryptodb.Pair, err error) {
 	return pr.Pairs, err
 }
 
-// Assumes position leverage is already set to isolated
-// func (e *Exchange) SetLeverage(pair string, buyLeverage, sellLeverage decimal.Decimal) (err error) {
-// 
-// 	var result PositionResponse
-// 	params := make(RequestParameters)
-// 
-// 	params["symbol"] = pair
-// 	params["buy_leverage"] = buyLeverage.String()
-// 	params["sell_leverage"] = sellLeverage.String()
-// 
-// 	_, _, err = e.SignedRequest(http.MethodPost, "/private/linear/position/set-leverage", params, &result)
-// 	if result.ReturnCode != 0 || result.ExtendedCode != "" {
-// 		return errors.New(result.ExtendedCode)
-// 	}
-// 
-// 	return nil
-// }
+func (e *Exchange) SendLeverage(n string, q string, l, s decimal.Decimal) (err error) {
+	var url string
+	levParams := make(RequestParameters)
+	var result LeverageResponse
+
+	switch q {
+	case "USDT":
+		levParams["symbol"] = n
+		levParams["buy_leverage"] = l.InexactFloat64()
+		levParams["sell_leverage"] = s.InexactFloat64()
+		url = "/private/linear/position/set-leverage"
+	default:
+		log.Printf("Setting margin not supported for this pair.")
+	}
+
+	_, _, err = e.SignedRequest(http.MethodPost, url, levParams, &result)
+	log.Printf("SendLeverage result: %+v", result)
+	if result.ReturnCode != 0 || result.ExtendedCode != "" {
+		return errors.New(result.ReturnMessage)
+	}
+
+	return nil
+}

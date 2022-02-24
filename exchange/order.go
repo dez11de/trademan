@@ -11,17 +11,16 @@ type Order struct {
 	StopOrderID string          `json:"stop_order_id"`
 	LinkOrderID string          `json:"order_link_id"`
 	Symbol      string          `json:"symbol"`
-	Side        string          `json:"side"`       // Buy/Sell
-	OrderType   string          `json:"order_type"` // Limit/Market
+	Side        string          `json:"side"`         // Buy/Sell
+	OrderType   string          `json:"order_type"`   // Limit/Market
+	OrderStatus string          `json:"order_status"` // Created/Rejected/New/PartiallyFilled/Filled/Cancelled/PendingCancel/Untriggered
 	Price       decimal.Decimal `json:"price"`
 	Size        decimal.Decimal `json:"qty"`
 	Leaves      decimal.Decimal `json:"leaves_qty"`
 	StopLoss    decimal.Decimal `json:"stop_loss"`
 	Fees        decimal.Decimal `json:"cum_exec_fee"`
-	OrderStatus string          `json:"order_status"` // Created/Rejected/New/PartiallyFilled/Filled/Cancelled/PendingCancel/Untriggered
-	// PositionIndex int             `json:"position_idx"` // sometimes it's a string, sometimes it's a number, sometimes an integer. Bybit Documentation :') '0:One-Way Mode, 1:Buy side of both side mode, 2: Sell side of both side mode
-	CreatedAt time.Time `json:"create_time,string"`
-	UpdatedAt time.Time `json:"update_time,string"`
+	CreatedAt   time.Time       `json:"create_time,string"`
+	UpdatedAt   time.Time       `json:"update_time,string"`
 }
 
 type OrderResponseRest struct {

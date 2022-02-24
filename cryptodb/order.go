@@ -1,7 +1,6 @@
 package cryptodb
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/bart613/decimal"
@@ -9,13 +8,13 @@ import (
 
 type Order struct {
 	ID            uint
-	SystemOrderID string          `gorm:"type:varchar(36);index" json:"order_id"`      // Stores either ByBits order_id, or stop_order_id
-	LinkOrderID   string          `gorm:"type:varchar(36);index" json:"order_link_id"` // Links trademan to exchange
-	PlanID        uint            `gorm:"index"`
+	PlanID        uint            `gorm:"index;not null"`
 	Status        Status          `gorm:"type:varchar(25)"` // TODO: investigate option to define enums, see: https://github.com/go-gorm/gorm/issues/1978#issuecomment-476673540
 	OrderKind     OrderKind       `gorm:"type:varchar(25)"`
 	Size          decimal.Decimal `gorm:"type:decimal(20, 8)" json:"qty"`
 	Price         decimal.Decimal `gorm:"type:decimal(20, 8)" json:"price"`
+	LinkOrderID   string          `gorm:"type:varchar(36);index" json:"order_link_id"` // Links trademan to exchange
+	SystemOrderID string          `gorm:"type:varchar(36);index" json:"order_id"`      // Stores either ByBits order_id, or stop_order_id
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
 }
@@ -32,11 +31,5 @@ func NewOrders(PlanID uint) []Order {
 		{PlanID: PlanID, Status: Unplanned, OrderKind: TakeProfit},
 		{PlanID: PlanID, Status: Unplanned, OrderKind: TakeProfit},
 		{PlanID: PlanID, Status: Unplanned, OrderKind: TakeProfit},
-	}
-}
-
-func debugPrintOrders(orders []Order) {
-	for i, o := range orders {
-		fmt.Printf("[%d] %d %s %s %s\n", i, o.ID, o.OrderKind.String(), o.Size.StringFixed(5), o.Price.StringFixed(5))
 	}
 }

@@ -43,12 +43,11 @@ func main() {
 			log.Fatalf("unable to reload pairs from exchange: %s", err)
 		}
 		for _, p := range exchangePairs {
-			db.CrupdatePair(&p) // eventhough tables have just been reset
 			time.Sleep(1543 * time.Millisecond)
-			p.Leverage.Buy = decimal.NewFromInt(1)
-			p.Leverage.Sell = decimal.NewFromInt(1)
-			// SetLeverage(p.Name, p.Leverage.Buy, p.Leverage.Sell)
-			db.CrupdatePair(&p)
+			p.Leverage.Long = decimal.NewFromInt(1)
+			p.Leverage.Short = decimal.NewFromInt(1)
+			e.SendLeverage(p.Name, p.QuoteCurrency, p.Leverage.Long.RoundStep(p.Leverage.Step, false), p.Leverage.Short.RoundStep(p.Leverage.Step, false))
+			db.Create(&p)
 		}
 
 		exchangeWallet, err := e.GetCurrentWallet()
@@ -138,7 +137,7 @@ func main() {
 			}
 
 		case <-pingExchangeTicker.C:
-			log.Print("Im still pinging...")
+			// log.Print("Im still pinging...")
 			e.Ping()
 
 		case <-quit:
@@ -162,12 +161,10 @@ func main() {
 			if err != nil {
 				log.Printf("Error occured processing order: %s", err)
 			}
-        case <-pause:
-		    fmt.Println("Pausing message updating")
-            select {
-            case <- play:
-                fmt.Println("Continue message updating")
-            }
+		case <-pause:
+			select {
+			case <-play:
+			}
 		}
 
 	}

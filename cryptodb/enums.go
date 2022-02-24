@@ -25,6 +25,7 @@ const (
 	Ordered
 	New         
 	Untriggered
+    PartiallyFilled
 	Filled
 	Stopped
 	Cancelled

@@ -1,274 +1,269 @@
 package main
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
-	"net/http"
 
-	"github.com/bart613/decimal"
 	"github.com/dez11de/cryptodb"
 	"github.com/dez11de/exchange"
 )
 
-func PlaceOrders(p cryptodb.Plan, activePair cryptodb.Pair, ticker exchange.Ticker, o []cryptodb.Order) (err error) {
-
-	// TODO: move to it's own routine and log it
+func placeOrders(p cryptodb.Plan, pair cryptodb.Pair, ticker exchange.Ticker, o []cryptodb.Order) (err error) {
 	switch p.Direction {
 	case cryptodb.Long:
-		if p.Leverage.GreaterThan(activePair.Leverage.Buy) {
-			log.Printf("Long leverage updated to %s", p.Leverage.String())
-			SetLeverage(p, &activePair)
+		if p.Leverage.GreaterThan(pair.Leverage.Long) {
+			setLeverage(p, &pair)
 		}
 	case cryptodb.Short:
-		if p.Leverage.GreaterThan(activePair.Leverage.Sell) {
-			log.Printf("Short leverage updated to %s", p.Leverage.String())
-			SetLeverage(p, &activePair)
+		if p.Leverage.GreaterThan(pair.Leverage.Short) {
+			setLeverage(p, &pair)
 		}
 	}
 
-	err = placeEntry(p, activePair, &o[cryptodb.MarketStopLoss], o[cryptodb.LimitStopLoss], &o[cryptodb.Entry])
+	err = setEntry(p, pair, &o[cryptodb.MarketStopLoss], &o[cryptodb.Entry])
 	if err != nil {
 		return err
 	}
 
-	db.Save(o[cryptodb.MarketStopLoss])
-	db.Save(o[cryptodb.Entry])
-
-	err = placeLimitStopLoss(p, activePair, ticker, o[cryptodb.MarketStopLoss], &o[cryptodb.LimitStopLoss], o[cryptodb.Entry])
+	err = setLimitStopLoss(p, pair, ticker, o[cryptodb.MarketStopLoss], &o[cryptodb.LimitStopLoss], o[cryptodb.Entry])
 	if err != nil {
 		return err
 	}
-	db.Save(o[cryptodb.LimitStopLoss])
 
 	for i := 3; i < 3+cryptodb.MaxTakeProfits; i++ {
 		if !o[i].Price.IsZero() {
-			err = placeTakeProfit(p, activePair, ticker, o[cryptodb.MarketStopLoss], o[cryptodb.Entry], &o[i])
+			err = setTakeProfit(p, pair, ticker, o[cryptodb.MarketStopLoss], o[cryptodb.Entry], &o[i])
 			if err != nil {
 				return err
 			}
-			db.Save(o[i])
 		}
 	}
 
 	return nil
 }
 
-func SetLeverage(p cryptodb.Plan, pair *cryptodb.Pair) (err error) {
-
-	var result exchange.LeverageResponse
-	levParams := make(exchange.RequestParameters)
-
-	levParams["symbol"] = pair
-	switch p.Direction {
+func setLeverage(plan cryptodb.Plan, pair *cryptodb.Pair) (err error) {
+	switch plan.Direction {
 	case cryptodb.Long:
-		levParams["buy_leverage"] = p.Leverage.InexactFloat64()
-		pair.Leverage.Buy = p.Leverage
+		err = e.SendLeverage(pair.Name, pair.QuoteCurrency, plan.Leverage, pair.Leverage.Short)
 	case cryptodb.Short:
-		levParams["sell"] = p.Leverage.InexactFloat64()
-		pair.Leverage.Sell = p.Leverage
+		err = e.SendLeverage(pair.Name, pair.QuoteCurrency, pair.Leverage.Long, plan.Leverage)
+	}
+	if err != nil {
+		logEntry := &cryptodb.Log{
+			PlanID: plan.ID,
+			Source: cryptodb.Server,
+			Text:   fmt.Sprintf("Error sending leverage: %s", err),
+		}
+		db.Create(logEntry)
+		return err
 	}
 
-	_, _, err = e.SignedRequest(http.MethodPost, "/private/linear/position/set-leverage", levParams, &result)
-	log.Printf("Result of setting leverage: %+v", result)
-	if result.ReturnCode != 0 || result.ExtendedCode != "" {
-		return errors.New(result.ExtendedCode)
+	switch plan.Direction {
+	case cryptodb.Long:
+		pair.Leverage.Long = plan.Leverage
+	case cryptodb.Short:
+		pair.Leverage.Short = plan.Leverage
 	}
 
 	logEntry := &cryptodb.Log{
+		PlanID: plan.ID,
+		Source: cryptodb.Server,
+		Text:   fmt.Sprintf("Sending set %s leverage to %s succesfull.", plan.Direction.String(), plan.Leverage.String()),
+	}
+
+	db.Save(pair)
+	db.Create(logEntry)
+	return nil
+}
+
+func setEntry(p cryptodb.Plan, pair cryptodb.Pair, marketStopLoss *cryptodb.Order, entry *cryptodb.Order) (err error) {
+	err = e.SendEntry(p, pair, marketStopLoss, entry)
+	if err != nil {
+		logEntry := &cryptodb.Log{
+			PlanID: p.ID,
+			Source: cryptodb.Server,
+			Text:   fmt.Sprintf("Error sending entry and market stoploss: %s", err),
+		}
+		result := db.Create(logEntry)
+		if result.Error != nil {
+			return result.Error
+		}
+		return err
+	}
+
+	// RoundStep to whatever is needed
+	logEntry := &cryptodb.Log{
 		PlanID: p.ID,
 		Source: cryptodb.Server,
-		Text:   fmt.Sprintf("Set %s leverage to %s", p.Direction.String(), p.Leverage.String()),
+		Text: fmt.Sprintf("Sending set entry (%s %s@%s) and market stoploss (@%s) succesfull.",
+			p.Direction.String(), entry.Size.String(), entry.Price.String(), marketStopLoss.Price.String()),
 	}
-	// TODO: should check if it was accepted by exchange
-	db.Save(pair)
+
+	db.Save(entry)
 	db.Create(logEntry)
 
 	return nil
 }
 
-func placeEntry(plan cryptodb.Plan, pair cryptodb.Pair, marketStopLoss *cryptodb.Order, limitStopLoss cryptodb.Order, entry *cryptodb.Order) (err error) {
-
-	log.Printf("Placing entry")
-	var result exchange.OrderResponseRest
-	entryParams := make(exchange.RequestParameters)
-
-	entryParams["order_link_id"] = entry.LinkOrderID
-	entryParams["symbol"] = pair.Name
-	if plan.Direction == cryptodb.Long {
-		entryParams["side"] = "Buy"
-	} else {
-		entryParams["side"] = "Sell"
-	}
-	entryParams["order_type"] = "Limit"
-	entryParams["qty"] = entry.Size.InexactFloat64()
-	entryParams["price"] = entry.Price.InexactFloat64()
-	entryParams["close_on_trigger"] = false
-	entryParams["reduce_only"] = false
-	entryParams["time_in_force"] = "GoodTillCancel"
-	entryParams["stop_loss"] = marketStopLoss.Price.InexactFloat64()
-	entryParams["sl_trigger_by"] = "LastPrice"
-
-	var response exchange.OrderResponseRest
-	_, responseBuffer, err := e.SignedRequest(http.MethodPost, "/private/linear/order/create", entryParams, &result)
-
-	if result.ReturnCode != 0 || result.ExtendedCode != "" {
-		log.Printf("Order not accepted. ReturnCode: %d, ReturnMessage: %s", result.ReturnCode, result.ReturnMessage)
-		return errors.New(result.ReturnMessage)
-	}
-
-	// log.Printf("Response buffer: %s", string(responseBuffer))
-	err = json.Unmarshal(responseBuffer, &response)
+func setLimitStopLoss(p cryptodb.Plan, pair cryptodb.Pair, ticker exchange.Ticker, marketStopLoss cryptodb.Order, limitStopLoss *cryptodb.Order, entry cryptodb.Order) (err error) {
+	err = e.SendLimitStopLoss(p, pair, ticker, marketStopLoss, limitStopLoss, entry)
 	if err != nil {
-		log.Printf("error unmarshalling responseBuffer %s", err)
+		logEntry := &cryptodb.Log{
+			PlanID: p.ID,
+			Source: cryptodb.Server,
+			Text:   fmt.Sprintf("Error sending limit stoploss: %s", err),
+		}
+		result := db.Create(logEntry)
+		if result.Error != nil {
+			return result.Error
+		}
 		return err
 	}
 
-	log.Printf("Response to setting Entry: %v", response)
-	log.Printf("Setting SystemOrderID to: %s", response.Result.OrderID)
-	entry.SystemOrderID = response.Result.OrderID
-	entry.Status.Scan(response.Result.OrderStatus)
-	log.Printf("Placing entry succesfull")
+	// RoundStep to whatever is needed
+	logEntry := &cryptodb.Log{
+		PlanID: p.ID,
+		Source: cryptodb.Server,
+		Text:   fmt.Sprintf("Sending set limit stoploss (@%s) succesfull.", limitStopLoss.Price.String()),
+	}
+
+	db.Save(limitStopLoss)
+	db.Create(logEntry)
 
 	return nil
 }
 
-func placeLimitStopLoss(plan cryptodb.Plan, pair cryptodb.Pair, ticker exchange.Ticker, marketStopLoss cryptodb.Order, limitStopLoss *cryptodb.Order, entry cryptodb.Order) (err error) {
-	log.Printf("Placing limit stoploss...")
-	var result exchange.OrderResponseRest
-
-	lslParams := make(exchange.RequestParameters)
-	lslParams["order_link_id"] = limitStopLoss.LinkOrderID
-	lslParams["symbol"] = pair.Name
-	lslParams["order_type"] = "Limit"
-	lslParams["qty"] = limitStopLoss.Size.InexactFloat64()
-	if plan.Direction == cryptodb.Long {
-		lslParams["side"] = "Sell"
-	} else {
-		lslParams["side"] = "Buy"
-	}
-
-	lslParams["trigger_by"] = "LastPrice"
-	lslParams["price"] = limitStopLoss.Price.InexactFloat64()
-	lslParams["stop_px"] = limitStopLoss.Price.InexactFloat64()
-	lslParams["base_price"] = ticker.LastPrice.InexactFloat64()
-
-	lslParams["close_on_trigger"] = false
-	lslParams["reduce_only"] = true
-	lslParams["time_in_force"] = "GoodTillCancel"
-
-	var response exchange.OrderResponseRest
-	_, responseBuffer, err := e.SignedRequest(http.MethodPost, "/private/linear/stop-order/create", lslParams, &result)
-	if result.ReturnCode != 0 || result.ExtendedCode != "" {
-		log.Printf("Order not accepted. ReturnCode: %d, ReturnMessage: %s", result.ReturnCode, result.ReturnMessage)
-		return errors.New(result.ReturnMessage)
-	}
-
-	log.Printf("Response: %s", string(responseBuffer))
-	err = json.Unmarshal(responseBuffer, &response)
+func setTakeProfit(p cryptodb.Plan, pair cryptodb.Pair, ticker exchange.Ticker, marketStopLoss, entry cryptodb.Order, takeProfit *cryptodb.Order) (err error) {
+	err = e.SendTakeProfit(p, pair, ticker, marketStopLoss, entry, takeProfit)
 	if err != nil {
-		log.Printf("error unmarshalling responseBuffer %s", err)
+		logEntry := &cryptodb.Log{
+			PlanID: p.ID,
+			Source: cryptodb.Server, // RoundStep to whatever is needed
+			Text:   fmt.Sprintf("Error sending take profit (@%s): %s", takeProfit.Price.String(), err),
+		}
+		result := db.Create(logEntry)
+		if result.Error != nil {
+			return result.Error
+		}
 		return err
 	}
 
-	limitStopLoss.SystemOrderID = response.Result.StopOrderID
-	limitStopLoss.Status.Scan(response.Result.OrderStatus)
+	// RoundStep to whatever is needed
+	logEntry := &cryptodb.Log{
+		PlanID: p.ID,
+		Source: cryptodb.Server,
+		Text:   fmt.Sprintf("Sending set Take Profit (@%s) succesfull.", takeProfit.Price.String()),
+	}
 
-	log.Printf("Placing limit stoploss succesfull")
+	db.Save(takeProfit)
+	db.Create(logEntry)
+
 	return nil
 }
 
-func placeTakeProfit(plan cryptodb.Plan, pair cryptodb.Pair, ticker exchange.Ticker, marketStopLoss, entry cryptodb.Order, takeProfit *cryptodb.Order) (err error) {
-	log.Printf("Placing take profit...")
-	var result exchange.OrderResponseRest
-	tpParams := make(exchange.RequestParameters)
-
-	tpParams["order_link_id"] = takeProfit.LinkOrderID
-	tpParams["symbol"] = pair.Name
-	tpParams["order_type"] = "Limit"
-	tpParams["qty"] = takeProfit.Size.InexactFloat64()
-	if plan.Direction == cryptodb.Long {
-		tpParams["side"] = "Sell"
-	} else {
-		tpParams["side"] = "Buy"
-	}
-	tpParams["trigger_by"] = "LastPrice"
-	tpParams["price"] = takeProfit.Price.InexactFloat64()
-	// TODO: also implement short situation
-	priceDifference := takeProfit.Price.Sub(entry.Price)
-	triggerPrice := entry.Price.Add(priceDifference.Mul(decimal.NewFromFloat(0.95)))
-	log.Printf("Calculatied triggerPrice as: %s", triggerPrice.String())
-	tpParams["stop_px"] = triggerPrice.InexactFloat64()
-	tpParams["base_price"] = entry.Price.InexactFloat64()
-
-	tpParams["close_on_trigger"] = false
-	tpParams["reduce_only"] = true
-	tpParams["time_in_force"] = "GoodTillCancel"
-
-	var response exchange.OrderResponseRest
-	_, responseBuffer, err := e.SignedRequest(http.MethodPost, "/private/linear/stop-order/create", tpParams, &result)
-	if result.ReturnCode != 0 || result.ExtendedCode != "" {
-		log.Printf("Order not accepted. ReturnCode: %d, ReturnMessage: %s", result.ReturnCode, result.ReturnMessage)
-		return errors.New(result.ReturnMessage)
-	}
-
-	log.Printf("Response: %s", string(responseBuffer))
-	err = json.Unmarshal(responseBuffer, &response)
-	if err != nil {
-		log.Printf("error unmarshalling responseBuffer %s", err)
-		return err
-	}
-
-	takeProfit.SystemOrderID = response.Result.StopOrderID
-
-	log.Printf("Placing takeprofit succesfull.")
-	return nil
-}
-
-func matchExchangeOrder(SystemOrderID string) (o cryptodb.Order, err error) {
-	result := db.Where("system_order_id = ?", SystemOrderID).Last(&o)
-
-	if result.RowsAffected > 1 {
-		log.Printf("Multiple results found??? WTH.")
-	}
-
-	return o, result.Error
-}
-
-func processEntryOrder(entryOrder cryptodb.Order, o exchange.Order) (err error) {
-	log.Printf("Processing Entry w/ MarketStopLoss started")
-
+func processOrder(incomingOrder exchange.Order) error {
+	var matchOrder string
+	var marketStopLossOrder cryptodb.Order
 	var plan cryptodb.Plan
 
-	var marketStopLossOrder cryptodb.Order
-	result := db.Where("order_kind = ?", cryptodb.MarketStopLoss).Where("plan_id = ?", entryOrder.PlanID).First(&marketStopLossOrder)
+	if incomingOrder.OrderType == "Market" {
+		// Assume it's the order for Market Stoploss, since... what else could it be.
+		result := db.
+			Where("system_order_id = ? AND order_kind = ?", incomingOrder.StopOrderID, cryptodb.MarketStopLoss).
+			First(&marketStopLossOrder)
+		if result.Error != nil {
+			result := db.
+				Joins("JOIN plans ON orders.plan_id = plans.id").
+				Joins("JOIN pairs ON pairs.id = plans.pair_id").
+				Where("order_kind = ? AND pairs.name = ?", cryptodb.MarketStopLoss, incomingOrder.Symbol).
+				First(&marketStopLossOrder)
+			if result.Error != nil {
+				return result.Error
+			} else {
+				marketStopLossOrder.SystemOrderID = incomingOrder.StopOrderID
+				db.Save(marketStopLossOrder)
+				db.Create(&cryptodb.Log{
+					PlanID: marketStopLossOrder.PlanID,
+					Source: cryptodb.Server,
+					Text:   fmt.Sprintf("Assigned SystemOrderID (%s)  to marketStopLossOrder.", incomingOrder.StopOrderID),
+				})
+				result = db.Where("id = ?", marketStopLossOrder.PlanID).First(&plan)
+				processMarketStoploss(plan, marketStopLossOrder, incomingOrder)
+			}
+		} else {
+			result = db.Where("id = ?", marketStopLossOrder.PlanID).First(&plan)
+			processMarketStoploss(plan, marketStopLossOrder, incomingOrder)
+		}
+	} else {
+		if incomingOrder.OrderID != "" {
+			matchOrder = incomingOrder.OrderID
+		} else if incomingOrder.StopOrderID != "" {
+			matchOrder = incomingOrder.StopOrderID
+		} else {
+			return errors.New("both order_id and stop_order_id empty")
+		}
+	}
+
+	var order cryptodb.Order
+	var pair cryptodb.Pair
+	var entryOrder cryptodb.Order
+
+	result := db.Where("system_order_id = ?", matchOrder).First(&order)
 	if result.Error != nil {
-		log.Printf("Entry w. MarketStoploss order for MarketStopLoss not found")
 		return result.Error
 	}
 
-	result = db.Where("id = ?", entryOrder.PlanID).First(&plan)
+	result = db.Where("id = ?", order.PlanID).First(&plan)
 	if result.Error != nil {
-		log.Printf("Entry Plan not found")
 		return result.Error
 	}
 
-	entryOrder.Status.Scan(o.OrderStatus)
+	result = db.Where("id = ?", plan.PairID).First(&pair)
+	if result.Error != nil {
+		return result.Error
+	}
+
+	result = db.Where("order_kind = ?", cryptodb.Entry).Where("plan_id = ?", order.PlanID).First(&entryOrder)
+	if result.Error != nil {
+		return result.Error
+	}
+
+	result = db.Where("order_kind = ?", cryptodb.MarketStopLoss).Where("plan_id = ?", order.PlanID).First(&marketStopLossOrder)
+	if result.Error != nil {
+		return result.Error
+	}
+	switch order.OrderKind {
+	case cryptodb.Entry:
+		err := processEntryOrder(plan, pair, marketStopLossOrder, order, incomingOrder)
+		if err != nil {
+			return err
+		}
+
+	case cryptodb.TakeProfit:
+		err := processTakeProfit(pair, entryOrder, order, incomingOrder)
+		if err != nil {
+			return err
+		}
+	case cryptodb.LimitStopLoss:
+		err := processLimitStoploss(plan, order, incomingOrder)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func processEntryOrder(plan cryptodb.Plan, pair cryptodb.Pair, marketStopLossOrder, entryOrder cryptodb.Order, o exchange.Order) (err error) {
 	// TODO: also handle change price if user moves price from exchange website or app, although that wouldn't be the prefered way
-	plan.Status = entryOrder.Status
 
-	tx := db.Begin()
-	result = tx.Save(plan)
-	if result.Error != nil {
-		log.Printf("This is weird AF.")
-		tx.Rollback()
-		return result.Error
-	}
-
-	var logEntry cryptodb.Log
-	logEntry.PlanID = entryOrder.PlanID
-	logEntry.Source = cryptodb.Exchange
+	var exchangeLogEntry cryptodb.Log
+	var planUpdateLogEntry cryptodb.Log
+	exchangeLogEntry.PlanID = entryOrder.PlanID
+	exchangeLogEntry.Source = cryptodb.Exchange
+	planUpdateLogEntry.PlanID = entryOrder.PlanID
+	planUpdateLogEntry.Source = cryptodb.Server
 
 	switch o.OrderStatus {
 	case "New":
@@ -279,162 +274,150 @@ func processEntryOrder(entryOrder cryptodb.Order, o exchange.Order) (err error) 
 		} else {
 			stopLossSetMsg = "but NOT" // TODO: this should NEVER happen.
 		}
-		marketStopLossOrder.Status = entryOrder.Status
+		entryOrder.Status.Scan(o.OrderStatus)
+		exchangeLogEntry.Text = fmt.Sprintf("Processed Entry Order %d %s stoploss, and set status to %s.", entryOrder.ID, stopLossSetMsg, entryOrder.Status.String())
+		db.Save(&entryOrder)
+		db.Create(&exchangeLogEntry)
 
-		logEntry.Text = fmt.Sprintf("Exchange processed Entry Order %d %s stoploss, and set status to %s.", entryOrder.ID, stopLossSetMsg, entryOrder.Status.String())
-	case "Filled":
-		logEntry.Text = fmt.Sprintf("Entry completely filled at %s. Changing Plan Status to Filled.", o.CreatedAt.Format("2006-01-02 15:04:05.000"))
-	case "Cancelled":
-		logEntry.Text = fmt.Sprintf("Entry and market stoploss cancelled. Changing Plan Status to cancelled.")
+		planUpdateLogEntry.Text = fmt.Sprintf("Changing plan status to i%s.", entryOrder.Status.String())
+		plan.Status = entryOrder.Status
+		db.Save(plan)
+		db.Create(&planUpdateLogEntry)
+
 	case "PartiallyFilled":
-		logEntry.Text = fmt.Sprintf("Entry partially filled: %s/%s", o.Leaves.String(), entryOrder.Size.String())
+		if entryOrder.Status.String() != o.OrderStatus {
+			exchangeLogEntry.Text = "Entry partially filled."
+			entryOrder.Status.Scan(o.OrderStatus)
+			db.Save(&entryOrder)
+			db.Create(&exchangeLogEntry)
+		}
+
+	case "Filled", "Cancelled":
+		exchangeLogEntry.Text = fmt.Sprintf("Entry %s.", o.OrderStatus)
+		entryOrder.Status.Scan(o.OrderStatus)
+		db.Save(&entryOrder)
+		db.Create(&exchangeLogEntry)
+
+		planUpdateLogEntry.Text = fmt.Sprintf("Changing plan status to %s.", o.OrderStatus)
+		plan.Status = entryOrder.Status
+		db.Save(plan)
+		db.Create(&planUpdateLogEntry)
+
 	default:
-		log.Printf("Handling of OrderStatus: %s not implemented yet.", o.OrderStatus)
-		return errors.New("Unhandled OrderStates")
+		db.Create(&exchangeLogEntry)
+		return errors.New("Unhandled OrderState")
 	}
 
-	result = tx.Save(&entryOrder)
-	if result.Error != nil {
-		tx.Rollback()
-		log.Printf("Saving Entry errored %s", result.Error)
-		return result.Error
-	}
-
-	result = tx.Save(&marketStopLossOrder)
-	if result.Error != nil {
-		tx.Rollback()
-		log.Printf("Processing Entry w/ MarketStopLoss errored")
-		return result.Error
-	}
-
-	result = tx.Create(&logEntry)
-	if result.Error != nil {
-		tx.Rollback()
-		log.Printf("logging for entry order errored %s", result.Error)
-		return result.Error
-	}
-
-	result = tx.Commit()
-
-	log.Printf("Processing Entry finished")
-	return result.Error
+	return nil
 }
 
-func processMarketStoploss(marketStopLossOrder cryptodb.Order, o exchange.Order) (err error) {
-	log.Printf("Processing MarketStopLoss started")
+func processMarketStoploss(plan cryptodb.Plan, marketStopLossOrder cryptodb.Order, o exchange.Order) (err error) {
 
-	var logEntry cryptodb.Log
-	logEntry.PlanID = marketStopLossOrder.PlanID
-	logEntry.Source = cryptodb.Exchange
+	var exchangeLogEntry cryptodb.Log
+	var planUpdateLogEntry cryptodb.Log
+	exchangeLogEntry.PlanID = marketStopLossOrder.PlanID
+	exchangeLogEntry.Source = cryptodb.Exchange
+	planUpdateLogEntry.PlanID = marketStopLossOrder.PlanID
+	planUpdateLogEntry.Source = cryptodb.Server
 
 	switch o.OrderStatus {
-	case "New":
-		var stopLossSetMsg string
-		if marketStopLossOrder.Price.Equal(o.StopLoss) {
-			marketStopLossOrder.Status.Scan(o.OrderStatus)
-			stopLossSetMsg = "and"
-		} else {
-			stopLossSetMsg = "but NOT" // TODO: this should NEVER happen.
-		}
+	case "New", "Untriggered":
+		marketStopLossOrder.Status.Scan(o.OrderStatus)
+		db.Save(&marketStopLossOrder)
+		exchangeLogEntry.Text = fmt.Sprintf("Processed Market StopLoss set status to %s.", marketStopLossOrder.Status.String())
+		db.Create(&exchangeLogEntry)
 
-		logEntry.Text = fmt.Sprintf("Exchange processed Market StopLoss order %d Market stoploss, %s and set status to %s.", marketStopLossOrder.ID, stopLossSetMsg, marketStopLossOrder.Status.String())
-	case "Filled":
-		logEntry.Text = fmt.Sprintf("Entry completely filled at %s. Changing Plan Status to Filled.", o.CreatedAt.Format("2006-01-02 15:04:05.000"))
-	case "Cancelled":
-		logEntry.Text = fmt.Sprintf("Entry and market stoploss cancelled. Changing Plan Status to cancelled.")
+	case "Cancelled", "Filled":
+		marketStopLossOrder.Status.Scan(o.OrderStatus)
+		exchangeLogEntry.Text = fmt.Sprintf("Market stoploss %s", marketStopLossOrder.Status.String())
+		db.Create(&exchangeLogEntry)
+		marketStopLossOrder.Status.Scan(o.OrderStatus)
+		db.Save(&marketStopLossOrder)
+		planUpdateLogEntry.Text = fmt.Sprintf("Changing plan status to %s", marketStopLossOrder.Status.String())
+		db.Create(planUpdateLogEntry)
+		plan.Status = cryptodb.Stopped
+		db.Save(plan)
+
 	case "PartiallyFilled":
-		logEntry.Text = fmt.Sprintf("Entry partially filled: /%s", marketStopLossOrder.Price.String())
+		if marketStopLossOrder.Status.String() != o.OrderStatus {
+			marketStopLossOrder.Status.Scan(o.OrderStatus)
+			db.Save(&marketStopLossOrder)
+			exchangeLogEntry.Text = "Market StopLoss partially filled."
+			db.Create(&exchangeLogEntry)
+		}
+
 	default:
-		log.Printf("Handling of OrderStatus: %s not implemented yet.", o.OrderStatus)
-		return errors.New("Unhandled OrderStatus")
+		return errors.New("Unhandled OrderStatus for marketstoploss")
 	}
 
-	tx := db.Begin()
-	result := tx.Save(&marketStopLossOrder)
-	if result.Error != nil {
-		tx.Rollback()
-		log.Printf("Saving MarketStopLoss errored")
-		return result.Error
-	}
-
-	result = tx.Create(&logEntry)
-	if result.Error != nil {
-		tx.Rollback()
-		log.Printf("Saving log MarketStopLoss errored")
-		return result.Error
-	}
-
-	result = tx.Commit()
-
-	log.Printf("Processing MarketStopLoss finished")
-	return result.Error
+	return nil
 }
 
-func processTakeProfit(takeProfit cryptodb.Order, o exchange.Order) (err error) {
-	log.Printf("Processing takeProfit order started")
+func processLimitStoploss(plan cryptodb.Plan, limitStopLossOrder cryptodb.Order, o exchange.Order) (err error) {
 
-	tx := db.Begin()
+	var exchangeLogEntry cryptodb.Log
+	var planUpdateLogEntry cryptodb.Log
+	exchangeLogEntry.PlanID = limitStopLossOrder.PlanID
+	exchangeLogEntry.Source = cryptodb.Exchange
+	planUpdateLogEntry.PlanID = limitStopLossOrder.PlanID
+	planUpdateLogEntry.Source = cryptodb.Server
 
-	var logEntry cryptodb.Log
-	takeProfit.Status.Scan(o.OrderStatus)
-	logEntry.PlanID = takeProfit.PlanID
-	logEntry.Source = cryptodb.Exchange
-	logEntry.Text = fmt.Sprintf("Exchange processed %s order %d, and set status to %s.", takeProfit.OrderKind.String(), takeProfit.ID, o.OrderStatus)
+	switch o.OrderStatus {
+	case "New", "Untriggered":
+		limitStopLossOrder.Status.Scan(o.OrderStatus)
+		db.Save(&limitStopLossOrder)
+		exchangeLogEntry.Text = fmt.Sprintf("Processed Limit StopLoss set status to %s.", limitStopLossOrder.Status.String())
+		db.Create(&exchangeLogEntry)
 
-	result := tx.Save(&takeProfit)
-	if result.Error != nil {
-		tx.Rollback()
-		log.Printf("Processing takeProfit errored on saving: %s", result.Error)
-		return result.Error
+	case "Cancelled", "Filled":
+		limitStopLossOrder.Status.Scan(o.OrderStatus)
+		exchangeLogEntry.Text = fmt.Sprintf("Limit stoploss %s", limitStopLossOrder.Status.String())
+		db.Create(&exchangeLogEntry)
+		limitStopLossOrder.Status.Scan(o.OrderStatus)
+		db.Save(&limitStopLossOrder)
+		planUpdateLogEntry.Text = fmt.Sprintf("Changing plan status to %s", limitStopLossOrder.Status.String())
+		db.Create(planUpdateLogEntry)
+		plan.Status = cryptodb.Stopped
+		db.Save(plan)
+
+	case "PartiallyFilled":
+		if limitStopLossOrder.Status.String() != o.OrderStatus {
+			limitStopLossOrder.Status.Scan(o.OrderStatus)
+			db.Save(&limitStopLossOrder)
+			exchangeLogEntry.Text = "Limit StopLoss partially filled."
+			db.Create(&exchangeLogEntry)
+		}
+
+	default:
+		return errors.New("Unhandled OrderStatus for limitStopLoss")
 	}
 
-	result = tx.Create(&logEntry)
-	if result.Error != nil {
-		tx.Rollback()
-		log.Printf("Processing takeProfit errored on logCreation: %s", result.Error)
-		return result.Error
-	}
-
-	result = tx.Commit()
-
-	log.Printf("Processing takeProfit completed")
-	return result.Error
+	return nil
 }
 
-func processOrder(o exchange.Order) error {
+func processTakeProfit(pair cryptodb.Pair, entryOrder, takeProfit cryptodb.Order, o exchange.Order) (err error) {
 
-	var matchOrder string
+	var exchangeLogEntry cryptodb.Log
+	exchangeLogEntry.PlanID = takeProfit.PlanID
+	exchangeLogEntry.Source = cryptodb.Exchange
 
-	if o.OrderID == "" && o.StopOrderID == "" {
-		log.Printf("Unknown order_id AND stop_order_id. Impossible to find order?")
-	}
-	if o.OrderID != "" {
-		matchOrder = o.OrderID
-	}
-	if o.StopOrderID != "" {
-		matchOrder = o.StopOrderID
-	}
-	order, err := matchExchangeOrder(matchOrder)
-	if err != nil {
-		log.Printf("Couldn't find matching order for %s. Weird. Aborting.", matchOrder)
-		return err
-	}
-	switch order.OrderKind {
-	case cryptodb.Entry:
-		err := processEntryOrder(order, o)
-		if err != nil {
-			log.Printf("Error processing entryOrder: %s", err)
+	switch o.OrderStatus {
+	case "New", "Untriggered", "PartiallyFilled":
+		if takeProfit.Status.String() != o.OrderStatus {
+			takeProfit.Status.Scan(o.OrderStatus)
+			exchangeLogEntry.Text = fmt.Sprintf("Take Profit status set to %s.", takeProfit.Status.String())
+			db.Save(&takeProfit)
+			db.Create(&exchangeLogEntry)
 		}
-	case cryptodb.MarketStopLoss:
-		err := processMarketStoploss(order, o)
-		if err != nil {
-			log.Printf("Error processing marketStopLossOrder: %s", err)
-		}
-	case cryptodb.TakeProfit, cryptodb.LimitStopLoss:
-		err := processTakeProfit(order, o)
-		if err != nil {
-			log.Printf("Error processing limitStopLossOrder: %s", err)
-		}
+	case "Filled":
+		exchangeLogEntry.Text = "Take profit completely filled."
+		takeProfit.Status.Scan(o.OrderStatus)
+		db.Save(&takeProfit)
+		db.Create(&exchangeLogEntry)
+	default:
+		exchangeLogEntry.Text = fmt.Sprintf("Processing of Take Profit status: %s not implemented.", o.OrderStatus)
+		db.Create(&exchangeLogEntry)
 	}
+
 	return nil
 }

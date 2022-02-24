@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 
@@ -53,19 +52,19 @@ func executePlanHandler(w http.ResponseWriter, r *http.Request, params httproute
 	tx.Create(&cryptodb.Log{PlanID: plan.ID, Source: cryptodb.Server, Text: "Finalized orders."})
 	// TODO: this should handle an error
 	plan.FinalizeOrders(balance.Available, pair, orders)
-    result := tx.Save(&orders)
+	result := tx.Save(&orders)
 	if result.Error != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-        fmt.Fprint(w, result.Error)
+		fmt.Fprint(w, result.Error)
 		tx.Rollback()
 		return
 	}
 
 	plan.Status = cryptodb.Ordered
-    result = tx.Save(&plan)
+	result = tx.Save(&plan)
 	if result.Error != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-        fmt.Fprint(w, result.Error)
+		fmt.Fprint(w, result.Error)
 		tx.Rollback()
 		return
 	}
@@ -77,15 +76,13 @@ func executePlanHandler(w http.ResponseWriter, r *http.Request, params httproute
 		tx.Rollback()
 		return
 	}
-    // TODO: check for error
-	tx.Create(&cryptodb.Log{PlanID: plan.ID, Source: cryptodb.Server, Text: "Sent plan to exchange."})
+	// TODO: check for error
+	tx.Create(&cryptodb.Log{PlanID: plan.ID, Source: cryptodb.Server, Text: "Sending plan."})
 	tx.Commit()
 
-    log.Printf("Pausing main routine")
-    pause <- struct{}{}
-	err = PlaceOrders(plan, pair, ticker, orders)
-    play <- struct{}{}
-    log.Printf("Continue main routine")
+	pause <- struct{}{}
+	err = placeOrders(plan, pair, ticker, orders)
+	play <- struct{}{}
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -93,9 +90,8 @@ func executePlanHandler(w http.ResponseWriter, r *http.Request, params httproute
 		db.Create(&cryptodb.Log{PlanID: plan.ID, Source: cryptodb.Server, Text: fmt.Sprintf("Exchange did not accept plan. %s", err)})
 		return
 	}
+	db.Create(&cryptodb.Log{PlanID: plan.ID, Source: cryptodb.Server, Text: "Sending plan succesfull."})
 
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.Write(jsonResp)
-
-	return
 }

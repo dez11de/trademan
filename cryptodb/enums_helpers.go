@@ -360,11 +360,11 @@ func (i *TakeProfitStrategy) Scan(value interface{}) error {
 	return nil
 }
 
-const _StatusName = "UnplannedPlannedCreatedOrderedNewUntriggeredFilledStoppedCancelledDeactivatedClosedLiquidatedLogged"
+const _StatusName = "UnplannedPlannedCreatedOrderedNewUntriggeredPartiallyFilledFilledStoppedCancelledDeactivatedClosedLiquidatedLogged"
 
-var _StatusIndex = [...]uint8{0, 9, 16, 23, 30, 33, 44, 50, 57, 66, 77, 83, 93, 99}
+var _StatusIndex = [...]uint8{0, 9, 16, 23, 30, 33, 44, 59, 65, 72, 81, 92, 98, 108, 114}
 
-const _StatusLowerName = "unplannedplannedcreatedorderednewuntriggeredfilledstoppedcancelleddeactivatedclosedliquidatedlogged"
+const _StatusLowerName = "unplannedplannedcreatedorderednewuntriggeredpartiallyfilledfilledstoppedcancelleddeactivatedclosedliquidatedlogged"
 
 func (i Status) String() string {
 	if i < 0 || i >= Status(len(_StatusIndex)-1) {
@@ -383,44 +383,47 @@ func _StatusNoOp() {
 	_ = x[Ordered-(3)]
 	_ = x[New-(4)]
 	_ = x[Untriggered-(5)]
-	_ = x[Filled-(6)]
-	_ = x[Stopped-(7)]
-	_ = x[Cancelled-(8)]
-	_ = x[Deactivated-(9)]
-	_ = x[Closed-(10)]
-	_ = x[Liquidated-(11)]
-	_ = x[Logged-(12)]
+	_ = x[PartiallyFilled-(6)]
+	_ = x[Filled-(7)]
+	_ = x[Stopped-(8)]
+	_ = x[Cancelled-(9)]
+	_ = x[Deactivated-(10)]
+	_ = x[Closed-(11)]
+	_ = x[Liquidated-(12)]
+	_ = x[Logged-(13)]
 }
 
-var _StatusValues = []Status{Unplanned, Planned, Created, Ordered, New, Untriggered, Filled, Stopped, Cancelled, Deactivated, Closed, Liquidated, Logged}
+var _StatusValues = []Status{Unplanned, Planned, Created, Ordered, New, Untriggered, PartiallyFilled, Filled, Stopped, Cancelled, Deactivated, Closed, Liquidated, Logged}
 
 var _StatusNameToValueMap = map[string]Status{
-	_StatusName[0:9]:        Unplanned,
-	_StatusLowerName[0:9]:   Unplanned,
-	_StatusName[9:16]:       Planned,
-	_StatusLowerName[9:16]:  Planned,
-	_StatusName[16:23]:      Created,
-	_StatusLowerName[16:23]: Created,
-	_StatusName[23:30]:      Ordered,
-	_StatusLowerName[23:30]: Ordered,
-	_StatusName[30:33]:      New,
-	_StatusLowerName[30:33]: New,
-	_StatusName[33:44]:      Untriggered,
-	_StatusLowerName[33:44]: Untriggered,
-	_StatusName[44:50]:      Filled,
-	_StatusLowerName[44:50]: Filled,
-	_StatusName[50:57]:      Stopped,
-	_StatusLowerName[50:57]: Stopped,
-	_StatusName[57:66]:      Cancelled,
-	_StatusLowerName[57:66]: Cancelled,
-	_StatusName[66:77]:      Deactivated,
-	_StatusLowerName[66:77]: Deactivated,
-	_StatusName[77:83]:      Closed,
-	_StatusLowerName[77:83]: Closed,
-	_StatusName[83:93]:      Liquidated,
-	_StatusLowerName[83:93]: Liquidated,
-	_StatusName[93:99]:      Logged,
-	_StatusLowerName[93:99]: Logged,
+	_StatusName[0:9]:          Unplanned,
+	_StatusLowerName[0:9]:     Unplanned,
+	_StatusName[9:16]:         Planned,
+	_StatusLowerName[9:16]:    Planned,
+	_StatusName[16:23]:        Created,
+	_StatusLowerName[16:23]:   Created,
+	_StatusName[23:30]:        Ordered,
+	_StatusLowerName[23:30]:   Ordered,
+	_StatusName[30:33]:        New,
+	_StatusLowerName[30:33]:   New,
+	_StatusName[33:44]:        Untriggered,
+	_StatusLowerName[33:44]:   Untriggered,
+	_StatusName[44:59]:        PartiallyFilled,
+	_StatusLowerName[44:59]:   PartiallyFilled,
+	_StatusName[59:65]:        Filled,
+	_StatusLowerName[59:65]:   Filled,
+	_StatusName[65:72]:        Stopped,
+	_StatusLowerName[65:72]:   Stopped,
+	_StatusName[72:81]:        Cancelled,
+	_StatusLowerName[72:81]:   Cancelled,
+	_StatusName[81:92]:        Deactivated,
+	_StatusLowerName[81:92]:   Deactivated,
+	_StatusName[92:98]:        Closed,
+	_StatusLowerName[92:98]:   Closed,
+	_StatusName[98:108]:       Liquidated,
+	_StatusLowerName[98:108]:  Liquidated,
+	_StatusName[108:114]:      Logged,
+	_StatusLowerName[108:114]: Logged,
 }
 
 var _StatusNames = []string{
@@ -430,13 +433,14 @@ var _StatusNames = []string{
 	_StatusName[23:30],
 	_StatusName[30:33],
 	_StatusName[33:44],
-	_StatusName[44:50],
-	_StatusName[50:57],
-	_StatusName[57:66],
-	_StatusName[66:77],
-	_StatusName[77:83],
-	_StatusName[83:93],
-	_StatusName[93:99],
+	_StatusName[44:59],
+	_StatusName[59:65],
+	_StatusName[65:72],
+	_StatusName[72:81],
+	_StatusName[81:92],
+	_StatusName[92:98],
+	_StatusName[98:108],
+	_StatusName[108:114],
 }
 
 // StatusString retrieves an enum value from the enum constants string name.

@@ -18,11 +18,11 @@ type Pair struct {
 	MakerFee      decimal.Decimal `gorm:"type:decimal(20, 8)" json:"maker_fee,string"`
 
 	Leverage struct {
-		Buy  decimal.Decimal `gorm:"type:decimal(20, 8)"`
-		Sell decimal.Decimal `gorm:"type:decimal(20, 8)"`
-		Min  decimal.Decimal `gorm:"type:decimal(20, 8)" json:"min_leverage"`
-		Max  decimal.Decimal `gorm:"type:decimal(20, 8)" json:"max_leverage"`
-		Step decimal.Decimal `gorm:"type:decimal(20, 8)" json:"leverage_step,string"`
+		Long  decimal.Decimal `gorm:"type:decimal(20, 8)"`
+		Short decimal.Decimal `gorm:"type:decimal(20, 8)"`
+		Min   decimal.Decimal `gorm:"type:decimal(20, 8)" json:"min_leverage"`
+		Max   decimal.Decimal `gorm:"type:decimal(20, 8)" json:"max_leverage"`
+		Step  decimal.Decimal `gorm:"type:decimal(20, 8)" json:"leverage_step,string"`
 	} `gorm:"embedded;embeddedPrefix:leverage_" json:"leverage_filter"` // TODO: is embedding still necesarry?
 
 	Price struct {

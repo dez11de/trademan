@@ -6,7 +6,8 @@ type Position struct {
 	Pair          string          `json:"symbol"`
 	Side          string          `json:"side"`
 	Size          decimal.Decimal `json:"size"`
-	EntryPrice    decimal.Decimal `json:"entry_price,string"` // Average Entry Price
+	Price         decimal.Decimal `json:"entry_price,string"` // Average Entry Price
+	OCCClosingFee decimal.Decimal `json:"occ_closing_fee,string"`
 }
 
 type PositionResponse struct {

@@ -381,6 +381,7 @@ func processLimitStoploss(plan cryptodb.Plan, limitStopLossOrder cryptodb.Order,
 
 		// TODO: cancel remaining open (takeProfit) orders
 		// TODO: mark it as a win or loss. calculate performance?
+        // Lower leverage
 
 	default:
 		return errors.New(fmt.Sprintf("Unhandled OrderStatus (%s) for limitstoploss", o.OrderStatus))

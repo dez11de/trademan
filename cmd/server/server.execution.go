@@ -27,8 +27,7 @@ func processExecution(e exchange.Execution) (err error) {
 	}
 
 	if !e.ExecFee.IsZero() {
-		log.Printf("Adding %s to plan fee", e.ExecFee.String())
-		p.Fee.Add(e.ExecFee)
+		p.Fee = p.Fee.Add(e.ExecFee)
 		result = db.Save(&p)
 		if result.Error != nil {
 			log.Printf("[execution] an error occured saving plan: %s", result.Error)

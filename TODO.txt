@@ -11,9 +11,6 @@ Investigate
     Trading break-even (win-rate/rrr)
     Laddered entry
 
-Properly configure enumer
-	make use of transform and/or trim options?
-
 Unit testing for 
 	database
 	exchange

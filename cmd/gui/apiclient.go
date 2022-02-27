@@ -77,7 +77,7 @@ func getPlans() (plans []cryptodb.Plan, err error) {
 	return plans, err
 }
 
-func executePlan(id uint) (plan cryptodb.Plan, err error) {
+func executePlan(id uint64) (plan cryptodb.Plan, err error) {
 	resp, err := http.Get(BaseURL + "plan/execute/" + strconv.Itoa(int(id)))
 	if err != nil {
 		return plan, err
@@ -98,7 +98,7 @@ func executePlan(id uint) (plan cryptodb.Plan, err error) {
 	return plan, err
 }
 
-func getOrders(PlanID uint) (orders []cryptodb.Order, err error) {
+func getOrders(PlanID uint64) (orders []cryptodb.Order, err error) {
 	resp, err := http.Get(BaseURL + "orders/" + strconv.Itoa(int(PlanID)))
 	if err != nil {
 		return orders, err

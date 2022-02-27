@@ -24,31 +24,31 @@ type Order struct {
 }
 
 type OrderResponseRest struct {
-	ReturnCode       int    `json:"ret_code"`
+	ReturnCode       int64  `json:"ret_code"`
 	ReturnMessage    string `json:"ret_msg"`
 	ExtendedCode     string `json:"ext_code"`
 	Result           Order  `json:"result"`
 	ExtendedInfo     string `json:"ext_info"`
 	ServerTime       string `json:"time_now"`
-	RateLimitStatus  int    `json:"rate_limit_status"`
-	RateLimitResetMS int    `json:"rate_limit_reset_ms"`
-	RateLimit        int    `json:"rate_limit"`
+	RateLimitStatus  int64  `json:"rate_limit_status"`
+	RateLimitResetMS int64  `json:"rate_limit_reset_ms"`
+	RateLimit        int64  `json:"rate_limit"`
 }
 
 type OrderPage struct {
-	CurrentPage int     `json:"current_page"`
-	LastPage    int     `json:"last_page"`
+	CurrentPage int64   `json:"current_page"`
+	LastPage    int64   `json:"last_page"`
 	Orders      []Order `json:"data"`
 }
 
 type OrderResponseWS struct {
-	ReturnCode       int       `json:"ret_code"`
+	ReturnCode       int64     `json:"ret_code"`
 	ReturnMessage    string    `json:"ret_msg"`
 	ExtendedCode     string    `json:"ext_code"`
 	Results          OrderPage `json:"result"`
 	ExtendedInfo     string    `json:"ext_info"`
 	ServerTime       string    `json:"time_now"`
-	RateLimitStatus  int       `json:"rate_limit_status"`
-	RateLimitResetMS int       `json:"rate_limit_reset_ms"`
-	RateLimit        int       `json:"rate_limit"`
+	RateLimitStatus  int64     `json:"rate_limit_status"`
+	RateLimitResetMS int64     `json:"rate_limit_reset_ms"`
+	RateLimit        int64     `json:"rate_limit"`
 }

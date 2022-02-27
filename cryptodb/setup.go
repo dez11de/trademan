@@ -6,5 +6,5 @@ type Setup struct {
 }
 
 func NewSetup() Setup {
-    return Setup{Orders: NewOrders(0)}
+    return Setup{Orders: NewOrders(uint64(0))}
 }

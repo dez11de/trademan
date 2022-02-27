@@ -54,7 +54,7 @@ func TestShouldSavePair(t *testing.T) {
 		for n, p := range mockPairs {
 			mock.ExpectBegin()
 			mock.ExpectExec("INSERT INTO `pairs` (.+) VALUES (.+)").
-				WithArgs(p.Name, p.Alias, p.Status, p.BaseCurrency, p.QuoteCurrency, p.PriceScale, p.TakerFee, p.MakerFee, p.Leverage.Buy, p.Leverage.Sell, p.Leverage.Min, p.Leverage.Max, p.Leverage.Step, p.Price.Min, p.Price.Max, p.Price.Tick, p.Order.Min, p.Order.Max, p.Order.Step, AnyTime{}, AnyTime{}, p.ID).
+				WithArgs(p.Name, p.Alias, p.Status, p.BaseCurrency, p.QuoteCurrency, p.PriceScale, p.TakerFee, p.MakerFee, p.Leverage.Long, p.Leverage.Short, p.Leverage.Min, p.Leverage.Max, p.Leverage.Step, p.Price.Min, p.Price.Max, p.Price.Tick, p.Order.Min, p.Order.Max, p.Order.Step, AnyTime{}, AnyTime{}, p.ID).
 				WillReturnResult(sqlmock.NewResult(1, 1))
 			mock.ExpectCommit()
 
@@ -68,7 +68,7 @@ func TestShouldSavePair(t *testing.T) {
 		for n, p := range mockPairs {
 			mock.ExpectBegin()
 			mock.ExpectExec("UPDATE `pairs` SET .+ WHERE `id` = .+").
-				WithArgs(p.Name, p.Alias, p.Status, p.BaseCurrency, p.QuoteCurrency, p.PriceScale, p.TakerFee, p.MakerFee, p.Leverage.Buy, p.Leverage.Sell, p.Leverage.Min, p.Leverage.Max, p.Leverage.Step, p.Price.Min, p.Price.Max, p.Price.Tick, p.Order.Min, p.Order.Max, p.Order.Step, AnyTime{}, AnyTime{}, p.ID).
+				WithArgs(p.Name, p.Alias, p.Status, p.BaseCurrency, p.QuoteCurrency, p.PriceScale, p.TakerFee, p.MakerFee, p.Leverage.Long, p.Leverage.Short, p.Leverage.Min, p.Leverage.Max, p.Leverage.Step, p.Price.Min, p.Price.Max, p.Price.Tick, p.Order.Min, p.Order.Max, p.Order.Step, AnyTime{}, AnyTime{}, p.ID).
 				WillReturnResult(sqlmock.NewResult(1, 1))
 			mock.ExpectCommit()
 

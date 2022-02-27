@@ -68,6 +68,18 @@ func Connect(c ExchangeConfig) (e *Exchange, err error) {
 	return e, err
 }
 
+func (e *Exchange) Reconnect() (err error) {
+	e.connection, _, err = websocket.Dial(e.context, e.websocketHost, nil)
+	err = e.Authenticate()
+	if err == nil {
+		e.logger.Write([]byte(fmt.Sprintf("%s [exchange] Succesfully connected.\n", time.Now().Format("2006-01-02 15:04:05.000"))))
+	} else {
+		e.logger.Write([]byte(fmt.Sprintf("%s [exchange] Error connecting to exchange: %v\n", time.Now().Format("2006-01-02 15:04:05.000"), err)))
+	}
+
+	return err
+}
+
 func (e *Exchange) Close() {
 	e.context.Done()
 	err := e.connection.Close(http.StatusConflict, "weirdness")

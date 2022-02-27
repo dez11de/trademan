@@ -7,7 +7,7 @@ import (
 )
 
 type Pair struct {
-	ID            uint
+	ID            uint64
 	Name          string          `gorm:"uniqueIndex; size:15; unique; not null" json:"name"`
 	Alias         string          `gorm:"size:15" json:"alias"`
 	Status        string          `gorm:"size:15" json:"status"` // TODO: make enum

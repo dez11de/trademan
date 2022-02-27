@@ -130,6 +130,7 @@ func (e *Exchange) SendTakeProfit(plan cryptodb.Plan, pair cryptodb.Pair, ticker
 	}
 
 	takeProfit.SystemOrderID = response.Result.StopOrderID
+	takeProfit.Status.Scan(response.Result.OrderStatus)
 
 	return nil
 }

@@ -29,11 +29,10 @@ func (e *Exchange) SendLeverage(n string, q string, l, s decimal.Decimal) (err e
 		levParams["sell_leverage"] = s.InexactFloat64()
 		url = "/private/linear/position/set-leverage"
 	default:
-		log.Printf("Setting margin not supported for this pair.")
+		log.Printf("Setting margin not supported for this pair. (USDT)")
 	}
 
 	_, _, err = e.SignedRequest(http.MethodPost, url, levParams, &result)
-	log.Printf("SendLeverage result: %+v", result)
 	if result.ReturnCode != 0 || result.ExtendedCode != "" {
 		return errors.New(result.ReturnMessage)
 	}

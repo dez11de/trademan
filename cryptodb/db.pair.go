@@ -32,7 +32,7 @@ func (db *Database) GetPairs() (pairs []Pair, err error) {
 	return pairs, result.Error
 }
 
-func (db *Database) GetPair(id uint) (pair Pair, err error) {
+func (db *Database) GetPair(id uint64) (pair Pair, err error) {
 	result := db.Where("ID = ?", id).First(&pair)
 
 	return pair, result.Error

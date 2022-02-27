@@ -16,6 +16,14 @@ func (e *Exchange) ProcessMessages(positionChannel chan<- Position, executionCha
 
 		if err != nil {
 			log.Printf("Error reading websocket.")
+			if e.debugMode {
+				e.logger.Write([]byte(fmt.Sprintf("Error reading websocket: %s. Reconnecting...", err)))
+			}
+			err = e.Reconnect()
+			time.Sleep(1 * time.Second)
+			if err != nil {
+				log.Printf("Unable to reconnect: %s", err)
+			}
 		}
 
 		var rawData json.RawMessage
@@ -29,6 +37,7 @@ func (e *Exchange) ProcessMessages(positionChannel chan<- Position, executionCha
 		case true:
 			switch wsresp.ReturnMessage {
 			case "pong":
+				log.Printf("pong")
 				// TODO: IF haven't received pong in 2 minutes (re)connect, ELSE Reset timer?
 			}
 		}
@@ -61,7 +70,7 @@ func (e *Exchange) ProcessMessages(positionChannel chan<- Position, executionCha
 				err = json.Unmarshal(rawData, &orders)
 				if err != nil {
 					log.Printf("Error unmarshalling order %s", err)
-                    log.Printf("rawData: %s", string(rawData))
+					log.Printf("rawData: %s", string(rawData))
 				}
 				for _, order := range orders {
 					e.logger.Write([]byte(fmt.Sprintf("%s [exchange] Order:     %v\n", time.Now().Format("2006-01-02 15:04:05.000"), order)))

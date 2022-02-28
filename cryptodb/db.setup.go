@@ -71,7 +71,7 @@ func (db *Database) SaveSetup(logSource LogSource, newSetup *Setup) error {
 	logPlanDifferences(tx, logSource, pair, oldPlan, newSetup.Plan)
 
 	var oldOrders []Order
-	result = db.Where("plan_id = ?", newSetup.Plan.ID).Find(oldOrders)
+	result = db.Where("plan_id = ?", newSetup.Plan.ID).Find(&oldOrders)
 
 	result = tx.Save(&newSetup.Orders)
 	if result.Error != nil {

@@ -361,7 +361,7 @@ func processLimitStoploss(plan cryptodb.Plan, limitStopLossOrder cryptodb.Order,
 	planUpdateLogEntry.Source = cryptodb.Server
 
 	switch o.OrderStatus {
-	case "New", "Untriggered", "PartiallyFilled", "Triggered":
+	case "New", "Untriggered", "PartiallyFilled", "Triggered", "Deactivated":
 		if limitStopLossOrder.Status.String() != o.OrderStatus {
 			limitStopLossOrder.Status.Scan(o.OrderStatus)
 			db.Save(&limitStopLossOrder)

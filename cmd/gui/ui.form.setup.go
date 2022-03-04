@@ -43,7 +43,7 @@ func NewForm() *planForm {
 	pf.TPStratItem = pf.makeTakeProfitStrategyItem()
 	pf.form.AppendItem(pf.TPStratItem)
 
-	for i := 0; i < cryptodb.MaxTakeProfits; i++ {
+	for i := 0; i <= cryptodb.MaxTakeProfits-1; i++ {
 		pf.takeProfitItems[i] = pf.makeTakeProfitItem(i)
 		pf.form.AppendItem(pf.takeProfitItems[i])
 	}
@@ -80,7 +80,7 @@ func (pf *planForm) FillForm(p cryptodb.Plan) {
 			dialog.ShowError(err, mainWindow)
 		}
 	} else {
-	    ui.activeOrders = cryptodb.NewOrders(0)
+		ui.activeOrders = cryptodb.NewOrders(0)
 	}
 
 	if ui.activePlan.ID != 0 {
@@ -128,17 +128,12 @@ func (pf *planForm) FillForm(p cryptodb.Plan) {
 	}
 
 	// TODO: think about in which statusses changing is allowed
-	if ui.activePlan.TradingViewPlan != "" {
-        // TODO: make this work
-		pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[0].Hide()
-		pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[1].Hide()
-		pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[2].Show()
-		pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[3].Show()
+	if ui.activePlan.TradingViewPlan == "" {
+		pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[0].(*fyne.Container).Objects[0].(*widget.Entry).Show()
+		pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[0].(*fyne.Container).Objects[1].(*widget.Hyperlink).Hide()
+		pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[1].(*fyne.Container).Objects[1].(*widget.Button).Show()
+		pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[1].(*fyne.Container).Objects[0].(*widget.Button).Hide()
 	} else {
-		pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[0].Show()
-		pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[1].Show()
-		pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[2].Hide()
-		pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[3].Hide()
 	}
 
 	// TODO: think about in which statusses changing is allowed

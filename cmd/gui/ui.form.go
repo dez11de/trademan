@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
 	"github.com/bart613/decimal"
@@ -8,6 +9,7 @@ import (
 )
 
 func (pf *planForm) gatherSetup() cryptodb.Setup {
+	// TODO: check for errors
 	ui.activePlan.PairID = ui.activePair.ID
 	ui.activePlan.Direction.Scan(pf.directionItem.Widget.(*widget.RadioGroup).Selected)
 	ui.activePlan.Risk = decimal.RequireFromString(pf.riskItem.Widget.(*widget.Entry).Text)
@@ -16,13 +18,15 @@ func (pf *planForm) gatherSetup() cryptodb.Setup {
 	ui.activePlan.TakeProfitStrategy.Scan(pf.TPStratItem.Widget.(*widget.Select).Selected)
 
 	for i := 0; i < cryptodb.MaxTakeProfits; i++ {
-		// TODO: make this more robust
 		tempPrice, err := decimal.NewFromString(pf.takeProfitItems[i].Widget.(*widget.Entry).Text)
 		if err == nil {
 			ui.activeOrders[3+i].Price = tempPrice
 		} else {
 			ui.activeOrders[3+i].Price = decimal.Zero
 		}
+	}
+	if pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[0].(*fyne.Container).Objects[1].(*widget.Hyperlink).URL != nil {
+		ui.activePlan.TradingViewPlan = pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[0].(*fyne.Container).Objects[1].(*widget.Hyperlink).URL.String()
 	}
 
 	return cryptodb.Setup{Plan: ui.activePlan, Orders: ui.activeOrders}

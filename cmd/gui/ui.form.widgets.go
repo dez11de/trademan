@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/url"
 	"sort"
 	"strings"
@@ -19,7 +18,9 @@ import (
 
 func (pf *planForm) setQuoteCurrency(s string) {
 	pf.stopLossItem.Text = fmt.Sprintf("Stop Loss (%s)", s)
+
 	pf.entryItem.Text = fmt.Sprintf("Entry (%s)", s)
+
 	for i, takeProfitItem := range pf.takeProfitItems {
 		takeProfitItem.Text = fmt.Sprintf("Take Profit #%d (%s)", i+1, s)
 	}
@@ -27,7 +28,9 @@ func (pf *planForm) setQuoteCurrency(s string) {
 
 func (pf *planForm) setPriceScale(i int32) {
 	pf.stopLossItem.Widget.(*widget.Entry).SetPlaceHolder(decimal.Zero.StringFixed(i))
+
 	pf.entryItem.Widget.(*widget.Entry).SetPlaceHolder(decimal.Zero.StringFixed(i))
+
 	for _, takeProfitItem := range pf.takeProfitItems {
 		takeProfitItem.Widget.(*widget.Entry).SetPlaceHolder(decimal.Zero.StringFixed(i))
 	}
@@ -52,6 +55,9 @@ func (ui *UI) fzfPairs(s string) (possiblePairs []string) {
 func (pf *planForm) makePairItem() *widget.FormItem {
 	CompletionEntry := xwidget.NewCompletionEntry([]string{})
 	CompletionEntry.SetPlaceHolder("Select pair from list")
+	item := widget.NewFormItem("Pair", CompletionEntry)
+	item.HintText = " "
+
 	CompletionEntry.OnChanged = func(s string) {
 		CompletionEntry.SetText(strings.ToUpper(s))
 		possiblePairs := ui.fzfPairs(strings.ToUpper(s))
@@ -66,172 +72,180 @@ func (pf *planForm) makePairItem() *widget.FormItem {
 	}
 
 	CompletionEntry.OnSubmitted = func(s string) {
-		ok := false
 		s = strings.ToUpper(s)
 		for _, p := range ui.Pairs {
 			if s == p.Name {
 				ui.activePair = p
-				ok = true
-				break // No need to look further
+				ui.activePlan.PairID = ui.activePair.ID
+				pf.setQuoteCurrency(ui.activePair.QuoteCurrency)
+				pf.setPriceScale(ui.activePair.PriceScale)
+
+				pf.directionItem.Widget.(*widget.RadioGroup).Enable()
+				pf.form.Refresh()
+				break
 			}
 		}
-		if ok {
-			ui.activePlan.PairID = ui.activePair.ID
-			pf.setQuoteCurrency(ui.activePair.QuoteCurrency)
-			pf.setPriceScale(ui.activePair.PriceScale)
-			pf.directionItem.Widget.(*widget.RadioGroup).Enable()
-			pf.form.Refresh()
-		}
 	}
-	item := widget.NewFormItem("Pair", CompletionEntry)
-	item.HintText = " "
 
 	return item
 }
 
 func (pf *planForm) makeDirectionItem() *widget.FormItem {
-	directionRadio := widget.NewRadioGroup(cryptodb.DirectionStrings(),
-		func(s string) {
-			pf.riskItem.Widget.(*widget.Entry).Enable()
-			pf.form.Refresh()
-		})
+	directionRadio := widget.NewRadioGroup(nil, nil)
+	item := widget.NewFormItem("Direction", directionRadio)
+	item.HintText = " "
 	directionRadio.Horizontal = true
 	directionRadio.Disable()
 
-	item := widget.NewFormItem("Direction", directionRadio)
-	item.HintText = " "
+	directionRadio.Options = cryptodb.DirectionStrings()
+	directionRadio.OnChanged =
+		func(s string) {
+			pf.riskItem.Widget.(*widget.Entry).Enable()
+			pf.form.Refresh()
+		}
 
 	return item
 }
 
-// TODO: think about in which statusses changing is allowed
 func (pf *planForm) makeRiskItem() *widget.FormItem {
 	riskEntry := widget.NewEntry()
 	riskEntry.Disable()
 	riskEntry.SetPlaceHolder("0.0")
-
-	riskEntry.OnChanged = func(s string) {
-		tempRisk, err := decimal.NewFromString(s)
-		if (err != nil ||
-			tempRisk.Cmp(decimal.NewFromFloat(5)) != -1 ||
-			tempRisk.Cmp(decimal.NewFromFloat(0.499)) != 1) &&
-			!tempRisk.IsZero() {
-			pf.riskItem.HintText = "enter a 0.5 > risk < 5.0"
-			pf.stopLossItem.Widget.(*widget.Entry).Disable()
-			pf.form.Refresh()
-		} else {
-			pf.riskItem.HintText = " "
-			pf.stopLossItem.Widget.(*widget.Entry).Enable()
-			pf.form.Refresh()
-		}
-	}
-
 	item := widget.NewFormItem("Risk (%)", riskEntry)
 	item.HintText = " "
 
+	riskEntry.OnChanged = func(s string) {
+		tempRisk, err := decimal.NewFromString(s)
+		if err != nil || tempRisk.GreaterThan(decimal.NewFromFloat(5.0)) || tempRisk.LessThan(decimal.NewFromFloat(0.5)) {
+			item.HintText = "enter a 0.5 > risk < 5.0"
+			pf.stopLossItem.Widget.(*widget.Entry).Disable()
+		} else {
+			item.HintText = " "
+			pf.stopLossItem.Widget.(*widget.Entry).Enable()
+		}
+		pf.form.Refresh()
+	}
+
 	return item
 }
 
-// TODO: think about in which statusses changing is allowed
 func (pf *planForm) makeStopLossItem() *widget.FormItem {
 	StopLossEntry := widget.NewEntry()
 	StopLossEntry.Disable()
+	item := widget.NewFormItem("Stop Loss", StopLossEntry)
+	item.HintText = " "
+
 	StopLossEntry.OnChanged = func(s string) {
-		// TODO: properly validate input
-		pf.entryItem.Widget.(*widget.Entry).Enable()
+		_, err := decimal.NewFromString(s)
+		if err != nil {
+			pf.entryItem.Widget.(*widget.Entry).Disable()
+			item.HintText = fmt.Sprintf("Enter a valid price in %s", ui.activePair.QuoteCurrency)
+		} else {
+			pf.entryItem.Widget.(*widget.Entry).Enable()
+			item.HintText = " "
+		}
+
 		pf.form.Refresh()
 	}
-
-	item := widget.NewFormItem(fmt.Sprintf("Stop Loss (%s)", ui.activePair.QuoteCurrency), StopLossEntry)
-	item.HintText = " "
 
 	return item
 }
 
-// TODO: think about in which statusses changing is allowed
 func (pf *planForm) makeEntryItem() *widget.FormItem {
 	entryEntry := widget.NewEntry()
 	entryEntry.Disable()
+	item := widget.NewFormItem("Entry (%s)", entryEntry)
+	item.HintText = " "
+
 	entryEntry.OnChanged = func(s string) {
-		// TODO: properly validate input
-		pf.TPStratItem.Widget.(*widget.Select).Enable()
+		_, err := decimal.NewFromString(s)
+		if err != nil {
+			pf.TPStratItem.Widget.(*widget.Select).Enable()
+			item.HintText = fmt.Sprintf("Enter a valid price in %s", ui.activePair.QuoteCurrency)
+		} else {
+			pf.TPStratItem.Widget.(*widget.Select).Enable()
+			item.HintText = " "
+		}
+
 		pf.form.Refresh()
 	}
 
-	item := widget.NewFormItem(fmt.Sprintf("Entry (%s)", ui.activePair.QuoteCurrency), entryEntry)
-	item.HintText = " "
-
 	return item
 }
 
-// TODO: think about in which statusses changing is allowed
 func (pf *planForm) makeTakeProfitStrategyItem() *widget.FormItem {
-	tPStratSelect := widget.NewSelect(cryptodb.TakeProfitStrategyStrings(), func(s string) {
-		pf.takeProfitItems[0].Widget.(*widget.Entry).Enable()
-		pf.form.Refresh()
-	})
+	tPStratSelect := widget.NewSelect(nil, nil)
 	tPStratSelect.Disable()
 	item := widget.NewFormItem("TP Strategy", tPStratSelect)
-
 	item.HintText = " "
+
+	tPStratSelect.Options = cryptodb.TakeProfitStrategyStrings()
+
+	tPStratSelect.OnChanged = func(s string) {
+		pf.takeProfitItems[0].Widget.(*widget.Entry).Enable()
+		pf.form.Refresh()
+	}
 
 	return item
 }
 
-// TODO: think about in which statusses changing is allowed
 func (pf *planForm) makeTakeProfitItem(n int) *widget.FormItem {
 	takeProfitEntry := widget.NewEntry()
 	takeProfitEntry.Disable()
+	item := widget.NewFormItem("Take profit #", takeProfitEntry)
+	item.HintText = " "
+
 	takeProfitEntry.OnChanged = func(s string) {
-		// TODO: properly validate input
-		// TODO: show % difference with entry and previous take profit
-		if !decimal.RequireFromString(s).IsZero() && s != "" {
-			if n < cryptodb.MaxTakeProfits-1 {
+		if n != cryptodb.MaxTakeProfits-1 {
+			v, err := decimal.NewFromString(s)
+			if err != nil || v.IsZero() {
+				pf.takeProfitItems[n+1].Widget.(*widget.Entry).Disable()
+			} else {
 				pf.takeProfitItems[n+1].Widget.(*widget.Entry).Enable()
-				pf.form.Refresh()
 			}
 		}
-	}
 
-	item := widget.NewFormItem(fmt.Sprintf("Take profit #%d (%s)", n+1, ui.activePair.QuoteCurrency), takeProfitEntry)
-	item.HintText = " "
+		pf.form.Refresh()
+	}
 
 	return item
 }
 
-// TODO: think about in which statusses changing is allowed
 func (pf *planForm) makeTradingViewLinkItem() *widget.FormItem {
-	var tvurl url.URL
-
 	editEntry := widget.NewEntry()
 	saveButton := widget.NewButtonWithIcon("", theme.DocumentSaveIcon(), nil)
 
-	// TODO: check error
-	tvurl.Parse(ui.activePlan.TradingViewPlan)
-	tradingViewLink := widget.NewHyperlink("Open", &tvurl)
+	tradingViewLink := widget.NewHyperlink("", nil)
 	createButton := widget.NewButtonWithIcon("", theme.DocumentCreateIcon(), nil)
 
+	saveButton.Hide()
+	editEntry.Hide()
+	createButton.Show()
+	tradingViewLink.Show()
+
 	saveButton.OnTapped = func() {
-		log.Printf("saveButton tapped")
-		editEntry.Hide()
-		tradingViewLink.Show()
-		saveButton.Hide()
-		createButton.Show()
+		tvurl, err := url.Parse(editEntry.Text)
+		if err == nil {
+			saveButton.Hide()
+			editEntry.Hide()
+			createButton.Show()
+            tradingViewLink.SetText(tvurl.String())
+			tradingViewLink.Show()
+			tradingViewLink.URL = tvurl
+		}
 	}
+
 	createButton.OnTapped = func() {
-		log.Printf("createButton tapped")
-		createButton.Hide()
-		tradingViewLink.Hide()
+		editEntry.SetText(tradingViewLink.URL.String())
 		saveButton.Show()
 		editEntry.Show()
-
+		createButton.Hide()
+		tradingViewLink.Hide()
 	}
 
-    holdingContainer := container.NewWithoutLayout()
-	holdingContainer.Add(editEntry)
-    holdingContainer.Add(saveButton)
-    holdingContainer.Add(tradingViewLink)
-    holdingContainer.Add(createButton)
+	buttonContainer := container.NewVBox(createButton, saveButton)
+	urlContainer := container.NewVBox(editEntry, tradingViewLink)
+	holdingContainer := container.NewBorder(nil, nil, nil, buttonContainer, urlContainer)
 
 	item := widget.NewFormItem("TradingView", holdingContainer)
 	item.HintText = " "

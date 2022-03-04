@@ -289,24 +289,18 @@ func processEntryOrder(plan cryptodb.Plan, pair cryptodb.Pair, marketStopLossOrd
 		planUpdateLogEntry.Text = fmt.Sprintf("Changing plan status to %s.", entryOrder.Status.String())
 		db.Create(&planUpdateLogEntry)
 
-	case "PartiallyFilled":
+	case "Filled", "Cancelled", "PartiallyFilled":
 		if entryOrder.Status.String() != o.OrderStatus {
+			exchangeLogEntry.Text = fmt.Sprintf("Entry %s.", o.OrderStatus)
 			entryOrder.Status.Scan(o.OrderStatus)
 			db.Save(&entryOrder)
-			exchangeLogEntry.Text = "Entry partially filled."
 			db.Create(&exchangeLogEntry)
+
+			planUpdateLogEntry.Text = fmt.Sprintf("Changing plan status to %s.", o.OrderStatus)
+			plan.Status = entryOrder.Status
+			db.Save(&plan)
+			db.Create(&planUpdateLogEntry)
 		}
-
-	case "Filled", "Cancelled":
-		exchangeLogEntry.Text = fmt.Sprintf("Entry %s.", o.OrderStatus)
-		entryOrder.Status.Scan(o.OrderStatus)
-		db.Save(&entryOrder)
-		db.Create(&exchangeLogEntry)
-
-		planUpdateLogEntry.Text = fmt.Sprintf("Changing plan status to %s.", o.OrderStatus)
-		plan.Status = entryOrder.Status
-		db.Save(&plan)
-		db.Create(&planUpdateLogEntry)
 
 	default:
 		return errors.New(fmt.Sprintf("Unhandled OrderStatus (%s) for entry", o.OrderStatus))
@@ -381,7 +375,7 @@ func processLimitStoploss(plan cryptodb.Plan, limitStopLossOrder cryptodb.Order,
 
 		// TODO: cancel remaining open (takeProfit) orders
 		// TODO: mark it as a win or loss. calculate performance?
-        // Lower leverage
+		// Lower leverage
 
 	default:
 		return errors.New(fmt.Sprintf("Unhandled OrderStatus (%s) for limitstoploss", o.OrderStatus))

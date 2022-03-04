@@ -6,8 +6,6 @@ import (
 	"github.com/bart613/decimal"
 )
 
-// TODO: consider including a seperate struct for statistics such as RRR @ start, Evolved RRR,
-// Break/Even, relative PnL.
 type Plan struct {
 	ID                 uint64
 	PairID             uint64

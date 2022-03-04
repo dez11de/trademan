@@ -10,7 +10,6 @@ import (
 
 const APIv1Base = "/api/v1/"
 
-// TODO: rewrite as gRPC
 func HandleRequests(c RESTServerConfig) {
 	router := httprouter.New()
 

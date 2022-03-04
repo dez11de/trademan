@@ -25,7 +25,6 @@ func (db *Database) CrupdatePair(p *Pair) (err error) {
 	}
 }
 
-// TODO: should only return Active pairs. See GORM api documentation.
 func (db *Database) GetPairs() (pairs []Pair, err error) {
 	result := db.Where("status = ?", "Trading").Order("ID ASC").Find(&pairs)
 

@@ -10,7 +10,6 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-// TODO: rewrite as gRPC
 func allPlansHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	var allPlans []cryptodb.Plan
 	result := db.Find(&allPlans)
@@ -29,7 +28,6 @@ func allPlansHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 	w.Write(jsonResp)
 }
 
-// TODO: rewrite as gRPC
 func executePlanHandler(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	id, err := strconv.Atoi(params.ByName("ID"))
 	if err != nil {
@@ -76,8 +74,14 @@ func executePlanHandler(w http.ResponseWriter, r *http.Request, params httproute
 		tx.Rollback()
 		return
 	}
-	// TODO: check for error
-	tx.Create(&cryptodb.Log{PlanID: plan.ID, Source: cryptodb.Server, Text: "Sending plan."})
+
+	result = tx.Create(&cryptodb.Log{PlanID: plan.ID, Source: cryptodb.Server, Text: "Sending plan."})
+    if result.Error != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(err.Error()))
+		tx.Rollback()
+		return
+    }
 	tx.Commit()
 
 	pause <- struct{}{}

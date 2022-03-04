@@ -7,7 +7,6 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-// TODO: rewrite as gRPC
 func allPairsHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	allPairs, err := db.GetPairs()
 	if err != nil {

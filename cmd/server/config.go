@@ -11,7 +11,7 @@ import (
 // TODO: set defaults and descriptions
 type RESTServerConfig struct {
 	Host string `default:""`
-    Port string `default:"8888"` // TODO: change to 443 for gRCP
+    Port string `default:"8888"`
 }
 
 type trademanConfig struct {

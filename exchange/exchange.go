@@ -10,12 +10,11 @@ import (
 	"nhooyr.io/websocket"
 )
 
-// TODO: set defaults and descriptions
 type ExchangeConfig struct {
-	ApiKey    string
-	ApiSecret string
-	RESTHost  string
-	WSHost    string
+    ApiKey    string `flag:"key||Exchange API key" env:"TRADEMAN_EXCHANGE_KEY"`
+    ApiSecret string `flag:"secret||Exchange API secret" env:"TRADEMAN_EXCHANGE_SECRET"`
+    RESTHost  string `flag:"rest_host||Exchange API REST protocol host" env:"TRADEMAN_EXCHANGE_REST_HOST"`
+    WSHost    string `flag:"websocket_host||Exchange WebSocket protocol host" env:"TRADEMAN_EXCHANGE_WEBSOCKET_HOST"`
 
 	// TODO: get logfile settings from config file
 }

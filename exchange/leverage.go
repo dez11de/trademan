@@ -1,6 +1,5 @@
 package exchange
 
-// TODO: bybit considers this part of position, according to documentation?
 type LeverageResponse struct {
 	ReturnCode       int64  `json:"ret_code"`
 	ReturnMessage    string `json:"ret_msg"`

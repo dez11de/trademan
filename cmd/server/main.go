@@ -94,8 +94,6 @@ func main() {
 	}
 	orderUpdate := make(chan exchange.Order)
 
-	// TODO: also subscribe to wallet socket?
-
 	pingExchangeTicker := time.NewTicker(1 * time.Minute)
 	refreshWalletTicker := time.NewTicker(2 * time.Hour)
 	refreshPairsTicker := time.NewTicker(24 * time.Hour)

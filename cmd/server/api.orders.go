@@ -10,7 +10,6 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-// TODO: rewrite as gRPC
 func getOrdersHandler(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	planID, err := strconv.Atoi(p.ByName("PlanID"))
     var orders []cryptodb.Order

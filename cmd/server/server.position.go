@@ -24,7 +24,6 @@ func processPosition(position exchange.Position) (err error) {
 	}
 
 	if !plan.AverageEntryPrice.Equal(position.Price) && !position.Price.IsZero() {
-	// TODO: if Size > 0 Plan.Status = partially if Size = EntrySize Plan Status = Filled
 		plan.AverageEntryPrice = position.Price
 		logEntry := &cryptodb.Log{
 			Source: cryptodb.Server,

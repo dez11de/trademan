@@ -14,6 +14,27 @@ import (
 // TODO: make host:port configurable in env/param/file
 const BaseURL = "http://localhost:8888/api/v1/"
 
+func getDBName() (name string, err error) {
+	resp, err := http.Get(BaseURL + "databaseName")
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		errorMessage, _ := ioutil.ReadAll(resp.Body)
+		return "", errors.New(string(errorMessage))
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	err = json.Unmarshal(body, &name)
+	return name, err
+}
+
 func getPairs() (pairs []cryptodb.Pair, err error) {
 	resp, err := http.Get(BaseURL + "pairs")
 	if err != nil {
@@ -139,3 +160,24 @@ func storeSetup(s cryptodb.Setup) (setup cryptodb.Setup, err error) {
 	err = json.Unmarshal(body, &setup)
 	return setup, err
 }
+
+func getLogs(PlanID uint64) (entries []cryptodb.Log, err error) {
+	resp, err := http.Get(BaseURL + "logs/" + strconv.Itoa(int(PlanID)))
+	if err != nil {
+		return entries, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		errorMessage, _ := ioutil.ReadAll(resp.Body)
+		return entries, errors.New(string(errorMessage))
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return entries, err
+	}
+
+	err = json.Unmarshal(body, &entries)
+	return entries, err
+}
+

@@ -13,8 +13,9 @@ type Order struct {
 	OrderKind     OrderKind       `gorm:"type:varchar(25)"`
 	Size          decimal.Decimal `gorm:"type:decimal(20, 8)" json:"qty"`
 	Price         decimal.Decimal `gorm:"type:decimal(20, 8)" json:"price"`
-	LinkOrderID   string          `gorm:"type:varchar(36);index" json:"order_link_id"` // Links trademan to exchange
-	SystemOrderID string          `gorm:"type:varchar(36);index" json:"order_id"`      // Stores either ByBits order_id, or stop_order_id
+	TriggerPrice  decimal.Decimal `gorm:"type:decimal(20, 8)"`
+	LinkOrderID   string          `gorm:"type:varchar(36);index" json:"order_link_id"`
+	SystemOrderID string          `gorm:"type:varchar(36);index" json:"order_id"`    
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
 }

@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/bart613/decimal"
 	"github.com/dez11de/cryptodb"
 )
 
@@ -52,7 +51,7 @@ func (e *Exchange) SendEntry(plan cryptodb.Plan, pair cryptodb.Pair, marketStopL
 	return nil
 }
 
-func (e *Exchange) SendLimitStopLoss(plan cryptodb.Plan, pair cryptodb.Pair, ticker Ticker, marketStopLoss cryptodb.Order, limitStopLoss *cryptodb.Order, entry cryptodb.Order) (err error) {
+func (e *Exchange) SendLimitStopLoss(plan cryptodb.Plan, pair cryptodb.Pair, marketStopLoss cryptodb.Order, limitStopLoss *cryptodb.Order, entry cryptodb.Order) (err error) {
 	var result OrderResponseRest
 	lslParams := make(RequestParameters)
 
@@ -68,8 +67,8 @@ func (e *Exchange) SendLimitStopLoss(plan cryptodb.Plan, pair cryptodb.Pair, tic
 
 	lslParams["trigger_by"] = "LastPrice"
 	lslParams["price"] = limitStopLoss.Price.InexactFloat64()
-	lslParams["stop_px"] = limitStopLoss.Price.InexactFloat64()
-	lslParams["base_price"] = ticker.LastPrice.InexactFloat64()
+	lslParams["stop_px"] = limitStopLoss.TriggerPrice.InexactFloat64()
+	lslParams["base_price"] = entry.Price.InexactFloat64()
 
 	lslParams["close_on_trigger"] = false
 	lslParams["reduce_only"] = true
@@ -95,7 +94,7 @@ func (e *Exchange) SendLimitStopLoss(plan cryptodb.Plan, pair cryptodb.Pair, tic
 	return nil
 }
 
-func (e *Exchange) SendTakeProfit(plan cryptodb.Plan, pair cryptodb.Pair, ticker Ticker, marketStopLoss, entry cryptodb.Order, takeProfit *cryptodb.Order) (err error) {
+func (e *Exchange) SendTakeProfit(plan cryptodb.Plan, pair cryptodb.Pair, marketStopLoss, entry cryptodb.Order, takeProfit *cryptodb.Order) (err error) {
 	var result OrderResponseRest
 	tpParams := make(RequestParameters)
 
@@ -110,7 +109,7 @@ func (e *Exchange) SendTakeProfit(plan cryptodb.Plan, pair cryptodb.Pair, ticker
 	tpParams["qty"] = takeProfit.Size.InexactFloat64()
 	tpParams["trigger_by"] = "LastPrice"
 	tpParams["price"] = takeProfit.Price.InexactFloat64()
-	tpParams["stop_px"] = entry.Price.Add(takeProfit.Price.Sub(entry.Price).Mul(decimal.NewFromFloat(0.95))).RoundStep(pair.Price.Tick, true)
+	tpParams["stop_px"] = takeProfit.TriggerPrice.InexactFloat64() 
 	tpParams["base_price"] = entry.Price.InexactFloat64()
 
 	tpParams["close_on_trigger"] = false

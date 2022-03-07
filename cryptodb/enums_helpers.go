@@ -360,11 +360,11 @@ func (i *TakeProfitStrategy) Scan(value interface{}) error {
 	return nil
 }
 
-const _StatusName = "UnplannedPlannedCreatedOrderedNewUntriggeredPartiallyFilledFilledStoppedCancelledDeactivatedClosedLiquidatedLogged"
+const _StatusName = "UnplannedPlannedCreatedOrderedNewUntriggeredPartiallyFilledFilledErrorStoppedCancelledDeactivatedClosedLiquidatedLogged"
 
-var _StatusIndex = [...]uint8{0, 9, 16, 23, 30, 33, 44, 59, 65, 72, 81, 92, 98, 108, 114}
+var _StatusIndex = [...]uint8{0, 9, 16, 23, 30, 33, 44, 59, 65, 70, 77, 86, 97, 103, 113, 119}
 
-const _StatusLowerName = "unplannedplannedcreatedorderednewuntriggeredpartiallyfilledfilledstoppedcancelleddeactivatedclosedliquidatedlogged"
+const _StatusLowerName = "unplannedplannedcreatedorderednewuntriggeredpartiallyfilledfillederrorstoppedcancelleddeactivatedclosedliquidatedlogged"
 
 func (i Status) String() string {
 	if i < 0 || i >= Status(len(_StatusIndex)-1) {
@@ -385,15 +385,16 @@ func _StatusNoOp() {
 	_ = x[Untriggered-(5)]
 	_ = x[PartiallyFilled-(6)]
 	_ = x[Filled-(7)]
-	_ = x[Stopped-(8)]
-	_ = x[Cancelled-(9)]
-	_ = x[Deactivated-(10)]
-	_ = x[Closed-(11)]
-	_ = x[Liquidated-(12)]
-	_ = x[Logged-(13)]
+	_ = x[Error-(8)]
+	_ = x[Stopped-(9)]
+	_ = x[Cancelled-(10)]
+	_ = x[Deactivated-(11)]
+	_ = x[Closed-(12)]
+	_ = x[Liquidated-(13)]
+	_ = x[Logged-(14)]
 }
 
-var _StatusValues = []Status{Unplanned, Planned, Created, Ordered, New, Untriggered, PartiallyFilled, Filled, Stopped, Cancelled, Deactivated, Closed, Liquidated, Logged}
+var _StatusValues = []Status{Unplanned, Planned, Created, Ordered, New, Untriggered, PartiallyFilled, Filled, Error, Stopped, Cancelled, Deactivated, Closed, Liquidated, Logged}
 
 var _StatusNameToValueMap = map[string]Status{
 	_StatusName[0:9]:          Unplanned,
@@ -412,18 +413,20 @@ var _StatusNameToValueMap = map[string]Status{
 	_StatusLowerName[44:59]:   PartiallyFilled,
 	_StatusName[59:65]:        Filled,
 	_StatusLowerName[59:65]:   Filled,
-	_StatusName[65:72]:        Stopped,
-	_StatusLowerName[65:72]:   Stopped,
-	_StatusName[72:81]:        Cancelled,
-	_StatusLowerName[72:81]:   Cancelled,
-	_StatusName[81:92]:        Deactivated,
-	_StatusLowerName[81:92]:   Deactivated,
-	_StatusName[92:98]:        Closed,
-	_StatusLowerName[92:98]:   Closed,
-	_StatusName[98:108]:       Liquidated,
-	_StatusLowerName[98:108]:  Liquidated,
-	_StatusName[108:114]:      Logged,
-	_StatusLowerName[108:114]: Logged,
+	_StatusName[65:70]:        Error,
+	_StatusLowerName[65:70]:   Error,
+	_StatusName[70:77]:        Stopped,
+	_StatusLowerName[70:77]:   Stopped,
+	_StatusName[77:86]:        Cancelled,
+	_StatusLowerName[77:86]:   Cancelled,
+	_StatusName[86:97]:        Deactivated,
+	_StatusLowerName[86:97]:   Deactivated,
+	_StatusName[97:103]:       Closed,
+	_StatusLowerName[97:103]:  Closed,
+	_StatusName[103:113]:      Liquidated,
+	_StatusLowerName[103:113]: Liquidated,
+	_StatusName[113:119]:      Logged,
+	_StatusLowerName[113:119]: Logged,
 }
 
 var _StatusNames = []string{
@@ -435,12 +438,13 @@ var _StatusNames = []string{
 	_StatusName[33:44],
 	_StatusName[44:59],
 	_StatusName[59:65],
-	_StatusName[65:72],
-	_StatusName[72:81],
-	_StatusName[81:92],
-	_StatusName[92:98],
-	_StatusName[98:108],
-	_StatusName[108:114],
+	_StatusName[65:70],
+	_StatusName[70:77],
+	_StatusName[77:86],
+	_StatusName[86:97],
+	_StatusName[97:103],
+	_StatusName[103:113],
+	_StatusName[113:119],
 }
 
 // StatusString retrieves an enum value from the enum constants string name.

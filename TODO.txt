@@ -3,7 +3,6 @@ NeoVIM
 
 Refactor!
     Might not be the most fun, but is always worth it
-    Moar testing.
     Is it actually worth it to keep everything in seperate modules?
 
 Investigate 

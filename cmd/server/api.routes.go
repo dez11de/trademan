@@ -13,12 +13,16 @@ const APIv1Base = "/api/v1/"
 func HandleRequests(c RESTServerConfig) {
 	router := httprouter.New()
 
+	router.GET(APIv1Base+"databaseName", dbNameHandler)
+
 	router.GET(APIv1Base+"pairs", allPairsHandler)
 
 	router.GET(APIv1Base+"plans", allPlansHandler)
 	router.GET(APIv1Base+"plan/execute/:ID", executePlanHandler)
 
 	router.GET(APIv1Base+"orders/:PlanID", getOrdersHandler)
+
+	router.GET(APIv1Base+"logs/:PlanID", getLogsHandler)
 
 	router.POST(APIv1Base+"setup", setupHandler)
 

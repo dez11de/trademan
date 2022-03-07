@@ -13,6 +13,7 @@ import (
 
 var db *cryptodb.Database
 var e *exchange.Exchange
+var trademanCfg trademanConfig
 
 var play = make(chan struct{})
 var pause = make(chan struct{})
@@ -20,7 +21,6 @@ var wg sync.WaitGroup
 
 func main() {
 	// TODO: respond to os.Signal messages in the exepected way. See https://pace.dev/blog/2020/02/17/repond-to-ctrl-c-interrupt-signals-gracefully-with-context-in-golang-by-mat-ryer.html
-	var trademanCfg trademanConfig
 	err := readConfig(&trademanCfg)
 	if err != nil {
 		log.Fatalf("Error reading configuration: %s", err)

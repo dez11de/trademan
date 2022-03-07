@@ -27,6 +27,7 @@ const (
 	Untriggered
     PartiallyFilled
 	Filled
+    Error
 	Stopped
 	Cancelled
 	Deactivated

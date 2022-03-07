@@ -44,7 +44,6 @@ func executePlanHandler(w http.ResponseWriter, r *http.Request, params httproute
 	db.Where("id = ?", plan.PairID).First(&pair)
 	db.Where("plan_id = ?", plan.ID).Find(&orders)
 	db.Where("symbol = ?", pair.QuoteCurrency).Order("created_at DESC").First(&balance)
-	ticker, _ := e.GetTicker(pair.Name)
 
 	tx := db.Begin()
 	tx.Create(&cryptodb.Log{PlanID: plan.ID, Source: cryptodb.Server, Text: "Finalized orders."})
@@ -85,7 +84,7 @@ func executePlanHandler(w http.ResponseWriter, r *http.Request, params httproute
 	tx.Commit()
 
 	pause <- struct{}{}
-	err = placeOrders(plan, pair, ticker, orders)
+	err = placeOrders(plan, pair,  orders)
 	play <- struct{}{}
 
 	if err != nil {

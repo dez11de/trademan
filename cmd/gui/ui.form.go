@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
@@ -60,4 +62,24 @@ func (pf *planForm) executeAction() {
 	ui.activeOrders = setup.Orders
 	ui.Plans, _ = getPlans()
 	ui.List.Refresh()
+}
+
+func (pf *planForm) logAction() {
+	entries, err := getLogs(ui.activePlan.ID)
+	if err != nil {
+		dialog.ShowError(err, mainWindow)
+	}
+
+	logFile := widget.NewRichText()
+	for _, e := range entries {
+		seg := &widget.TextSegment{
+			Style: widget.RichTextStyle{},
+			Text:  fmt.Sprintf("%s  %s", e.CreatedAt.Format("2006-01-02 15:04:05"), e.Text),
+		}
+		logFile.Segments = append(logFile.Segments, seg)
+	}
+
+	logWindow := widget.NewPopUp(logFile, mainWindow.Canvas())
+	logWindow.Resize(fyne.NewSize(mainWindow.Canvas().Size().Width-2*50.0, mainWindow.Canvas().Size().Height-2*50.0))
+	logWindow.ShowAtPosition(fyne.Position{X: 50, Y: 50})
 }

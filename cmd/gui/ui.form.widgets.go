@@ -229,7 +229,7 @@ func (pf *planForm) makeTradingViewLinkItem() *widget.FormItem {
 			saveButton.Hide()
 			editEntry.Hide()
 			createButton.Show()
-            tradingViewLink.SetText(tvurl.String())
+			tradingViewLink.SetText(tvurl.String())
 			tradingViewLink.Show()
 			tradingViewLink.URL = tvurl
 		}
@@ -266,9 +266,10 @@ func (pf *planForm) makeNotesMultilineItem() *widget.FormItem {
 }
 
 func (pf *planForm) makeToolBar() *widget.Toolbar {
+	logAction := widget.NewToolbarAction(theme.DocumentIcon(), pf.logAction)
 	executeAction := widget.NewToolbarAction(theme.UploadIcon(), pf.executeAction)
 	cancelAction := widget.NewToolbarAction(theme.CancelIcon(), pf.cancelAction)
 	okAction := widget.NewToolbarAction(theme.ConfirmIcon(), pf.okAction)
 
-	return widget.NewToolbar(widget.NewToolbarSpacer(), executeAction, cancelAction, okAction)
+	return widget.NewToolbar(widget.NewToolbarSpacer(), logAction, executeAction, cancelAction, okAction)
 }

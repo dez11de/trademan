@@ -8,9 +8,17 @@ import (
 	"fyne.io/fyne/v2/app"
 )
 
+var trademanCfg trademanConfig
+var BaseURL string
 var mainWindow fyne.Window
 
 func main() {
+	err := readConfig(&trademanCfg)
+    BaseURL = fmt.Sprintf("http://%s:%s/api/v1/", trademanCfg.RESTServer.Host, trademanCfg.RESTServer.Port)
+	if err != nil {
+		log.Fatalf("Error reading configuration: %s", err)
+	}
+
 	app := app.NewWithID("nl.ganzeinfach.apps.bbtrader")
 	app.Settings().SetTheme(&myTheme{})
 	dbName, err := getDBName()

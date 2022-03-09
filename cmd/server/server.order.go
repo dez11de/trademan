@@ -25,10 +25,10 @@ func placeOrders(p cryptodb.Plan, pair cryptodb.Pair, o []cryptodb.Order) (err e
 		return err
 	}
 
-	err = setLimitStopLoss(p, pair, o[cryptodb.MarketStopLoss], &o[cryptodb.LimitStopLoss], o[cryptodb.Entry])
-	if err != nil {
-		return err
-	}
+	// err = setLimitStopLoss(&p, pair, o[cryptodb.MarketStopLoss], &o[cryptodb.LimitStopLoss], o[cryptodb.Entry])
+	// if err != nil {
+	// 	return err
+	// }
 
 	for i := 3; i < 3+cryptodb.MaxTakeProfits; i++ {
 		if !o[i].Price.IsZero() {
@@ -105,7 +105,7 @@ func setEntry(p cryptodb.Plan, pair cryptodb.Pair, marketStopLoss *cryptodb.Orde
 	return nil
 }
 
-func setLimitStopLoss(p cryptodb.Plan, pair cryptodb.Pair, marketStopLoss cryptodb.Order, limitStopLoss *cryptodb.Order, entry cryptodb.Order) (err error) {
+func setLimitStopLoss(p *cryptodb.Plan, pair cryptodb.Pair, marketStopLoss cryptodb.Order, limitStopLoss *cryptodb.Order, entry cryptodb.Order) (err error) {
 	err = e.SendLimitStopLoss(p, pair, marketStopLoss, limitStopLoss, entry)
 	if err != nil {
 		logEntry := &cryptodb.Log{
@@ -114,6 +114,11 @@ func setLimitStopLoss(p cryptodb.Plan, pair cryptodb.Pair, marketStopLoss crypto
 			Text:   fmt.Sprintf("Error sending Limit StopLoss (%s@%s %s): %s", limitStopLoss.Size.String(), limitStopLoss.Price.String(), limitStopLoss.TriggerPrice.String(), err),
 		}
 		result := db.Create(logEntry)
+		if result.Error != nil {
+			return result.Error
+		}
+		p.Status = cryptodb.Error
+		db.Save(p)
 		if result.Error != nil {
 			return result.Error
 		}
@@ -141,6 +146,11 @@ func setTakeProfit(p cryptodb.Plan, pair cryptodb.Pair, marketStopLoss, entry cr
 			Text:   fmt.Sprintf("Error sending take profit (%s@%s %s): %s", takeProfit.Size.String(), takeProfit.Price.String(), takeProfit.TriggerPrice.String(), err),
 		}
 		result := db.Create(logEntry)
+		if result.Error != nil {
+			return result.Error
+		}
+		p.Status = cryptodb.Error
+		db.Save(p)
 		if result.Error != nil {
 			return result.Error
 		}
@@ -247,11 +257,11 @@ func processOrder(incomingOrder exchange.Order) error {
 		if err != nil {
 			return err
 		}
-	case cryptodb.LimitStopLoss:
-		err := processLimitStoploss(plan, order, incomingOrder)
-		if err != nil {
-			return err
-		}
+	// case cryptodb.LimitStopLoss:
+	// 	err := processLimitStoploss(plan, order, incomingOrder)
+	// 	if err != nil {
+	// 		return err
+	// 	}
 	}
 
 	return nil
@@ -301,6 +311,8 @@ func processEntryOrder(plan cryptodb.Plan, pair cryptodb.Pair, marketStopLossOrd
 		}
 
 	default:
+		exchangeLogEntry.Text = fmt.Sprintf("Unhandled OrderStatus (%s) for Entry", o.OrderStatus)
+		db.Create(&exchangeLogEntry)
 		return errors.New(fmt.Sprintf("Unhandled OrderStatus (%s) for entry", o.OrderStatus))
 	}
 
@@ -333,10 +345,12 @@ func processMarketStoploss(plan cryptodb.Plan, marketStopLossOrder cryptodb.Orde
 		db.Save(&marketStopLossOrder)
 		planUpdateLogEntry.Text = fmt.Sprintf("Changing plan status to %s", marketStopLossOrder.Status.String())
 		db.Create(&planUpdateLogEntry)
-		plan.Status = cryptodb.Stopped
+		plan.Status = marketStopLossOrder.Status
 		db.Save(&plan)
 
 	default:
+		exchangeLogEntry.Text = fmt.Sprintf("Unhandled OrderStatus (%s) for Market StopLoss", o.OrderStatus)
+		db.Create(&exchangeLogEntry)
 		return errors.New(fmt.Sprintf("Unhandled OrderStatus (%s) for marketstoploss", o.OrderStatus))
 	}
 
@@ -344,7 +358,6 @@ func processMarketStoploss(plan cryptodb.Plan, marketStopLossOrder cryptodb.Orde
 }
 
 func processLimitStoploss(plan cryptodb.Plan, limitStopLossOrder cryptodb.Order, o exchange.Order) (err error) {
-
 	var exchangeLogEntry cryptodb.Log
 	var planUpdateLogEntry cryptodb.Log
 	exchangeLogEntry.PlanID = limitStopLossOrder.PlanID
@@ -361,46 +374,37 @@ func processLimitStoploss(plan cryptodb.Plan, limitStopLossOrder cryptodb.Order,
 			db.Create(&exchangeLogEntry)
 		}
 
-	case "Rejected":
+	case "Cancelled", "Filled", "Rejected":
 		limitStopLossOrder.Status.Scan(o.OrderStatus)
 		db.Save(&limitStopLossOrder)
-		exchangeLogEntry.Text = fmt.Sprintf("Limit stoploss %s", limitStopLossOrder.Status.String())
+		exchangeLogEntry.Text = fmt.Sprintf("Limit StopLoss status set to %s.", limitStopLossOrder.Status.String())
 		db.Create(&exchangeLogEntry)
-		plan.Status = cryptodb.Error
-		db.Save(&plan)
-		planUpdateLogEntry.Text = fmt.Sprintf("Changing plan status to %s", cryptodb.Error)
-		db.Create(&planUpdateLogEntry)
-
-	case "Cancelled", "Filled":
-		limitStopLossOrder.Status.Scan(o.OrderStatus)
-		db.Save(&limitStopLossOrder)
-		exchangeLogEntry.Text = fmt.Sprintf("Limit stoploss %s", limitStopLossOrder.Status.String())
-		db.Create(&exchangeLogEntry)
-		plan.Status = cryptodb.Stopped
-		db.Save(&plan)
 		planUpdateLogEntry.Text = fmt.Sprintf("Changing plan status to %s", limitStopLossOrder.Status.String())
 		db.Create(&planUpdateLogEntry)
+		plan.Status = limitStopLossOrder.Status
+		db.Save(&plan)
 
 		// TODO: cancel remaining open (takeProfit) orders
 		// TODO: mark it as a win or loss. calculate performance?
 		// Lower leverage
 
 	default:
-		return errors.New(fmt.Sprintf("Unhandled OrderStatus (%s) for limitstoploss", o.OrderStatus))
+		exchangeLogEntry.Text = fmt.Sprintf("Unhandled OrderStatus (%s) for Limit StopLoss", o.OrderStatus)
+		db.Create(&exchangeLogEntry)
+		return errors.New(fmt.Sprintf("Unhandled OrderStatus (%s) for Limit StopLoss", o.OrderStatus))
 	}
 
 	return nil
 }
 
 func processTakeProfit(plan cryptodb.Plan, pair cryptodb.Pair, entryOrder, takeProfit cryptodb.Order, o exchange.Order) (err error) {
-
 	var exchangeLogEntry cryptodb.Log
 	var planUpdateLogEntry cryptodb.Log
 	exchangeLogEntry.PlanID = takeProfit.PlanID
 	exchangeLogEntry.Source = cryptodb.Exchange
 
 	switch o.OrderStatus {
-	case "New", "Untriggered", "PartiallyFilled", "Filled", "Deactivated":
+	case "New", "Untriggered", "PartiallyFilled", "Filled":
 		if takeProfit.Status.String() != o.OrderStatus {
 			takeProfit.Status.Scan(o.OrderStatus)
 			db.Save(&takeProfit)
@@ -408,17 +412,19 @@ func processTakeProfit(plan cryptodb.Plan, pair cryptodb.Pair, entryOrder, takeP
 			db.Create(&exchangeLogEntry)
 		}
 
-	case "Rejected":
+	case "Rejected", "Deactivated":
 		takeProfit.Status.Scan(o.OrderStatus)
 		db.Save(&takeProfit)
 		exchangeLogEntry.Text = fmt.Sprintf("Take Profit status set to %s.", takeProfit.Status.String())
 		db.Create(&exchangeLogEntry)
-		plan.Status = cryptodb.Stopped
-		db.Save(&plan)
 		planUpdateLogEntry.Text = fmt.Sprintf("Changing plan status to %s", takeProfit.Status.String())
 		db.Create(&planUpdateLogEntry)
+		plan.Status = takeProfit.Status
+		db.Save(&plan)
 
 	default:
+		exchangeLogEntry.Text = fmt.Sprintf("Unhandled OrderStatus (%s) for takeProfit", o.OrderStatus)
+		db.Create(&exchangeLogEntry)
 		return errors.New(fmt.Sprintf("Unhandled OrderStatus (%s) for takeProfit", o.OrderStatus))
 	}
 

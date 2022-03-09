@@ -25,11 +25,16 @@ func (p *Plan) FinalizeOrders(available decimal.Decimal, activePair Pair, o []Or
 	entryStopLossDistance := o[MarketStopLoss].Price.Sub(o[Entry].Price)
 	positionSize := maxRisk.Div(entryStopLossDistance.Abs()).RoundStep(activePair.Order.Step, false)
 	positionValue := positionSize.Mul(o[Entry].Price)
-	o[MarketStopLoss].Size = positionSize
-	o[LimitStopLoss].Size = positionSize
-	o[LimitStopLoss].Price = triggerPrice(p.Direction, o[Entry].Price, o[MarketStopLoss].Price).RoundStep(activePair.Price.Tick, false)
-	o[LimitStopLoss].TriggerPrice = o[LimitStopLoss].Price
 	o[Entry].Size = positionSize
+	o[MarketStopLoss].Size = positionSize
+
+	// o[LimitStopLoss].Size = positionSize
+	// if p.Direction == Long {
+	// 	o[LimitStopLoss].Price = triggerPrice(Short, o[Entry].Price, o[MarketStopLoss].Price).RoundStep(activePair.Price.Tick, false)
+	// } else {
+	// 	o[LimitStopLoss].Price = triggerPrice(Long, o[Entry].Price, o[MarketStopLoss].Price).RoundStep(activePair.Price.Tick, false)
+	// }
+	// o[LimitStopLoss].TriggerPrice = o[LimitStopLoss].Price
 
 	if available.LessThan(positionSize.Mul(o[Entry].Price)) {
 		// TODO: find out how to included costs and risk bybit calculates
@@ -52,11 +57,11 @@ func (p *Plan) FinalizeOrders(available decimal.Decimal, activePair Pair, o []Or
 		takeProfitSize := positionSize.Div(decimal.NewFromInt(takeProfitsCount)).RoundStep(activePair.Order.Step, false)
 		i := int64(1)
 		for ; i <= takeProfitsCount-1; i++ {
-			o[2+i].TriggerPrice = triggerPrice(p.Direction, o[Entry].Price, o[MarketStopLoss].Price).RoundStep(activePair.Price.Tick, false)
+			o[2+i].TriggerPrice = triggerPrice(p.Direction, o[Entry].Price, o[2+i].Price).RoundStep(activePair.Price.Tick, false)
 			o[2+i].Size = takeProfitSize
 			remainingSize = remainingSize.Sub(takeProfitSize)
 		}
-		o[2+i].TriggerPrice = triggerPrice(p.Direction, o[Entry].Price, o[MarketStopLoss].Price).RoundStep(activePair.Price.Tick, false)
+		o[2+i].TriggerPrice = triggerPrice(p.Direction, o[Entry].Price, o[2+i].Price).RoundStep(activePair.Price.Tick, false)
 		o[2+i].Size = remainingSize.RoundStep(activePair.Order.Step, false)
 	default:
 		log.Printf("Take profit strategy %s is not (yet) implemented, sizes not set!", p.TakeProfitStrategy.String())

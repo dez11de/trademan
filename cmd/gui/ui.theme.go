@@ -71,6 +71,9 @@ func StatusColor(s cryptodb.Status) color.Color {
 	case cryptodb.Cancelled, cryptodb.Deactivated:
 		rgbacolor, _ := ParseHexColor("#dbc074")
 		return rgbacolor
+	case cryptodb.Error:
+		rgbacolor, _ := ParseHexColor("#ae3638")
+		return rgbacolor
 	}
 	return theme.PrimaryColor()
 }

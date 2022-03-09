@@ -51,7 +51,7 @@ func (e *Exchange) SendEntry(plan cryptodb.Plan, pair cryptodb.Pair, marketStopL
 	return nil
 }
 
-func (e *Exchange) SendLimitStopLoss(plan cryptodb.Plan, pair cryptodb.Pair, marketStopLoss cryptodb.Order, limitStopLoss *cryptodb.Order, entry cryptodb.Order) (err error) {
+func (e *Exchange) SendLimitStopLoss(plan *cryptodb.Plan, pair cryptodb.Pair, marketStopLoss cryptodb.Order, limitStopLoss *cryptodb.Order, entry cryptodb.Order) (err error) {
 	var result OrderResponseRest
 	lslParams := make(RequestParameters)
 

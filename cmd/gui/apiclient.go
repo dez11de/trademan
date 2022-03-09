@@ -11,9 +11,6 @@ import (
 	"github.com/dez11de/cryptodb"
 )
 
-// TODO: make host:port configurable in env/param/file
-const BaseURL = "http://localhost:8888/api/v1/"
-
 func getDBName() (name string, err error) {
 	resp, err := http.Get(BaseURL + "databaseName")
 	if err != nil {

@@ -75,7 +75,15 @@ func MakePlanListSplit() *container.Split {
 		planListSplit.Refresh()
 	})
 
-	actionBar := widget.NewToolbar(widget.NewToolbarSpacer(), addPlanAction)
+	refreshListAction := widget.NewToolbarAction(theme.ViewRefreshIcon(), func() {
+		ui.Plans, err = getPlans()
+		if err != nil {
+			dialog.ShowError(err, mainWindow)
+		}
+        ui.List.Refresh()
+	})
+
+	actionBar := widget.NewToolbar(widget.NewToolbarSpacer(), refreshListAction, addPlanAction)
 	actionBar.Refresh()
 	ListAndButtons = container.New(layout.NewBorderLayout(nil, actionBar, nil, nil), container.NewMax(ui.List), actionBar)
 	planListSplit.Leading = ListAndButtons

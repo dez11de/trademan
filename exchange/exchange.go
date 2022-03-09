@@ -59,7 +59,7 @@ func Connect(c ExchangeConfig) (e *Exchange, err error) {
 	err = e.Authenticate()
 
 	if err == nil {
-		e.logger.Write([]byte(fmt.Sprintf("%s [exchange] Succesfully connected.\n", time.Now().Format("2006-01-02 15:04:05.000"))))
+		e.logger.Write([]byte(fmt.Sprintf("%s [exchange] Successfully connected.\n", time.Now().Format("2006-01-02 15:04:05.000"))))
 	} else {
 		e.logger.Write([]byte(fmt.Sprintf("%s [exchange] Error connecting to exchange: %v\n", time.Now().Format("2006-01-02 15:04:05.000"), err)))
 	}
@@ -71,7 +71,7 @@ func (e *Exchange) Reconnect() (err error) {
 	e.connection, _, err = websocket.Dial(e.context, e.websocketHost, nil)
 	err = e.Authenticate()
 	if err == nil {
-		e.logger.Write([]byte(fmt.Sprintf("%s [exchange] Succesfully connected.\n", time.Now().Format("2006-01-02 15:04:05.000"))))
+		e.logger.Write([]byte(fmt.Sprintf("%s [exchange] Successfully connected.\n", time.Now().Format("2006-01-02 15:04:05.000"))))
 	} else {
 		e.logger.Write([]byte(fmt.Sprintf("%s [exchange] Error connecting to exchange: %v\n", time.Now().Format("2006-01-02 15:04:05.000"), err)))
 	}
@@ -85,7 +85,7 @@ func (e *Exchange) Close() {
 	if err == nil {
 		e.logger.Write([]byte(fmt.Sprintf("%s [server] Succesfully disconnected.\n", time.Now().Format("2006-01-02 15:04:05.000"))))
 	} else {
-		e.logger.Write([]byte(fmt.Sprintf("%s [server] Unsuccesfully disconnected?\n", time.Now().Format("2006-01-02 15:04:05.000"))))
+		e.logger.Write([]byte(fmt.Sprintf("%s [server] Unsuccessfully disconnected?\n", time.Now().Format("2006-01-02 15:04:05.000"))))
 	}
 	e.logger.Close()
 }

@@ -45,7 +45,10 @@ func (ui *UI) fzfPairs(s string) (possiblePairs []string) {
 	matches := fuzzy.RankFind(s, pairNames)
 	sort.Sort(matches)
 
-	for _, p := range matches {
+	for i, p := range matches {
+		if i > 10 {
+			break
+		}
 		possiblePairs = append(possiblePairs, p.Target)
 	}
 
@@ -60,14 +63,16 @@ func (pf *planForm) makePairItem() *widget.FormItem {
 
 	CompletionEntry.OnChanged = func(s string) {
 		CompletionEntry.SetText(strings.ToUpper(s))
-		possiblePairs := ui.fzfPairs(strings.ToUpper(s))
+		if len(s) >= 2 {
+			possiblePairs := ui.fzfPairs(strings.ToUpper(s))
 
-		if len(possiblePairs) == 1 {
-			CompletionEntry.SetText(possiblePairs[0])
-			CompletionEntry.HideCompletion()
-		} else if len(s) >= 2 {
-			CompletionEntry.SetOptions(possiblePairs)
-			CompletionEntry.ShowCompletion()
+			if len(possiblePairs) == 1 {
+				CompletionEntry.SetText(possiblePairs[0])
+				CompletionEntry.HideCompletion()
+			} else {
+				CompletionEntry.SetOptions(possiblePairs)
+				CompletionEntry.ShowCompletion()
+			}
 		}
 	}
 

@@ -163,15 +163,24 @@ func (pf *planForm) makeEntryItem() *widget.FormItem {
 	item.HintText = " "
 
 	entryEntry.OnChanged = func(s string) {
-		_, err := decimal.NewFromString(s)
-		if err != nil {
-			pf.TPStratItem.Widget.(*widget.Select).Enable()
-			item.HintText = fmt.Sprintf("Enter a valid price in %s", ui.activePair.QuoteCurrency)
-		} else {
+		marketStopLossPrice := decimal.RequireFromString(pf.stopLossItem.Widget.(*widget.Entry).Text)
+		entryPrice, err := decimal.NewFromString(s)
+		switch {
+		case err != nil:
+			pf.TPStratItem.Widget.(*widget.Select).Disable()
+			item.HintText = fmt.Sprintf("enter a valid price in %s", ui.activePair.QuoteCurrency)
+		case entryPrice.IsZero():
+			item.HintText = " "
+		case pf.directionItem.Widget.(*widget.RadioGroup).Selected == cryptodb.Long.String() && marketStopLossPrice.GreaterThanOrEqual(entryPrice):
+			item.HintText = "must be higher than stoploss"
+			pf.TPStratItem.Widget.(*widget.Select).Disable()
+		case pf.directionItem.Widget.(*widget.RadioGroup).Selected == cryptodb.Short.String() && marketStopLossPrice.LessThanOrEqual(entryPrice):
+			item.HintText = "must be lower than stoploss"
+			pf.TPStratItem.Widget.(*widget.Select).Disable()
+		default:
 			pf.TPStratItem.Widget.(*widget.Select).Enable()
 			item.HintText = " "
 		}
-
 		pf.form.Refresh()
 	}
 
@@ -201,11 +210,43 @@ func (pf *planForm) makeTakeProfitItem(n int) *widget.FormItem {
 	item.HintText = " "
 
 	takeProfitEntry.OnChanged = func(s string) {
-		if n != cryptodb.MaxTakeProfits-1 {
-			v, err := decimal.NewFromString(s)
-			if err != nil || v.IsZero() {
+		var prevPrice decimal.Decimal
+		var prevName string
+		entryPrice := decimal.RequireFromString(pf.entryItem.Widget.(*widget.Entry).Text)
+		if n == 0 {
+			prevPrice = entryPrice
+			prevName = "entry"
+		} else {
+			prevPrice = decimal.RequireFromString(pf.takeProfitItems[n-1].Widget.(*widget.Entry).Text)
+			prevName = fmt.Sprintf("take profit #%d", n-1)
+		}
+		takeProfitPrice, err := decimal.NewFromString(s)
+		switch {
+		case err != nil:
+			item.HintText = fmt.Sprintf("enter a valid price in %s", ui.activePair.QuoteCurrency)
+			if n != cryptodb.MaxTakeProfits-1 {
 				pf.takeProfitItems[n+1].Widget.(*widget.Entry).Disable()
-			} else {
+			}
+		case takeProfitPrice.IsZero():
+			item.HintText = " "
+			if n != cryptodb.MaxTakeProfits-1 {
+				pf.takeProfitItems[n+1].Widget.(*widget.Entry).Disable()
+			}
+		case pf.directionItem.Widget.(*widget.RadioGroup).Selected == cryptodb.Long.String() && !takeProfitPrice.GreaterThanOrEqual(prevPrice):
+			item.HintText = "must be higher than " + prevName
+			if n != cryptodb.MaxTakeProfits-1 {
+				pf.takeProfitItems[n+1].Widget.(*widget.Entry).Disable()
+			}
+		case pf.directionItem.Widget.(*widget.RadioGroup).Selected == cryptodb.Short.String() && !takeProfitPrice.LessThanOrEqual(prevPrice):
+			item.HintText = "must be lower than " + prevName
+			if n != cryptodb.MaxTakeProfits-1 {
+				pf.takeProfitItems[n+1].Widget.(*widget.Entry).Disable()
+			}
+		default:
+			item.HintText = fmt.Sprintf("%.1f%% / %.1f%%",
+				takeProfitPrice.Sub(prevPrice).Abs().Div(prevPrice).Mul(decimal.NewFromInt(100)).InexactFloat64(),
+				takeProfitPrice.Sub(entryPrice).Abs().Div(entryPrice).Mul(decimal.NewFromInt(100)).InexactFloat64())
+			if n != cryptodb.MaxTakeProfits-1 {
 				pf.takeProfitItems[n+1].Widget.(*widget.Entry).Enable()
 			}
 		}

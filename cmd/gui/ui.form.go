@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
 	"github.com/bart613/decimal"
@@ -80,6 +82,15 @@ func (pf *planForm) logAction() {
 	}
 
 	logWindow := widget.NewPopUp(logFile, mainWindow.Canvas())
-	logWindow.Resize(fyne.NewSize(mainWindow.Canvas().Size().Width-2*50.0, mainWindow.Canvas().Size().Height-2*50.0))
-	logWindow.ShowAtPosition(fyne.Position{X: 50, Y: 50})
+	logAnimation := canvas.NewSizeAnimation(
+		fyne.NewSize(mainWindow.Canvas().Size().Width-2*50.0, 0),
+		fyne.NewSize(mainWindow.Canvas().Size().Width-2*50.0, mainWindow.Canvas().Size().Height-1*50.0),
+		50*time.Millisecond,
+		func(s fyne.Size) {
+			logWindow.Resize(s)
+		})
+
+	logWindow.Resize(fyne.NewSize(0, 0))
+	logWindow.ShowAtPosition(fyne.Position{X: 50, Y: 0})
+	logAnimation.Start()
 }

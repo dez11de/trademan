@@ -2,19 +2,15 @@ package main
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/dez11de/cryptodb"
 	"github.com/dez11de/exchange"
 )
 
 func processPosition(position exchange.Position) (err error) {
-
 	var plan cryptodb.Plan
 	result := db.Joins("JOIN pairs ON pairs.id = plans.pair_id").Where("pairs.name = ?", position.Pair).Last(&plan)
-
 	if result.Error != nil {
-		log.Printf("Error finding plan: %s", result.Error)
 		return result.Error
 	}
 

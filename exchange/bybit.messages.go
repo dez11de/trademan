@@ -37,7 +37,6 @@ func (e *Exchange) ProcessMessages(positionChannel chan<- Position, executionCha
 		case true:
 			switch wsresp.ReturnMessage {
 			case "pong":
-				log.Printf("pong")
 				// TODO: IF haven't received pong in 2 minutes (re)connect, ELSE Reset timer?
 			}
 		}

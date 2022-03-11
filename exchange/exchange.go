@@ -52,7 +52,7 @@ func Connect(c ExchangeConfig) (e *Exchange, err error) {
 		return nil, err
 	}
 
-	e.logger.Filename = "./logs/trademan.log"
+	e.logger.Filename = "./log/trademan.log"
 	e.logger.MaxSize = 10000000
 	e.logger.Compress = true
 

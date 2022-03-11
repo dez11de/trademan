@@ -100,13 +100,14 @@ func setEntry(p cryptodb.Plan, pair cryptodb.Pair, marketStopLoss *cryptodb.Orde
 	}
 
 	db.Save(entry)
+	db.Save(marketStopLoss)
 	db.Create(logEntry)
 
 	return nil
 }
 
 func setLimitStopLoss(p *cryptodb.Plan, pair cryptodb.Pair, marketStopLoss cryptodb.Order, limitStopLoss *cryptodb.Order, entry cryptodb.Order) (err error) {
-	err = e.SendLimitStopLoss(p, pair, marketStopLoss, limitStopLoss, entry)
+	err = e.SendLimitStopLoss(p, pair, limitStopLoss, entry)
 	if err != nil {
 		logEntry := &cryptodb.Log{
 			PlanID: p.ID,
@@ -138,7 +139,7 @@ func setLimitStopLoss(p *cryptodb.Plan, pair cryptodb.Pair, marketStopLoss crypt
 }
 
 func setTakeProfit(p cryptodb.Plan, pair cryptodb.Pair, marketStopLoss, entry cryptodb.Order, takeProfit *cryptodb.Order) (err error) {
-	err = e.SendTakeProfit(p, pair, marketStopLoss, entry, takeProfit)
+	err = e.SendTakeProfit(p, pair, entry, takeProfit)
 	if err != nil {
 		logEntry := &cryptodb.Log{
 			PlanID: p.ID,
@@ -171,59 +172,33 @@ func setTakeProfit(p cryptodb.Plan, pair cryptodb.Pair, marketStopLoss, entry cr
 
 func processOrder(incomingOrder exchange.Order) error {
 	var matchOrder string
-	var marketStopLossOrder cryptodb.Order
+	var order cryptodb.Order
 	var plan cryptodb.Plan
 
-	if incomingOrder.OrderType == "Market" {
-		result := db.
-			// TODO: make more sure that it's the correct order, also check Pair and Price?
-			// and first check if the SystemOrderID is known.
-			Where("system_order_id = ? AND order_kind = ?", incomingOrder.StopOrderID, cryptodb.MarketStopLoss).
-			First(&marketStopLossOrder)
-		if result.Error != nil {
-			result := db.
-				Joins("JOIN plans ON orders.plan_id = plans.id").
-				Joins("JOIN pairs ON pairs.id = plans.pair_id").
-				Where("order_kind = ? AND pairs.name = ?", cryptodb.MarketStopLoss, incomingOrder.Symbol).
-				First(&marketStopLossOrder)
-			if result.Error != nil {
-				return result.Error
-			} else {
-				if incomingOrder.StopOrderID != "" {
-					marketStopLossOrder.SystemOrderID = incomingOrder.StopOrderID
-					db.Save(marketStopLossOrder)
-					db.Create(&cryptodb.Log{
-						PlanID: marketStopLossOrder.PlanID,
-						Source: cryptodb.Server,
-						Text:   fmt.Sprintf("Set SystemOrderID (%s) for Market StopLoss Order.", incomingOrder.StopOrderID),
-					})
-				}
-				result = db.Where("id = ?", marketStopLossOrder.PlanID).First(&plan)
-				processMarketStoploss(plan, marketStopLossOrder, incomingOrder)
-				return nil
-			}
-		} else {
-			result = db.Where("id = ?", marketStopLossOrder.PlanID).First(&plan)
-			processMarketStoploss(plan, marketStopLossOrder, incomingOrder)
-			return nil
-		}
+	if incomingOrder.OrderID != "" {
+		matchOrder = incomingOrder.OrderID
+	} else if incomingOrder.StopOrderID != "" {
+		matchOrder = incomingOrder.StopOrderID
 	} else {
-		if incomingOrder.OrderID != "" {
-			matchOrder = incomingOrder.OrderID
-		} else if incomingOrder.StopOrderID != "" {
-			matchOrder = incomingOrder.StopOrderID
-		} else {
-			return errors.New("both order_id and stop_order_id empty")
-		}
+		return errors.New("both order_id and stop_order_id empty")
 	}
-
-	var order cryptodb.Order
-	var pair cryptodb.Pair
-	var entryOrder cryptodb.Order
 
 	result := db.Where("system_order_id = ?", matchOrder).First(&order)
 	if result.Error != nil {
-		return result.Error
+		if incomingOrder.OrderType == "Market" {
+			// TODO: make sure the plan is still open and in the same direction?
+			result := db.Joins("JOIN plans ON orders.plan_id = plans.id").
+				Joins("JOIN pairs ON pairs.id = plans.pair_id").
+				Where("order_kind = ? AND pairs.name = ?", cryptodb.MarketStopLoss, incomingOrder.Symbol).
+				First(&order)
+			if result.Error != nil {
+				return result.Error
+			} else {
+				order.LinkOrderID = incomingOrder.StopOrderID
+			}
+		} else {
+			return result.Error
+		}
 	}
 
 	result = db.Where("id = ?", order.PlanID).First(&plan)
@@ -231,202 +206,43 @@ func processOrder(incomingOrder exchange.Order) error {
 		return result.Error
 	}
 
-	result = db.Where("id = ?", plan.PairID).First(&pair)
-	if result.Error != nil {
-		return result.Error
-	}
-
-	result = db.Where("order_kind = ?", cryptodb.Entry).Where("plan_id = ?", order.PlanID).First(&entryOrder)
-	if result.Error != nil {
-		return result.Error
-	}
-
-	result = db.Where("order_kind = ?", cryptodb.MarketStopLoss).Where("plan_id = ?", order.PlanID).First(&marketStopLossOrder)
-	if result.Error != nil {
-		return result.Error
-	}
-	switch order.OrderKind {
-	case cryptodb.Entry:
-		err := processEntryOrder(plan, pair, marketStopLossOrder, order, incomingOrder)
-		if err != nil {
-			return err
-		}
-
-	case cryptodb.TakeProfit:
-		err := processTakeProfit(plan, pair, entryOrder, order, incomingOrder)
-		if err != nil {
-			return err
-		}
-	// case cryptodb.LimitStopLoss:
-	// 	err := processLimitStoploss(plan, order, incomingOrder)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	}
+	updateStatus(plan, order, incomingOrder)
 
 	return nil
 }
 
-func processEntryOrder(plan cryptodb.Plan, pair cryptodb.Pair, marketStopLossOrder, entryOrder cryptodb.Order, o exchange.Order) (err error) {
-	// TODO: also handle change price if user moves price from exchange website or app, although that wouldn't be the prefered way
+func updateStatus(plan cryptodb.Plan, dbOrder cryptodb.Order, exchangeOrder exchange.Order) {
+	var newStatus cryptodb.Status
+	newStatus.Scan(exchangeOrder.OrderStatus)
 
-	var exchangeLogEntry cryptodb.Log
-	var planUpdateLogEntry cryptodb.Log
-	exchangeLogEntry.PlanID = entryOrder.PlanID
-	exchangeLogEntry.Source = cryptodb.Exchange
-	planUpdateLogEntry.PlanID = entryOrder.PlanID
-	planUpdateLogEntry.Source = cryptodb.Server
-
-	switch o.OrderStatus {
-	case "New":
-		entryOrder.Status.Scan(o.OrderStatus)
-		db.Save(&entryOrder)
-
-		var stopLossSetMsg string
-		if marketStopLossOrder.Price.Equal(o.StopLoss) {
-			marketStopLossOrder.Status = entryOrder.Status
-			stopLossSetMsg = "and"
-		} else {
-			stopLossSetMsg = "but NOT" // TODO: this should NEVER happen.
-		}
-		exchangeLogEntry.Text = fmt.Sprintf("Processed Entry Order %s  Market StopLoss, and set status to %s.", stopLossSetMsg, entryOrder.Status.String())
-		db.Create(&exchangeLogEntry)
-
-		plan.Status = entryOrder.Status
-		db.Save(&plan)
-		planUpdateLogEntry.Text = fmt.Sprintf("Changing plan status to %s.", entryOrder.Status.String())
-		db.Create(&planUpdateLogEntry)
-
-	case "Filled", "Cancelled", "PartiallyFilled":
-		if entryOrder.Status.String() != o.OrderStatus {
-			exchangeLogEntry.Text = fmt.Sprintf("Entry %s.", o.OrderStatus)
-			entryOrder.Status.Scan(o.OrderStatus)
-			db.Save(&entryOrder)
-			db.Create(&exchangeLogEntry)
-
-			planUpdateLogEntry.Text = fmt.Sprintf("Changing plan status to %s.", o.OrderStatus)
-			plan.Status = entryOrder.Status
-			db.Save(&plan)
-			db.Create(&planUpdateLogEntry)
-		}
-
-	default:
-		exchangeLogEntry.Text = fmt.Sprintf("Unhandled OrderStatus (%s) for Entry", o.OrderStatus)
-		db.Create(&exchangeLogEntry)
-		return errors.New(fmt.Sprintf("Unhandled OrderStatus (%s) for entry", o.OrderStatus))
-	}
-
-	return nil
+	updateOrderStatus(&plan, &dbOrder, newStatus)
+	updatePlanStatus(&plan, dbOrder.Status)
 }
 
-func processMarketStoploss(plan cryptodb.Plan, marketStopLossOrder cryptodb.Order, o exchange.Order) (err error) {
-
-	var exchangeLogEntry cryptodb.Log
-	var planUpdateLogEntry cryptodb.Log
-	exchangeLogEntry.PlanID = marketStopLossOrder.PlanID
-	exchangeLogEntry.Source = cryptodb.Exchange
-	planUpdateLogEntry.PlanID = marketStopLossOrder.PlanID
-	planUpdateLogEntry.Source = cryptodb.Server
-
-	switch o.OrderStatus {
-	case "New", "Untriggered", "PartiallyFilled":
-		if marketStopLossOrder.Status.String() != o.OrderStatus {
-			marketStopLossOrder.Status.Scan(o.OrderStatus)
-			db.Save(&marketStopLossOrder)
-			exchangeLogEntry.Text = fmt.Sprintf("Processed Market StopLoss set status to %s.", marketStopLossOrder.Status.String())
-			db.Create(&exchangeLogEntry)
-		}
-
-	case "Cancelled", "Filled":
-		marketStopLossOrder.Status.Scan(o.OrderStatus)
-		exchangeLogEntry.Text = fmt.Sprintf("Market stoploss %s", marketStopLossOrder.Status.String())
-		db.Create(&exchangeLogEntry)
-		marketStopLossOrder.Status.Scan(o.OrderStatus)
-		db.Save(&marketStopLossOrder)
-		planUpdateLogEntry.Text = fmt.Sprintf("Changing plan status to %s", marketStopLossOrder.Status.String())
-		db.Create(&planUpdateLogEntry)
-		plan.Status = marketStopLossOrder.Status
-		db.Save(&plan)
-
-	default:
-		exchangeLogEntry.Text = fmt.Sprintf("Unhandled OrderStatus (%s) for Market StopLoss", o.OrderStatus)
-		db.Create(&exchangeLogEntry)
-		return errors.New(fmt.Sprintf("Unhandled OrderStatus (%s) for marketstoploss", o.OrderStatus))
+func updatePlanStatus(plan *cryptodb.Plan, newStatus cryptodb.Status) {
+	if plan.Status >= newStatus {
+		return
 	}
 
-	return nil
+	db.Create(&cryptodb.Log{
+		PlanID: plan.ID,
+		Source: cryptodb.Server,
+		Text:   fmt.Sprintf("Plan status updated to %s.", newStatus),
+	})
+	plan.Status = newStatus
+	db.Save(plan)
 }
 
-func processLimitStoploss(plan cryptodb.Plan, limitStopLossOrder cryptodb.Order, o exchange.Order) (err error) {
-	var exchangeLogEntry cryptodb.Log
-	var planUpdateLogEntry cryptodb.Log
-	exchangeLogEntry.PlanID = limitStopLossOrder.PlanID
-	exchangeLogEntry.Source = cryptodb.Exchange
-	planUpdateLogEntry.PlanID = limitStopLossOrder.PlanID
-	planUpdateLogEntry.Source = cryptodb.Server
-
-	switch o.OrderStatus {
-	case "New", "Untriggered", "PartiallyFilled", "Triggered", "Deactivated":
-		if limitStopLossOrder.Status.String() != o.OrderStatus {
-			limitStopLossOrder.Status.Scan(o.OrderStatus)
-			db.Save(&limitStopLossOrder)
-			exchangeLogEntry.Text = fmt.Sprintf("Processed Limit StopLoss set status to %s.", limitStopLossOrder.Status.String())
-			db.Create(&exchangeLogEntry)
-		}
-
-	case "Cancelled", "Filled", "Rejected":
-		limitStopLossOrder.Status.Scan(o.OrderStatus)
-		db.Save(&limitStopLossOrder)
-		exchangeLogEntry.Text = fmt.Sprintf("Limit StopLoss status set to %s.", limitStopLossOrder.Status.String())
-		db.Create(&exchangeLogEntry)
-		planUpdateLogEntry.Text = fmt.Sprintf("Changing plan status to %s", limitStopLossOrder.Status.String())
-		db.Create(&planUpdateLogEntry)
-		plan.Status = limitStopLossOrder.Status
-		db.Save(&plan)
-
-		// TODO: cancel remaining open (takeProfit) orders
-		// TODO: mark it as a win or loss. calculate performance?
-		// Lower leverage
-
-	default:
-		exchangeLogEntry.Text = fmt.Sprintf("Unhandled OrderStatus (%s) for Limit StopLoss", o.OrderStatus)
-		db.Create(&exchangeLogEntry)
-		return errors.New(fmt.Sprintf("Unhandled OrderStatus (%s) for Limit StopLoss", o.OrderStatus))
+func updateOrderStatus(plan *cryptodb.Plan, order *cryptodb.Order, newStatus cryptodb.Status) {
+	if order.Status >= newStatus {
+		return
 	}
 
-	return nil
-}
-
-func processTakeProfit(plan cryptodb.Plan, pair cryptodb.Pair, entryOrder, takeProfit cryptodb.Order, o exchange.Order) (err error) {
-	var exchangeLogEntry cryptodb.Log
-	var planUpdateLogEntry cryptodb.Log
-	exchangeLogEntry.PlanID = takeProfit.PlanID
-	exchangeLogEntry.Source = cryptodb.Exchange
-
-	switch o.OrderStatus {
-	case "New", "Untriggered", "PartiallyFilled", "Filled":
-		if takeProfit.Status.String() != o.OrderStatus {
-			takeProfit.Status.Scan(o.OrderStatus)
-			db.Save(&takeProfit)
-			exchangeLogEntry.Text = fmt.Sprintf("Take Profit status set to %s.", takeProfit.Status.String())
-			db.Create(&exchangeLogEntry)
-		}
-
-	case "Rejected", "Deactivated":
-		takeProfit.Status.Scan(o.OrderStatus)
-		db.Save(&takeProfit)
-		exchangeLogEntry.Text = fmt.Sprintf("Take Profit status set to %s.", takeProfit.Status.String())
-		db.Create(&exchangeLogEntry)
-		planUpdateLogEntry.Text = fmt.Sprintf("Changing plan status to %s", takeProfit.Status.String())
-		db.Create(&planUpdateLogEntry)
-		plan.Status = takeProfit.Status
-		db.Save(&plan)
-
-	default:
-		exchangeLogEntry.Text = fmt.Sprintf("Unhandled OrderStatus (%s) for takeProfit", o.OrderStatus)
-		db.Create(&exchangeLogEntry)
-		return errors.New(fmt.Sprintf("Unhandled OrderStatus (%s) for takeProfit", o.OrderStatus))
-	}
-
-	return nil
+	db.Create(&cryptodb.Log{
+		PlanID: plan.ID,
+		Source: cryptodb.Exchange,
+		Text:   fmt.Sprintf("%s@%s status updated to %s.", order.OrderKind.String(), order.Price.String(), newStatus),
+	})
+	order.Status = newStatus
+	db.Save(order)
 }

@@ -11,7 +11,6 @@ import (
 
 // Also sends Market StopLoss
 func (e *Exchange) SendEntry(plan cryptodb.Plan, pair cryptodb.Pair, marketStopLoss *cryptodb.Order, entry *cryptodb.Order) (err error) {
-	var result OrderResponseRest
 	entryParams := make(RequestParameters)
 
 	if plan.Direction == cryptodb.Long {
@@ -31,6 +30,7 @@ func (e *Exchange) SendEntry(plan cryptodb.Plan, pair cryptodb.Pair, marketStopL
 	entryParams["sl_trigger_by"] = "LastPrice"
 
 	var response OrderResponseRest
+	var result OrderResponseRest
 	_, responseBuffer, err := e.SignedRequest(http.MethodPost, "/private/linear/order/create", entryParams, &result)
 	if err != nil {
 		return err
@@ -47,11 +47,12 @@ func (e *Exchange) SendEntry(plan cryptodb.Plan, pair cryptodb.Pair, marketStopL
 
 	entry.SystemOrderID = response.Result.OrderID
 	entry.Status.Scan(response.Result.OrderStatus)
+	marketStopLoss.Status = entry.Status
 
 	return nil
 }
 
-func (e *Exchange) SendLimitStopLoss(plan *cryptodb.Plan, pair cryptodb.Pair, marketStopLoss cryptodb.Order, limitStopLoss *cryptodb.Order, entry cryptodb.Order) (err error) {
+func (e *Exchange) SendLimitStopLoss(plan *cryptodb.Plan, pair cryptodb.Pair, limitStopLoss *cryptodb.Order, entry cryptodb.Order) (err error) {
 	var result OrderResponseRest
 	lslParams := make(RequestParameters)
 
@@ -94,7 +95,7 @@ func (e *Exchange) SendLimitStopLoss(plan *cryptodb.Plan, pair cryptodb.Pair, ma
 	return nil
 }
 
-func (e *Exchange) SendTakeProfit(plan cryptodb.Plan, pair cryptodb.Pair, marketStopLoss, entry cryptodb.Order, takeProfit *cryptodb.Order) (err error) {
+func (e *Exchange) SendTakeProfit(plan cryptodb.Plan, pair cryptodb.Pair, entry cryptodb.Order, takeProfit *cryptodb.Order) (err error) {
 	var result OrderResponseRest
 	tpParams := make(RequestParameters)
 
@@ -109,7 +110,7 @@ func (e *Exchange) SendTakeProfit(plan cryptodb.Plan, pair cryptodb.Pair, market
 	tpParams["qty"] = takeProfit.Size.InexactFloat64()
 	tpParams["trigger_by"] = "LastPrice"
 	tpParams["price"] = takeProfit.Price.InexactFloat64()
-	tpParams["stop_px"] = takeProfit.TriggerPrice.InexactFloat64() 
+	tpParams["stop_px"] = takeProfit.TriggerPrice.InexactFloat64()
 	tpParams["base_price"] = entry.Price.InexactFloat64()
 
 	tpParams["close_on_trigger"] = false

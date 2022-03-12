@@ -184,21 +184,19 @@ func processOrder(incomingOrder exchange.Order) error {
 	}
 
 	result := db.Where("system_order_id = ?", matchOrder).First(&order)
-	if result.Error != nil {
-		if incomingOrder.OrderType == "Market" {
-			// TODO: make sure the plan is still open and in the same direction?
-			result := db.Joins("JOIN plans ON orders.plan_id = plans.id").
-				Joins("JOIN pairs ON pairs.id = plans.pair_id").
-				Where("order_kind = ? AND pairs.name = ?", cryptodb.MarketStopLoss, incomingOrder.Symbol).
-				First(&order)
-			if result.Error != nil {
-				return result.Error
-			} else {
-				order.LinkOrderID = incomingOrder.StopOrderID
-			}
-		} else {
+	if result.Error != nil && incomingOrder.OrderType == "Market" {
+		// TODO: make sure the plan is still open and in the same direction?
+		result := db.Joins("JOIN plans ON orders.plan_id = plans.id").
+			Joins("JOIN pairs ON pairs.id = plans.pair_id").
+			Where("order_kind = ? AND pairs.name = ?", cryptodb.MarketStopLoss, incomingOrder.Symbol).
+			First(&order)
+		if result.Error != nil {
 			return result.Error
+		} else {
+			order.SystemOrderID = incomingOrder.StopOrderID
 		}
+	} else {
+		return result.Error
 	}
 
 	result = db.Where("id = ?", order.PlanID).First(&plan)

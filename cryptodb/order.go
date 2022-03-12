@@ -14,7 +14,7 @@ type Order struct {
 	Size          decimal.Decimal `gorm:"type:decimal(20, 8)" json:"qty"`
 	Price         decimal.Decimal `gorm:"type:decimal(20, 8)" json:"price"`
 	TriggerPrice  decimal.Decimal `gorm:"type:decimal(20, 8)"`
-	LinkOrderID   string          `gorm:"type:varchar(36);index" json:"order_link_id"`
+	// LinkOrderID   string          `gorm:"type:varchar(36);index" json:"order_link_id"`
 	SystemOrderID string          `gorm:"type:varchar(36);index" json:"order_id"`    
 	CreatedAt     time.Time
 	UpdatedAt     time.Time

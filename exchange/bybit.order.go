@@ -18,7 +18,7 @@ func (e *Exchange) SendEntry(plan cryptodb.Plan, pair cryptodb.Pair, marketStopL
 	} else {
 		entryParams["side"] = "Sell"
 	}
-	entryParams["order_link_id"] = entry.LinkOrderID
+	// entryParams["order_link_id"] = entry.LinkOrderID
 	entryParams["symbol"] = pair.Name
 	entryParams["order_type"] = "Limit"
 	entryParams["qty"] = entry.Size.InexactFloat64()
@@ -61,7 +61,7 @@ func (e *Exchange) SendLimitStopLoss(plan *cryptodb.Plan, pair cryptodb.Pair, li
 	} else {
 		lslParams["side"] = "Buy"
 	}
-	lslParams["order_link_id"] = limitStopLoss.LinkOrderID
+	// lslParams["order_link_id"] = limitStopLoss.LinkOrderID
 	lslParams["symbol"] = pair.Name
 	lslParams["order_type"] = "Limit"
 	lslParams["qty"] = limitStopLoss.Size.InexactFloat64()
@@ -104,7 +104,7 @@ func (e *Exchange) SendTakeProfit(plan cryptodb.Plan, pair cryptodb.Pair, entry 
 	} else {
 		tpParams["side"] = "Buy"
 	}
-	tpParams["order_link_id"] = takeProfit.LinkOrderID
+	// tpParams["order_link_id"] = takeProfit.LinkOrderID
 	tpParams["symbol"] = pair.Name
 	tpParams["order_type"] = "Limit"
 	tpParams["qty"] = takeProfit.Size.InexactFloat64()

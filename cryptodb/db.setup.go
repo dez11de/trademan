@@ -1,9 +1,5 @@
 package cryptodb
 
-import (
-	"fmt"
-)
-
 func (db *Database) CreateSetup(s *Setup) error {
 	tx := db.Begin()
 
@@ -23,9 +19,9 @@ func (db *Database) CreateSetup(s *Setup) error {
 		return result.Error
 	}
 
-	for i := range s.Orders {
-		s.Orders[i].LinkOrderID = fmt.Sprintf("TM-%04d-%05d-%d", s.Plan.ID, s.Orders[i].ID, s.Plan.CreatedAt.Unix())
-	}
+// 	for i := range s.Orders {
+// 		s.Orders[i].LinkOrderID = fmt.Sprintf("TM-%04d-%05d-%d", s.Plan.ID, s.Orders[i].ID, s.Plan.CreatedAt.Unix())
+// 	}
 
 	result = db.Save(&s.Orders)
 	if result.Error != nil {

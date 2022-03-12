@@ -63,6 +63,7 @@ func (pf *planForm) executeAction() {
 	ui.activePlan = plan
 	ui.activeOrders = setup.Orders
 	ui.Plans, _ = getPlans()
+    pf.form.Refresh()
 	ui.List.Refresh()
 }
 

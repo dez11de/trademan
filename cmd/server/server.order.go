@@ -106,8 +106,8 @@ func setEntry(p cryptodb.Plan, pair cryptodb.Pair, marketStopLoss *cryptodb.Orde
 	return nil
 }
 
-func setLimitStopLoss(p *cryptodb.Plan, pair cryptodb.Pair, marketStopLoss cryptodb.Order, limitStopLoss *cryptodb.Order, entry cryptodb.Order) (err error) {
-	err = e.SendLimitStopLoss(p, pair, limitStopLoss, entry)
+func setLimitStopLoss(p cryptodb.Plan, pair cryptodb.Pair, marketStopLoss cryptodb.Order, limitStopLoss *cryptodb.Order, entry cryptodb.Order) (err error) {
+	err = e.SendLimitOrder(p, pair, entry, limitStopLoss)
 	if err != nil {
 		logEntry := &cryptodb.Log{
 			PlanID: p.ID,
@@ -139,7 +139,7 @@ func setLimitStopLoss(p *cryptodb.Plan, pair cryptodb.Pair, marketStopLoss crypt
 }
 
 func setTakeProfit(p cryptodb.Plan, pair cryptodb.Pair, marketStopLoss, entry cryptodb.Order, takeProfit *cryptodb.Order) (err error) {
-	err = e.SendTakeProfit(p, pair, entry, takeProfit)
+	err = e.SendLimitOrder(p, pair, entry, takeProfit)
 	if err != nil {
 		logEntry := &cryptodb.Log{
 			PlanID: p.ID,

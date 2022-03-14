@@ -1,5 +1,5 @@
 go.mod
 go.sum
 cmd/server/trademan.yml
-cmd/server/logs/
+cmd/server/log/
 

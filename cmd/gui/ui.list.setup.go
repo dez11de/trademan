@@ -63,7 +63,7 @@ func MakePlanListSplit() *container.Split {
 
 	selectPlanLabel := container.New(layout.NewCenterLayout(), canvas.NewText("Select a plan from the list, or press + to make a new plan.", nil))
 
-	ListAndButtons := container.NewWithoutLayout(widget.NewLabel("Error loading plans. Check internet connection."))
+	ListAndButtons := container.NewWithoutLayout(widget.NewLabel("Error loading plans. Check network connection."))
 	planListSplit := container.NewHSplit(ListAndButtons, container.NewMax(selectPlanLabel))
 	planListSplit.SetOffset(0.22)
 
@@ -71,7 +71,7 @@ func MakePlanListSplit() *container.Split {
 		f := NewForm()
 		planListSplit.Trailing = f.formContainer
 
-		f.FillForm(cryptodb.Plan{})
+		f.FillForm(cryptodb.NewSetup().Plan)
 		planListSplit.Refresh()
 	})
 
@@ -84,8 +84,8 @@ func MakePlanListSplit() *container.Split {
 	})
 
 	actionBar := widget.NewToolbar(widget.NewToolbarSpacer(), refreshListAction, addPlanAction)
-	actionBar.Refresh()
-	ListAndButtons = container.New(layout.NewBorderLayout(nil, actionBar, nil, nil), container.NewMax(ui.List), actionBar)
+        // actionBar.Refresh()
+	ListAndButtons = container.NewBorder(nil, actionBar, nil, nil, ui.List)
 	planListSplit.Leading = ListAndButtons
 	planListSplit.Refresh()
 

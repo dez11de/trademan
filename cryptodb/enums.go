@@ -27,8 +27,10 @@ const (
 	Untriggered
     PartiallyFilled
 	Filled
+    Rejected
     Error
 	Stopped
+    PendingCancel
 	Cancelled
 	Deactivated
 	Closed 

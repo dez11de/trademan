@@ -4,7 +4,6 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
-	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
 	xwidget "fyne.io/x/fyne/widget"
 	"github.com/bart613/decimal"
@@ -60,7 +59,7 @@ func NewForm() *planForm {
 
 	ui.statisticsContainer = pf.makeStatContainer()
 
-	pf.formContainer = container.New(layout.NewBorderLayout(ui.statisticsContainer, toolBar, nil, nil), ui.statisticsContainer, toolBar, pf.form)
+	pf.formContainer = container.NewBorder(ui.statisticsContainer, toolBar, nil, nil, pf.form)
 
 	pf.form.Refresh()
 	return pf
@@ -72,9 +71,6 @@ func (pf *planForm) FillForm(p cryptodb.Plan) {
 
 	if ui.activePlan.PairID != 0 {
 		ui.activePair = ui.Pairs[ui.activePlan.PairID-1]
-		if err != nil {
-			dialog.ShowError(err, mainWindow)
-		}
 		ui.activeOrders, err = getOrders(ui.activePlan.ID)
 		if err != nil {
 			dialog.ShowError(err, mainWindow)

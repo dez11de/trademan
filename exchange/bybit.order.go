@@ -3,6 +3,7 @@ package exchange
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/dez11de/cryptodb"
@@ -43,7 +44,7 @@ func (e *Exchange) SendEntry(plan cryptodb.Plan, pair cryptodb.Pair, marketStopL
 	}
 
 	if result.ReturnCode != 0 || result.ExtendedCode != "" {
-		return errors.New(result.ReturnMessage)
+		return errors.New(fmt.Sprintf("(%d) %s", result.ReturnCode, result.ReturnMessage))
 	}
 
 	err = json.Unmarshal(responseBuffer, &response)
@@ -89,7 +90,7 @@ func (e *Exchange) SendLimitOrder(plan cryptodb.Plan, pair cryptodb.Pair, entry 
 
 	_, responseBuffer, err := e.SignedRequest(http.MethodPost, endPoint, tpParams, &result)
 	if result.ReturnCode != 0 || result.ExtendedCode != "" {
-		return errors.New(result.ReturnMessage)
+		return errors.New(fmt.Sprintf("(%d) %s", result.ReturnCode, result.ReturnMessage))
 	}
 
 	err = json.Unmarshal(responseBuffer, &response)
@@ -98,5 +99,9 @@ func (e *Exchange) SendLimitOrder(plan cryptodb.Plan, pair cryptodb.Pair, entry 
 	}
 
 	limitOrder.SystemOrderID = response.Result.StopOrderID
-	return limitOrder.Status.Scan(response.Result.OrderStatus)
+	if response.Result.OrderStatus != "" {
+		return limitOrder.Status.Scan(response.Result.OrderStatus)
+	}
+
+	return nil
 }

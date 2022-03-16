@@ -2,50 +2,55 @@ package cryptodb
 
 import (
 	"fmt"
+	"log"
 
 	_ "github.com/go-sql-driver/mysql"
 	"gorm.io/gorm"
 )
 
-func logPlanDifferences(tx *gorm.DB, logSource LogSource, pair Pair, oldPlan, newPlan Plan) {
+func logPlanDifferences(tx *gorm.DB, logSource LogSource, pair Pair, oldPlan, newPlan Plan) error {
 	var logEntry Log
-	logEntry.PlanID = oldPlan.ID
+	logEntry.PlanID = newPlan.ID
 	logEntry.Source = logSource
 
-	subTx := tx.Begin()
-	if oldPlan.Status != newPlan.Status {
-		logEntry.Text = fmt.Sprintf("\tStatus changed from %s to %s.", oldPlan.Status.String(), newPlan.Status.String())
-		result := subTx.Create(&logEntry)
-		if result.Error != nil {
-			subTx.Rollback()
-			return
-		}
-	}
+	log.Print("Starting new transaction for difference logging")
+	subTx := tx.Debug().Begin()
+	// if oldPlan.Status != newPlan.Status {
+	// 	logEntry.Text = fmt.Sprintf("\tStatus changed from %s to %s.", oldPlan.Status.String(), newPlan.Status.String())
+	// 	result := subTx.Create(&logEntry)
+	// 	if result.Error != nil {
+	// 		subTx.Rollback()
+	// 		return
+	// 	}
+	// }
 
 	if !oldPlan.Risk.Equal(newPlan.Risk) {
 		logEntry.Text = fmt.Sprintf("Risk changed from %s to %s.", oldPlan.Risk.StringFixed(2), newPlan.Risk.StringFixed(2))
-		result := subTx.Create(&logEntry)
+		result := subTx.Create(logEntry)
 		if result.Error != nil {
+			log.Printf("Error logging risk change: %s", result.Error)
 			subTx.Rollback()
-			return
+			return result.Error
 		}
 	}
 
 	if oldPlan.Status != newPlan.Status {
 		logEntry.Text = fmt.Sprintf("Tradingview plan changed from %s to %s.", oldPlan.TradingViewPlan, newPlan.TradingViewPlan)
-		result := subTx.Create(&logEntry)
+		result := subTx.Create(logEntry)
 		if result.Error != nil {
+			log.Printf("Error logging tvlink change: %s", result.Error)
 			subTx.Rollback()
-			return
+			return result.Error
 		}
 	}
 
 	if oldPlan.RewardRiskRatio != newPlan.RewardRiskRatio {
 		logEntry.Text = fmt.Sprintf("RRR changed from %.2f to %.2f.", oldPlan.RewardRiskRatio, newPlan.RewardRiskRatio)
-		result := subTx.Create(&logEntry)
+		result := subTx.Create(logEntry)
 		if result.Error != nil {
+			log.Printf("Error logging RRR change: %s", result.Error)
 			subTx.Rollback()
-			return
+			return result.Error
 		}
 	}
 
@@ -53,13 +58,14 @@ func logPlanDifferences(tx *gorm.DB, logSource LogSource, pair Pair, oldPlan, ne
 		logEntry.Text = fmt.Sprintf("Profit changed from %s to %s.",
 			oldPlan.Profit.StringFixed(pair.PriceScale),
 			newPlan.Profit.StringFixed(2))
-		result := subTx.Create(&logEntry)
+		result := subTx.Create(logEntry)
 		if result.Error != nil {
+			log.Printf("Error logging RRR change: %s", result.Error)
 			subTx.Rollback()
-			return
+			return result.Error
 		}
 	}
-	subTx.Commit()
+    return subTx.Debug().Commit().Error
 }
 
 func logOrderDifferences(tx *gorm.DB, logSource LogSource, pair Pair, oldOrders, newOrders []Order) {

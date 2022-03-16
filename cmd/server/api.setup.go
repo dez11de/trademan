@@ -18,6 +18,7 @@ func setupHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		return
 	}
 
+
 	if setup.Plan.ID == 0 {
 		err = db.CreateSetup(&setup)
 		if err != nil {

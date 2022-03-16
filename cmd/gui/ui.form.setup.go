@@ -35,15 +35,15 @@ func NewForm() *planForm {
 	pf.form.AppendItem(pf.directionItem)
 	pf.riskItem = pf.makeRiskItem()
 	pf.form.AppendItem(pf.riskItem)
-	pf.stopLossItem = pf.makeStopLossItem()
+	pf.stopLossItem = pf.makeStopLossItem(0, decimal.Zero)
 	pf.form.AppendItem(pf.stopLossItem)
-	pf.entryItem = pf.makeEntryItem()
+	pf.entryItem = pf.makeEntryItem(0, decimal.Zero)
 	pf.form.AppendItem(pf.entryItem)
 	pf.TPStratItem = pf.makeTakeProfitStrategyItem()
 	pf.form.AppendItem(pf.TPStratItem)
 
 	for i := 0; i <= cryptodb.MaxTakeProfits-1; i++ {
-		pf.takeProfitItems[i] = pf.makeTakeProfitItem(i)
+		pf.takeProfitItems[i] = pf.makeTakeProfitItem(i, 0, decimal.Zero)
 		pf.form.AppendItem(pf.takeProfitItems[i])
 	}
 
@@ -53,7 +53,7 @@ func NewForm() *planForm {
 	pf.form.AppendItem(pf.notesMultilineEntryItem)
 
 	pf.setQuoteCurrency(" . . . ")
-	pf.setPriceScale(0)
+	pf.setPriceScale(0, decimal.Zero)
 
 	toolBar := pf.makeToolBar()
 
@@ -83,7 +83,7 @@ func (pf *planForm) FillForm(p cryptodb.Plan) {
 		pf.pairItem.Widget.(*xwidget.CompletionEntry).Disable()
 		pf.pairItem.Widget.(*xwidget.CompletionEntry).SetText(ui.activePair.Name)
 		pf.setQuoteCurrency(ui.activePair.QuoteCurrency)
-		pf.setPriceScale(ui.activePair.PriceScale)
+		pf.setPriceScale(ui.activePair.PriceScale, ui.activePair.Price.Tick)
 	}
 
 	if ui.activePlan.ID != 0 {
@@ -93,20 +93,20 @@ func (pf *planForm) FillForm(p cryptodb.Plan) {
 
 	// TODO: think about in which statusses changing is allowed
 	if !ui.activePlan.Risk.IsZero() {
-		pf.riskItem.Widget.(*widget.Entry).SetText(ui.activePlan.Risk.StringFixed(1))
+		pf.riskItem.Widget.(*FloatEntry).SetText(ui.activePlan.Risk.StringFixed(1))
 		if ui.activePlan.Status != cryptodb.Planned {
-			pf.riskItem.Widget.(*widget.Entry).Disable()
+			pf.riskItem.Widget.(*FloatEntry).Disable()
 		}
 	}
 
 	// TODO: think about in which statusses changing is allowed
 	if !ui.activeOrders[cryptodb.MarketStopLoss].Price.IsZero() {
-		pf.stopLossItem.Widget.(*widget.Entry).SetText(ui.activeOrders[cryptodb.MarketStopLoss].Price.StringFixed(ui.activePair.PriceScale))
+		pf.stopLossItem.Widget.(*FloatEntry).SetText(ui.activeOrders[cryptodb.MarketStopLoss].Price.StringFixed(ui.activePair.PriceScale))
 	}
 
 	// TODO: think about in which statusses changing is allowed, disable editting if required
 	if !ui.activeOrders[cryptodb.Entry].Price.IsZero() {
-		pf.entryItem.Widget.(*widget.Entry).SetText(ui.activeOrders[cryptodb.Entry].Price.StringFixed(ui.activePair.PriceScale))
+		pf.entryItem.Widget.(*FloatEntry).SetText(ui.activeOrders[cryptodb.Entry].Price.StringFixed(ui.activePair.PriceScale))
 	}
 
 	// TODO: think about in which statusses changing is allowed, disable editting if required
@@ -118,7 +118,7 @@ func (pf *planForm) FillForm(p cryptodb.Plan) {
 	takeProfitCount := 0
 	for _, o := range ui.activeOrders {
 		if o.OrderKind == cryptodb.TakeProfit && o.Price.Cmp(decimal.Zero) != 0 {
-			pf.takeProfitItems[takeProfitCount].Widget.(*widget.Entry).SetText(o.Price.StringFixed(ui.activePair.PriceScale))
+			pf.takeProfitItems[takeProfitCount].Widget.(*FloatEntry).SetText(o.Price.StringFixed(ui.activePair.PriceScale))
 			takeProfitCount++
 		}
 	}

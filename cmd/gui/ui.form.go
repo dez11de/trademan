@@ -16,13 +16,13 @@ func (pf *planForm) gatherSetup() cryptodb.Setup {
 	// TODO: check for errors
 	ui.activePlan.PairID = ui.activePair.ID
 	ui.activePlan.Direction.Scan(pf.directionItem.Widget.(*widget.RadioGroup).Selected)
-	ui.activePlan.Risk = decimal.RequireFromString(pf.riskItem.Widget.(*widget.Entry).Text)
-	ui.activeOrders[cryptodb.MarketStopLoss].Price = decimal.RequireFromString(pf.stopLossItem.Widget.(*widget.Entry).Text)
-	ui.activeOrders[cryptodb.Entry].Price = decimal.RequireFromString(pf.entryItem.Widget.(*widget.Entry).Text)
+	ui.activePlan.Risk = decimal.RequireFromString(pf.riskItem.Widget.(*FloatEntry).Text)
+	ui.activeOrders[cryptodb.MarketStopLoss].Price = decimal.RequireFromString(pf.stopLossItem.Widget.(*FloatEntry).Text)
+	ui.activeOrders[cryptodb.Entry].Price = decimal.RequireFromString(pf.entryItem.Widget.(*FloatEntry).Text)
 	ui.activePlan.TakeProfitStrategy.Scan(pf.TPStratItem.Widget.(*widget.Select).Selected)
 
 	for i := 0; i < cryptodb.MaxTakeProfits; i++ {
-		tempPrice, err := decimal.NewFromString(pf.takeProfitItems[i].Widget.(*widget.Entry).Text)
+		tempPrice, err := decimal.NewFromString(pf.takeProfitItems[i].Widget.(*FloatEntry).Text)
 		if err == nil {
 			ui.activeOrders[3+i].Price = tempPrice
 		} else {
@@ -44,6 +44,7 @@ func (pf *planForm) okAction() {
 	}
 	ui.activePlan = setup.Plan
 	ui.activeOrders = setup.Orders
+    pf.form.Refresh()
 	ui.Plans, _ = getPlans()
 	ui.List.Refresh()
 }

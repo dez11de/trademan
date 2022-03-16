@@ -1,5 +1,7 @@
 package cryptodb
 
+import "log"
+
 func (db *Database) CreateSetup(s *Setup) error {
 	tx := db.Begin()
 
@@ -45,6 +47,7 @@ func (db *Database) CreateSetup(s *Setup) error {
 }
 
 func (db *Database) SaveSetup(logSource LogSource, newSetup *Setup) error {
+    log.Print("Saving setup...")
 	pair, err := db.GetPair(newSetup.Plan.PairID)
 	if err != nil {
 		return err
@@ -55,28 +58,42 @@ func (db *Database) SaveSetup(logSource LogSource, newSetup *Setup) error {
 	if result.Error != nil {
 		return result.Error
 	}
+	var oldOrders []Order
+	result = db.Where("plan_id = ?", newSetup.Plan.ID).Find(&oldOrders)
+	if result.Error != nil {
+		return result.Error
+	}
 
 	tx := db.Begin()
 
+    log.Print("Saving plan...")
 	result = tx.Save(&newSetup.Plan)
 	if result.Error != nil {
+        log.Printf("And error occured saving plan: %s", result.Error)
 		tx.Rollback()
 		return result.Error
 	}
 
-	logPlanDifferences(tx, logSource, pair, oldPlan, newSetup.Plan)
+    log.Print("Logging plan differences...")
+	err = logPlanDifferences(tx, logSource, pair, oldPlan, newSetup.Plan)
+    if err != nil {
+        log.Printf("Error logging differences in updated plan: %s", err)
+        tx.Rollback()
+        return err
+    }
 
-	var oldOrders []Order
-	result = db.Where("plan_id = ?", newSetup.Plan.ID).Find(&oldOrders)
-
-	result = tx.Save(&newSetup.Orders)
+    log.Print("Saving orders...")
+	result = tx.Save(newSetup.Orders)
 	if result.Error != nil {
+        log.Printf("And error occured saving orders: %s", result.Error)
 		tx.Rollback()
 		return result.Error
 	}
 
+    log.Print("Logging order differences...")
 	logOrderDifferences(tx, logSource, pair, oldOrders, newSetup.Orders)
-
+    
+    log.Print("Committing setup...")
 	tx.Commit()
 
 	return err

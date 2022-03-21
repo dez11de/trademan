@@ -158,14 +158,20 @@ func setTakeProfit(p cryptodb.Plan, pair cryptodb.Pair, marketStopLoss, entry cr
 		return err
 	}
 
+	result := db.Save(takeProfit)
+	if result.Error != nil {
+		return result.Error
+	}
+
 	logEntry := &cryptodb.Log{
 		PlanID: p.ID,
 		Source: cryptodb.Server,
 		Text:   fmt.Sprintf("Sending set Take Profit (%s@%s %s) successful.", takeProfit.Size.String(), takeProfit.Price.String(), takeProfit.TriggerPrice.String()),
 	}
-
-	db.Save(takeProfit)
-	db.Create(logEntry)
+	result = db.Create(logEntry)
+	if result.Error != nil {
+		return result.Error
+	}
 
 	return nil
 }

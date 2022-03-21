@@ -64,7 +64,7 @@ func (e *Exchange) SendLimitOrder(plan cryptodb.Plan, pair cryptodb.Pair, entry 
 	var result OrderResponseRest
 	var response OrderResponseRest
 
-	if entry.SystemOrderID == "" {
+	if limitOrder.SystemOrderID == "" {
 		endPoint = "/private/linear/stop-order/create"
 	} else {
 		endPoint = "/private/linear/stop-order/replace"
@@ -99,6 +99,7 @@ func (e *Exchange) SendLimitOrder(plan cryptodb.Plan, pair cryptodb.Pair, entry 
 	}
 
 	limitOrder.SystemOrderID = response.Result.StopOrderID
+
 	if response.Result.OrderStatus != "" {
 		return limitOrder.Status.Scan(response.Result.OrderStatus)
 	}

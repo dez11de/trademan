@@ -9,100 +9,82 @@ import (
 	"github.com/dez11de/cryptodb"
 )
 
-// Also sends Market StopLoss
-func (e *Exchange) SendEntry(plan cryptodb.Plan, pair cryptodb.Pair, marketStopLoss *cryptodb.Order, entry *cryptodb.Order) (err error) {
-	entryParams := make(RequestParameters)
+func (e *Exchange) SendOrder(plan cryptodb.Plan, pair cryptodb.Pair, entry, order *cryptodb.Order) (err error) {
 	var endPoint string
-	var response OrderResponseRest
-	var result OrderResponseRest
+	params := make(RequestParameters)
+	var response, result OrderResponseRest
+
+	switch {
+	case entry.SystemOrderID == "":
+		endPoint = "/private/linear/order/create"
+		params["symbol"] = pair.Name
+		if plan.Direction == cryptodb.Long {
+			params["side"] = "Buy"
+		} else {
+			params["side"] = "Sell"
+		}
+		params["order_type"] = "Limit"
+		params["qty"] = entry.Size.InexactFloat64()
+		params["price"] = entry.Price.InexactFloat64()
+		params["close_on_trigger"] = false
+		params["reduce_only"] = false
+		params["time_in_force"] = "GoodTillCancel"
+		params["sl_trigger_by"] = "LastPrice"
+
+		params["stop_loss"] = order.Price.InexactFloat64()
+
+	case order.SystemOrderID == "":
+		endPoint = "/private/linear/stop-order/create"
+		params["symbol"] = pair.Name
+		if plan.Direction == cryptodb.Long {
+			params["side"] = "Sell"
+		} else {
+			params["side"] = "Buy"
+		}
+		params["order_type"] = "Limit"
+		params["qty"] = order.Size.InexactFloat64()
+		params["price"] = order.Price.InexactFloat64()
+		params["close_on_trigger"] = false
+		params["time_in_force"] = "GoodTillCancel"
+
+		params["stop_px"] = order.TriggerPrice.InexactFloat64()
+		params["base_price"] = entry.Price.InexactFloat64()
+		params["trigger_by"] = "LastPrice"
+		params["reduce_only"] = true
+
+	case entry.SystemOrderID != "" && order.OrderKind == cryptodb.MarketStopLoss:
+		endPoint = "/private/linear/order/replace"
+		params["order_id"] = entry.SystemOrderID
+		params["p_r_price"] = entry.Price.InexactFloat64()
+
+	case order.SystemOrderID != "":
+		endPoint = "/private/linear/stop-order/replace"
+		params["order_id"] = order.SystemOrderID
+		params["p_r_price"] = order.Price.InexactFloat64()
+	}
+
+	_, responseBuffer, err := e.SignedRequest(http.MethodPost, endPoint, params, &result)
+	if err != nil {
+		return err
+	}
+
+	if result.ReturnCode != 0 || result.ExtendedCode != "" {
+		return errors.New(fmt.Sprintf("(%d) %s", result.ReturnCode, result.ReturnMessage))
+	}
+
+    // TODO: this might be redundant, can just use result
+	err = json.Unmarshal(responseBuffer, &response)
+	if err != nil {
+		return err
+	}
 
 	if entry.SystemOrderID == "" {
-		endPoint = "/private/linear/order/create"
+		entry.SystemOrderID = response.Result.OrderID
+		err = entry.Status.Scan(response.Result.OrderStatus)
 	} else {
-		endPoint = "/private/linear/order/replace"
+		order.SystemOrderID = response.Result.StopOrderID
+		err = order.Status.Scan(response.Result.OrderStatus)
 	}
 
-	if plan.Direction == cryptodb.Long {
-		entryParams["side"] = "Buy"
-	} else {
-		entryParams["side"] = "Sell"
-	}
-	entryParams["symbol"] = pair.Name
-	entryParams["order_type"] = "Limit"
-	entryParams["qty"] = entry.Size.InexactFloat64()
-	entryParams["close_on_trigger"] = false
-	entryParams["reduce_only"] = false
-	entryParams["time_in_force"] = "GoodTillCancel"
-	entryParams["stop_loss"] = marketStopLoss.Price.InexactFloat64()
-	entryParams["sl_trigger_by"] = "LastPrice"
-
-	entryParams["price"] = entry.Price.InexactFloat64()
-
-	_, responseBuffer, err := e.SignedRequest(http.MethodPost, endPoint, entryParams, &result)
-	if err != nil {
-		return err
-	}
-
-	if result.ReturnCode != 0 || result.ExtendedCode != "" {
-		return errors.New(fmt.Sprintf("(%d) %s", result.ReturnCode, result.ReturnMessage))
-	}
-
-	err = json.Unmarshal(responseBuffer, &response)
-	if err != nil {
-		return err
-	}
-
-	entry.SystemOrderID = response.Result.OrderID
-	entry.Status.Scan(response.Result.OrderStatus)
-	return marketStopLoss.Status.Scan(response.Result.OrderStatus)
-}
-
-// TODO: basicly the same as function above. Rewrite into 1 function.
-func (e *Exchange) SendLimitOrder(plan cryptodb.Plan, pair cryptodb.Pair, entry cryptodb.Order, limitOrder *cryptodb.Order) (err error) {
-	tpParams := make(RequestParameters)
-	var endPoint string
-	var result OrderResponseRest
-	var response OrderResponseRest
-
-	if limitOrder.SystemOrderID == "" {
-		endPoint = "/private/linear/stop-order/create"
-	} else {
-		endPoint = "/private/linear/stop-order/replace"
-	}
-
-	if plan.Direction == cryptodb.Long {
-		tpParams["side"] = "Sell"
-	} else {
-		tpParams["side"] = "Buy"
-	}
-
-	tpParams["symbol"] = pair.Name
-	tpParams["order_type"] = "Limit"
-	tpParams["qty"] = limitOrder.Size.InexactFloat64()
-	tpParams["trigger_by"] = "LastPrice"
-	tpParams["close_on_trigger"] = false
-	tpParams["reduce_only"] = true
-	tpParams["time_in_force"] = "GoodTillCancel"
-
-	tpParams["price"] = limitOrder.Price.InexactFloat64()
-	tpParams["stop_px"] = limitOrder.TriggerPrice.InexactFloat64()
-	tpParams["base_price"] = entry.Price.InexactFloat64()
-
-	_, responseBuffer, err := e.SignedRequest(http.MethodPost, endPoint, tpParams, &result)
-	if result.ReturnCode != 0 || result.ExtendedCode != "" {
-		return errors.New(fmt.Sprintf("(%d) %s", result.ReturnCode, result.ReturnMessage))
-	}
-
-	err = json.Unmarshal(responseBuffer, &response)
-	if err != nil {
-		return err
-	}
-
-	limitOrder.SystemOrderID = response.Result.StopOrderID
-
-	if response.Result.OrderStatus != "" {
-		return limitOrder.Status.Scan(response.Result.OrderStatus)
-	}
-
-	return nil
+	return err
 }

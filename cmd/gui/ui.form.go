@@ -12,15 +12,21 @@ import (
 	"github.com/dez11de/cryptodb"
 )
 
-func (pf *planForm) gatherSetup() cryptodb.Setup {
+func (pf *planForm) gatherPlan() cryptodb.Plan {
 	// TODO: check for errors
 	ui.activePlan.PairID = ui.activePair.ID
 	ui.activePlan.Direction.Scan(pf.directionItem.Widget.(*widget.RadioGroup).Selected)
 	ui.activePlan.Risk = decimal.RequireFromString(pf.riskItem.Widget.(*FloatEntry).Text)
+	ui.activePlan.TakeProfitStrategy.Scan(pf.TPStratItem.Widget.(*widget.Select).Selected)
+	if pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[0].(*fyne.Container).Objects[1].(*widget.Hyperlink).URL != nil {
+		ui.activePlan.TradingViewPlan = pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[0].(*fyne.Container).Objects[1].(*widget.Hyperlink).URL.String()
+	}
+	return ui.activePlan
+}
+
+func (pf *planForm) gatherOrders() []cryptodb.Order {
 	ui.activeOrders[cryptodb.MarketStopLoss].Price = decimal.RequireFromString(pf.stopLossItem.Widget.(*FloatEntry).Text)
 	ui.activeOrders[cryptodb.Entry].Price = decimal.RequireFromString(pf.entryItem.Widget.(*FloatEntry).Text)
-	ui.activePlan.TakeProfitStrategy.Scan(pf.TPStratItem.Widget.(*widget.Select).Selected)
-
 	for i := 0; i < cryptodb.MaxTakeProfits; i++ {
 		tempPrice, err := decimal.NewFromString(pf.takeProfitItems[i].Widget.(*FloatEntry).Text)
 		if err == nil {
@@ -29,43 +35,47 @@ func (pf *planForm) gatherSetup() cryptodb.Setup {
 			ui.activeOrders[3+i].Price = decimal.Zero
 		}
 	}
-	if pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[0].(*fyne.Container).Objects[1].(*widget.Hyperlink).URL != nil {
-		ui.activePlan.TradingViewPlan = pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[0].(*fyne.Container).Objects[1].(*widget.Hyperlink).URL.String()
-	}
-
-	return cryptodb.Setup{Plan: ui.activePlan, Orders: ui.activeOrders}
+	return ui.activeOrders
 }
 
 func (pf *planForm) okAction() {
-	setup := pf.gatherSetup()
-	setup, err := storeSetup(setup)
+	plan := pf.gatherPlan()
+	updatedPlan, err := savePlan(plan)
 	if err != nil {
 		dialog.ShowError(err, mainWindow)
 	}
-	ui.activePlan = setup.Plan
-	ui.activeOrders = setup.Orders
-    pf.form.Refresh()
+	ui.activePlan = updatedPlan
+
+	orders := pf.gatherOrders()
+	if orders[cryptodb.MarketStopLoss].PlanID == 0 {
+		for i := range orders {
+			orders[i].PlanID = updatedPlan.ID
+		}
+	}
+
+	updatedOrders, err := saveOrders(orders)
+	if err != nil {
+		dialog.ShowError(err, mainWindow)
+	}
+	ui.activeOrders = updatedOrders
+	pf.form.Refresh()
+
 	ui.Plans, _ = getPlans()
 	ui.List.Refresh()
 }
 
 func (pf *planForm) cancelAction() {
-
+	reloadedPlan, _ := getPlan(ui.activePlan.ID)
+	pf.FillForm(reloadedPlan)
 }
 
 func (pf *planForm) executeAction() {
-	setup := pf.gatherSetup()
-	setup, err := storeSetup(setup)
-	if err != nil {
-		dialog.ShowError(err, mainWindow)
-	}
-
-	plan, err := executePlan(setup.Plan.ID)
-	ui.activePlan = plan
-	ui.activeOrders = setup.Orders
+	executePlan(ui.activePlan.ID)
 	ui.Plans, _ = getPlans()
-    pf.form.Refresh()
 	ui.List.Refresh()
+
+	reloadedPlan, _ := getPlan(ui.activePlan.ID)
+	pf.FillForm(reloadedPlan)
 }
 
 func (pf *planForm) logAction() {

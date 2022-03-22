@@ -25,14 +25,9 @@ func placeOrders(p cryptodb.Plan, pair cryptodb.Pair, o []cryptodb.Order) (err e
 		return err
 	}
 
-	// err = setLimitStopLoss(&p, pair, o[cryptodb.MarketStopLoss], &o[cryptodb.LimitStopLoss], o[cryptodb.Entry])
-	// if err != nil {
-	// 	return err
-	// }
-
 	for i := 3; i < 3+cryptodb.MaxTakeProfits; i++ {
 		if !o[i].Price.IsZero() {
-			err = setTakeProfit(p, pair, o[cryptodb.MarketStopLoss], o[cryptodb.Entry], &o[i])
+			err = setTakeProfit(p, pair, &o[cryptodb.Entry], &o[i])
 			if err != nil {
 				return err
 			}
@@ -78,7 +73,7 @@ func setLeverage(plan cryptodb.Plan, pair *cryptodb.Pair) (err error) {
 }
 
 func setEntry(p cryptodb.Plan, pair cryptodb.Pair, marketStopLoss *cryptodb.Order, entry *cryptodb.Order) (err error) {
-	err = e.SendEntry(p, pair, marketStopLoss, entry)
+	err = e.SendOrder(p, pair, entry, marketStopLoss)
 	if err != nil {
 		logEntry := &cryptodb.Log{
 			PlanID: p.ID,
@@ -95,7 +90,7 @@ func setEntry(p cryptodb.Plan, pair cryptodb.Pair, marketStopLoss *cryptodb.Orde
 	logEntry := &cryptodb.Log{
 		PlanID: p.ID,
 		Source: cryptodb.Server,
-		Text: fmt.Sprintf("Sending set entry (%s %s@%s) and market stoploss (@%s) successful",
+		Text: fmt.Sprintf("Sending set entry (%s %s@%s) and market stoploss (@%s) successful.",
 			p.Direction.String(), entry.Size.String(), entry.Price.String(), marketStopLoss.Price.String()),
 	}
 
@@ -106,40 +101,8 @@ func setEntry(p cryptodb.Plan, pair cryptodb.Pair, marketStopLoss *cryptodb.Orde
 	return nil
 }
 
-func setLimitStopLoss(p cryptodb.Plan, pair cryptodb.Pair, marketStopLoss cryptodb.Order, limitStopLoss *cryptodb.Order, entry cryptodb.Order) (err error) {
-	err = e.SendLimitOrder(p, pair, entry, limitStopLoss)
-	if err != nil {
-		logEntry := &cryptodb.Log{
-			PlanID: p.ID,
-			Source: cryptodb.Server,
-			Text:   fmt.Sprintf("Error sending Limit StopLoss (%s@%s %s): %s", limitStopLoss.Size.String(), limitStopLoss.Price.String(), limitStopLoss.TriggerPrice.String(), err),
-		}
-		result := db.Create(logEntry)
-		if result.Error != nil {
-			return result.Error
-		}
-		p.Status = cryptodb.Error
-		db.Save(p)
-		if result.Error != nil {
-			return result.Error
-		}
-		return err
-	}
-
-	logEntry := &cryptodb.Log{
-		PlanID: p.ID,
-		Source: cryptodb.Server,
-		Text:   fmt.Sprintf("Sending set Limit StopLoss (%s@%s %s) successful.", limitStopLoss.Size.String(), limitStopLoss.Price.String(), limitStopLoss.TriggerPrice.String()),
-	}
-
-	db.Save(limitStopLoss)
-	db.Create(logEntry)
-
-	return nil
-}
-
-func setTakeProfit(p cryptodb.Plan, pair cryptodb.Pair, marketStopLoss, entry cryptodb.Order, takeProfit *cryptodb.Order) (err error) {
-	err = e.SendLimitOrder(p, pair, entry, takeProfit)
+func setTakeProfit(p cryptodb.Plan, pair cryptodb.Pair, entry, takeProfit *cryptodb.Order) (err error) {
+	err = e.SendOrder(p, pair, entry, takeProfit)
 	if err != nil {
 		logEntry := &cryptodb.Log{
 			PlanID: p.ID,

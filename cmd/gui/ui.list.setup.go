@@ -71,7 +71,7 @@ func MakePlanListSplit() *container.Split {
 		f := NewForm()
 		planListSplit.Trailing = f.formContainer
 
-		f.FillForm(cryptodb.NewSetup().Plan)
+		f.FillForm(cryptodb.Plan{})
 		planListSplit.Refresh()
 	})
 

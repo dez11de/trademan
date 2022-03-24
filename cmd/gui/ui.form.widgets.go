@@ -64,6 +64,7 @@ func (ui *UI) fzfPairs(s string) (possiblePairs []string) {
 func (pf *planForm) makePairItem() *widget.FormItem {
 	CompletionEntry := xwidget.NewCompletionEntry([]string{})
 	CompletionEntry.SetPlaceHolder("Select pair from list")
+	CompletionEntry.Disable()
 	item := widget.NewFormItem("Pair", CompletionEntry)
 	item.HintText = " "
 

@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 
@@ -64,8 +63,6 @@ func savePlanHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params
 		return
 	}
 
-    log.Printf("saving plan: %v", plan)
-
 	var result *gorm.DB
 	if plan.ID == 0 {
 		result = db.Create(&plan)
@@ -99,11 +96,12 @@ func executePlanHandler(w http.ResponseWriter, r *http.Request, params httproute
 	var plan cryptodb.Plan
 	var pair cryptodb.Pair
 	var orders []cryptodb.Order
-	var balance cryptodb.Balance
 	db.Where("id = ?", id).First(&plan)
 	db.Where("id = ?", plan.PairID).First(&pair)
 	db.Where("plan_id = ?", plan.ID).Find(&orders)
-	db.Where("symbol = ?", pair.QuoteCurrency).Order("created_at DESC").First(&balance)
+
+	wallet, err := e.GetCurrentWallet()
+	balance := wallet[pair.QuoteCurrency]
 
 	tx := db.Begin()
 	tx.Create(&cryptodb.Log{PlanID: plan.ID, Source: cryptodb.Server, Text: "Finalized orders."})

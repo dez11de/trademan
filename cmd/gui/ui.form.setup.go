@@ -69,73 +69,62 @@ func (pf *planForm) FillForm(p cryptodb.Plan) {
 	var err error
 	ui.activePlan = p
 
-	if ui.activePlan.PairID != 0 {
+	if ui.activePlan.PairID == 0 {
+		ui.activeOrders = cryptodb.NewOrders(0)
+	} else {
 		ui.activePair = ui.Pairs[ui.activePlan.PairID-1]
 		ui.activeOrders, err = getOrders(ui.activePlan.ID)
 		if err != nil {
 			dialog.ShowError(err, mainWindow)
 		}
+	}
+
+	if ui.activePlan.ID == 0 {
+		pf.pairItem.Widget.(*xwidget.CompletionEntry).Enable()
 	} else {
-		ui.activeOrders = cryptodb.NewOrders(0)
-	}
-
-	if ui.activePlan.ID != 0 {
-		pf.pairItem.Widget.(*xwidget.CompletionEntry).Disable()
 		pf.pairItem.Widget.(*xwidget.CompletionEntry).SetText(ui.activePair.Name)
-		pf.setQuoteCurrency(ui.activePair.QuoteCurrency)
-		pf.setPriceScale(ui.activePair.PriceScale, ui.activePair.Price.Tick)
-	}
-
-	if ui.activePlan.ID != 0 {
+		pf.pairItem.Widget.(*xwidget.CompletionEntry).Disable()
 		pf.directionItem.Widget.(*widget.RadioGroup).SetSelected(ui.activePlan.Direction.String())
 		pf.directionItem.Widget.(*widget.RadioGroup).Disable()
-	}
 
-	// TODO: think about in which statusses changing is allowed
-	if !ui.activePlan.Risk.IsZero() {
 		pf.riskItem.Widget.(*FloatEntry).SetText(ui.activePlan.Risk.StringFixed(1))
-		if ui.activePlan.Status != cryptodb.Planned {
+		pf.stopLossItem.Widget.(*FloatEntry).SetText(ui.activeOrders[cryptodb.MarketStopLoss].Price.StringFixed(ui.activePair.PriceScale))
+		pf.entryItem.Widget.(*FloatEntry).SetText(ui.activeOrders[cryptodb.Entry].Price.StringFixed(ui.activePair.PriceScale))
+		pf.TPStratItem.Widget.(*widget.Select).SetSelected(ui.activePlan.TakeProfitStrategy.String())
+		pf.TPStratItem.Widget.(*widget.Select).SetSelected(ui.activePlan.TakeProfitStrategy.String())
+
+		if ui.activePlan.Status >= cryptodb.Planned {
 			pf.riskItem.Widget.(*FloatEntry).Disable()
 		}
-	}
 
-	// TODO: think about in which statusses changing is allowed
-	if !ui.activeOrders[cryptodb.MarketStopLoss].Price.IsZero() {
-		pf.stopLossItem.Widget.(*FloatEntry).SetText(ui.activeOrders[cryptodb.MarketStopLoss].Price.StringFixed(ui.activePair.PriceScale))
-	}
-
-	// TODO: think about in which statusses changing is allowed, disable editting if required
-	if !ui.activeOrders[cryptodb.Entry].Price.IsZero() {
-		pf.entryItem.Widget.(*FloatEntry).SetText(ui.activeOrders[cryptodb.Entry].Price.StringFixed(ui.activePair.PriceScale))
-	}
-
-	// TODO: think about in which statusses changing is allowed, disable editting if required
-	if ui.activePlan.ID != 0 {
-		pf.TPStratItem.Widget.(*widget.Select).SetSelected(ui.activePlan.TakeProfitStrategy.String())
-	}
-
-	// TODO: think about in which statusses changing is allowed, disable editting if required
-	takeProfitCount := 0
-	for _, o := range ui.activeOrders {
-		if o.OrderKind == cryptodb.TakeProfit && o.Price.Cmp(decimal.Zero) != 0 {
-			pf.takeProfitItems[takeProfitCount].Widget.(*FloatEntry).SetText(o.Price.StringFixed(ui.activePair.PriceScale))
-			takeProfitCount++
+		if ui.activeOrders[cryptodb.Entry].Status >= cryptodb.Ordered {
+			pf.stopLossItem.Widget.(*FloatEntry).Disabled()
+			pf.entryItem.Widget.(*FloatEntry).Disabled()
+			pf.TPStratItem.Widget.(*widget.Select).Disabled()
 		}
-	}
 
-	// TODO: think about in which statusses changing is allowed
-	if ui.activePlan.TradingViewPlan == "" {
-		pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[0].(*fyne.Container).Objects[0].(*widget.Entry).Show()
-		pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[0].(*fyne.Container).Objects[1].(*widget.Hyperlink).Hide()
-		pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[1].(*fyne.Container).Objects[1].(*widget.Button).Show()
-		pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[1].(*fyne.Container).Objects[0].(*widget.Button).Hide()
-	} else {
-	}
+		// TODO: think about in which statusses changing is allowed, disable editting if required
+		takeProfitCount := 0
+		for _, o := range ui.activeOrders {
+			if o.OrderKind == cryptodb.TakeProfit {
+				pf.takeProfitItems[takeProfitCount].Widget.(*FloatEntry).SetText(o.Price.StringFixed(ui.activePair.PriceScale))
+				if o.Status <= cryptodb.Ordered {
+					pf.takeProfitItems[takeProfitCount].Widget.(*FloatEntry).Enable()
+				}
+				takeProfitCount++
+			}
+		}
 
-	// TODO: think about in which statusses changing is allowed
-	if ui.activePlan.Notes != "" {
+		pf.setQuoteCurrency(ui.activePair.QuoteCurrency)
+		pf.setPriceScale(ui.activePair.PriceScale, ui.activePair.Price.Tick)
+
+		if ui.activePlan.TradingViewPlan == "" {
+			pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[0].(*fyne.Container).Objects[0].(*widget.Entry).Show()
+			pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[0].(*fyne.Container).Objects[1].(*widget.Hyperlink).Hide()
+			pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[1].(*fyne.Container).Objects[1].(*widget.Button).Show()
+			pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[1].(*fyne.Container).Objects[0].(*widget.Button).Hide()
+		}
 		pf.notesMultilineEntryItem.Widget.(*widget.Entry).SetText(ui.activePlan.Notes)
 	}
-
 	pf.form.Refresh()
 }

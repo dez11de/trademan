@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"fyne.io/fyne/v2"
@@ -38,13 +39,12 @@ func (pf *planForm) gatherOrders() []cryptodb.Order {
 	return ui.activeOrders
 }
 
-func (pf *planForm) okAction() {
+func (pf *planForm) saveSetup() {
 	plan := pf.gatherPlan()
 	updatedPlan, err := savePlan(plan)
 	if err != nil {
 		dialog.ShowError(err, mainWindow)
 	}
-	ui.activePlan = updatedPlan
 
 	orders := pf.gatherOrders()
 	if orders[cryptodb.MarketStopLoss].PlanID == 0 {
@@ -53,12 +53,17 @@ func (pf *planForm) okAction() {
 		}
 	}
 
-	updatedOrders, err := saveOrders(orders)
+	_, err = saveOrders(orders)
 	if err != nil {
 		dialog.ShowError(err, mainWindow)
 	}
-	ui.activeOrders = updatedOrders
-	pf.form.Refresh()
+
+    log.Printf("Reloading updated plan in form: %+v", updatedPlan)
+	pf.FillForm(updatedPlan)
+}
+
+func (pf *planForm) okAction() {
+	pf.saveSetup()
 
 	ui.Plans, _ = getPlans()
 	ui.List.Refresh()
@@ -70,12 +75,11 @@ func (pf *planForm) cancelAction() {
 }
 
 func (pf *planForm) executeAction() {
+	pf.saveSetup()
 	executePlan(ui.activePlan.ID)
+
 	ui.Plans, _ = getPlans()
 	ui.List.Refresh()
-
-	reloadedPlan, _ := getPlan(ui.activePlan.ID)
-	pf.FillForm(reloadedPlan)
 }
 
 func (pf *planForm) logAction() {

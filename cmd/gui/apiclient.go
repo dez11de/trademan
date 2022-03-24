@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strconv"
 
@@ -182,7 +181,6 @@ func getOrders(PlanID uint64) (orders []cryptodb.Order, err error) {
 }
 
 func saveOrders(o []cryptodb.Order) (orders []cryptodb.Order, err error) {
-    log.Printf("Saving orders: %+v", o)
 	setupJSON, _ := json.Marshal(o)
 	resp, err := http.Post(BaseURL+"orders", "application/json", bytes.NewBuffer(setupJSON))
 	if err != nil {

@@ -87,16 +87,20 @@ func setEntry(p cryptodb.Plan, pair cryptodb.Pair, marketStopLoss *cryptodb.Orde
 		return err
 	}
 
-	logEntry := &cryptodb.Log{
-		PlanID: p.ID,
+	db.Save(entry)
+	db.Save(marketStopLoss)
+	db.Create(&cryptodb.Log{PlanID: p.ID,
 		Source: cryptodb.Server,
 		Text: fmt.Sprintf("Sending set entry (%s %s@%s) and market stoploss (@%s) successful.",
 			p.Direction.String(), entry.Size.String(), entry.Price.String(), marketStopLoss.Price.String()),
-	}
+	})
 
-	db.Save(entry)
-	db.Save(marketStopLoss)
-	db.Create(logEntry)
+	p.Status = entry.Status
+	db.Save(p)
+	db.Create(&cryptodb.Log{PlanID: p.ID,
+		Source: cryptodb.Server,
+		Text:   fmt.Sprintf("Setting plan status to %s", p.Status.String()),
+	})
 
 	return nil
 }
@@ -183,7 +187,7 @@ func updateStatus(plan cryptodb.Plan, dbOrder cryptodb.Order, exchangeOrder exch
 	newStatus.Scan(exchangeOrder.OrderStatus)
 
 	updateOrderStatus(&plan, &dbOrder, newStatus)
-	updatePlanStatus(&plan, dbOrder.Status)
+	updatePlanStatus(&plan, newStatus)
 }
 
 func updatePlanStatus(plan *cryptodb.Plan, newStatus cryptodb.Status) {

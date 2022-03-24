@@ -68,10 +68,10 @@ func (e *Exchange) PublicRequest(method string, apiURL string, params map[string
 	return
 }
 
-func (b *Exchange) PrivateRequest(method string, apiURL string, params map[string]interface{}, result interface{}) (resp []byte, err error) {
+func (e *Exchange) PrivateRequest(method string, apiURL string, params map[string]interface{}, result interface{}) (resp []byte, err error) {
 	timestamp := time.Now().UnixNano() / 1e6
 
-	params["api_key"] = b.apiKey
+	params["api_key"] = e.apiKey
 	params["timestamp"] = timestamp
 
 	var keys []string
@@ -86,11 +86,11 @@ func (b *Exchange) PrivateRequest(method string, apiURL string, params map[strin
 	}
 
 	param := strings.Join(p, "&")
-	signature := b.getSigned(param)
+	signature := e.getSigned(param)
 	param += "&sign=" + signature
 
-	fullURL := b.restHost + apiURL + "?" + param
-	if b.debugMode {
+	fullURL := e.restHost + apiURL + "?" + param
+	if e.debugMode {
 		log.Printf("SignedRequest: %v", fullURL)
 	}
 	var binBody = bytes.NewReader(make([]byte, 0))
@@ -103,7 +103,7 @@ func (b *Exchange) PrivateRequest(method string, apiURL string, params map[strin
 	}
 
 	var response *http.Response
-	response, err = b.restClient.Do(request)
+	response, err = e.restClient.Do(request)
 	if err != nil {
 		return
 	}
@@ -114,7 +114,7 @@ func (b *Exchange) PrivateRequest(method string, apiURL string, params map[strin
 		return
 	}
 
-	if b.debugMode {
+	if e.debugMode {
 		log.Printf("SignedRequest: %v", string(resp))
 	}
 
@@ -122,10 +122,10 @@ func (b *Exchange) PrivateRequest(method string, apiURL string, params map[strin
 	return
 }
 
-func (b *Exchange) SignedRequest(method string, apiURL string, params map[string]interface{}, result interface{}) (fullURL string, resp []byte, err error) {
+func (e *Exchange) SignedRequest(method string, apiURL string, params map[string]interface{}, result interface{}) (fullURL string, resp []byte, err error) {
 	timestamp := time.Now().UnixNano() / 1e6
 
-	params["api_key"] = b.apiKey
+	params["api_key"] = e.apiKey
 	params["timestamp"] = timestamp
 
 	var keys []string
@@ -140,11 +140,11 @@ func (b *Exchange) SignedRequest(method string, apiURL string, params map[string
 	}
 
 	param := strings.Join(p, "&")
-	signature := b.getSigned(param)
+	signature := e.getSigned(param)
 	param += "&sign=" + signature
 
-	fullURL = b.restHost + apiURL + "?" + param
-	if b.debugMode {
+	fullURL = e.restHost + apiURL + "?" + param
+	if e.debugMode {
 		log.Printf("SignedRequest: %v", fullURL)
 	}
 	var binBody = bytes.NewReader(make([]byte, 0))
@@ -157,7 +157,7 @@ func (b *Exchange) SignedRequest(method string, apiURL string, params map[string
 	}
 
 	var response *http.Response
-	response, err = b.restClient.Do(request)
+	response, err = e.restClient.Do(request)
 	if err != nil {
 		return
 	}
@@ -168,15 +168,15 @@ func (b *Exchange) SignedRequest(method string, apiURL string, params map[string
 		return
 	}
 
-	if b.debugMode {
+	if e.debugMode {
 		log.Printf("SignedRequest: %v", string(resp))
 	}
 	err = json.Unmarshal(resp, result)
 	return
 }
 
-func (b *Exchange) getSigned(param string) string {
-	sig := hmac.New(sha256.New, []byte(b.apiSecret))
+func (e *Exchange) getSigned(param string) string {
+	sig := hmac.New(sha256.New, []byte(e.apiSecret))
 	sig.Write([]byte(param))
 	signature := hex.EncodeToString(sig.Sum(nil))
 	return signature

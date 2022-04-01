@@ -88,3 +88,27 @@ func (e *Exchange) SendOrder(plan cryptodb.Plan, pair cryptodb.Pair, entry, orde
 
 	return err
 }
+
+func (e *Exchange) CancelOrder(symbol, SystemOrderID string) (err error) {
+	var endPoint string
+	params := make(RequestParameters)
+	var response, result OrderResponseRest
+    
+		endPoint = "/private/linear/order/create"
+		params["symbol"] = symbol
+	_, responseBuffer, err := e.SignedRequest(http.MethodPost, endPoint, params, &result)
+	if err != nil {
+		return err
+	}
+
+	if result.ReturnCode != 0 || result.ExtendedCode != "" {
+		return errors.New(fmt.Sprintf("(%d) %s", result.ReturnCode, result.ReturnMessage))
+	}
+
+	err = json.Unmarshal(responseBuffer, &response)
+	if err != nil {
+		return err
+	}
+
+    return nil
+}

@@ -200,7 +200,7 @@ func (pf *planForm) makeEntryItem(decimals int32, tick decimal.Decimal) *widget.
 		entryPrice, err := decimal.NewFromString(s)
 		switch {
 		case err != nil:
-			pf.TPStratItem.Widget.(*widget.Select).Disable()
+			pf.TPStratItem.Widget.(*fyne.Container).Objects[0].(*widget.Select).Disable()
 			item.HintText = fmt.Sprintf("enter a valid price in %s", ui.activePair.QuoteCurrency)
 		case entryPrice.IsZero():
 			item.HintText = " "
@@ -223,8 +223,6 @@ func (pf *planForm) makeEntryItem(decimals int32, tick decimal.Decimal) *widget.
 func (pf *planForm) makeTakeProfitStrategyItem() *widget.FormItem {
 	tPStratSelect := widget.NewSelect(nil, nil)
 	tPStratSelect.Disable()
-	item := widget.NewFormItem("TP Strategy", tPStratSelect)
-	item.HintText = " "
 
 	tPStratSelect.Options = cryptodb.TakeProfitStrategyStrings()
 
@@ -232,6 +230,9 @@ func (pf *planForm) makeTakeProfitStrategyItem() *widget.FormItem {
 		pf.takeProfitItems[0].Widget.(*FloatEntry).Enable()
 		pf.form.Refresh()
 	}
+
+	item := widget.NewFormItem("TP Strategy", tPStratSelect)
+	item.HintText = " "
 
 	return item
 }

@@ -12,10 +12,12 @@ import (
 )
 
 type ExchangeConfig struct {
-    ApiKey    string `flag:"key||Exchange API key" env:"TRADEMAN_EXCHANGE_KEY"`
-    ApiSecret string `flag:"secret||Exchange API secret" env:"TRADEMAN_EXCHANGE_SECRET"`
-    RESTHost  string `flag:"rest_host||Exchange API REST protocol host" env:"TRADEMAN_EXCHANGE_REST_HOST"`
-    WSHost    string `flag:"websocket_host||Exchange WebSocket protocol host" env:"TRADEMAN_EXCHANGE_WEBSOCKET_HOST"`
+	ApiKey    string `flag:"key||Exchange API key" env:"TRADEMAN_EXCHANGE_KEY"`
+	ApiSecret string `flag:"secret||Exchange API secret" env:"TRADEMAN_EXCHANGE_SECRET"`
+	RESTHost  string `flag:"rest_host||Exchange API REST protocol host" env:"TRADEMAN_EXCHANGE_REST_HOST"`
+	WSHost    string `flag:"websocket_host||Exchange WebSocket protocol host" env:"TRADEMAN_EXCHANGE_WEBSOCKET_HOST"`
+
+	ShowPong bool `flag:"showpong|false|Show pong responses"`
 
 	// TODO: get logfile settings from config file
 }
@@ -31,6 +33,7 @@ type Exchange struct {
 	connection    *websocket.Conn
 
 	logger    lumberjack.Logger
+	showPong  bool
 	debugMode bool
 }
 
@@ -45,6 +48,7 @@ func Connect(c ExchangeConfig) (e *Exchange, err error) {
 		},
 		context: context.Background(),
 
+		showPong:  c.ShowPong,
 		debugMode: false,
 	}
 
@@ -61,7 +65,7 @@ func Connect(c ExchangeConfig) (e *Exchange, err error) {
 
 	if err == nil {
 		e.logger.Write([]byte(fmt.Sprintf("%s [exchange] Successfully connected.\n", time.Now().Format("2006-01-02 15:04:05.000"))))
-        log.Print("Connected.")
+		log.Print("Connected.")
 	} else {
 		e.logger.Write([]byte(fmt.Sprintf("%s [exchange] Error connecting to exchange: %v\n", time.Now().Format("2006-01-02 15:04:05.000"), err)))
 	}
@@ -74,7 +78,7 @@ func (e *Exchange) Reconnect() (err error) {
 	err = e.Authenticate()
 	if err == nil {
 		e.logger.Write([]byte(fmt.Sprintf("%s [exchange] Successfully connected.\n", time.Now().Format("2006-01-02 15:04:05.000"))))
-        log.Print("Reconnected.")
+		log.Print("Reconnected.")
 	} else {
 		e.logger.Write([]byte(fmt.Sprintf("%s [exchange] Error connecting to exchange: %v\n", time.Now().Format("2006-01-02 15:04:05.000"), err)))
 	}

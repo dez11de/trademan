@@ -91,7 +91,7 @@ func (pf *planForm) FillForm(p cryptodb.Plan) {
 		pf.stopLossItem.Widget.(*FloatEntry).SetText(ui.activeOrders[cryptodb.MarketStopLoss].Price.StringFixed(ui.activePair.PriceScale))
 		pf.entryItem.Widget.(*FloatEntry).SetText(ui.activeOrders[cryptodb.Entry].Price.StringFixed(ui.activePair.PriceScale))
 		pf.TPStratItem.Widget.(*widget.Select).SetSelected(ui.activePlan.TakeProfitStrategy.String())
-		pf.TPStratItem.Widget.(*widget.Select).SetSelected(ui.activePlan.TakeProfitStrategy.String())
+		pf.TPStratItem.Widget.(*widget.Select).Disable()
 
 		if ui.activePlan.Status >= cryptodb.Planned {
 			pf.riskItem.Widget.(*FloatEntry).Disable()

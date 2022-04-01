@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	"fyne.io/fyne/v2"
@@ -58,7 +57,6 @@ func (pf *planForm) saveSetup() {
 		dialog.ShowError(err, mainWindow)
 	}
 
-    log.Printf("Reloading updated plan in form: %+v", updatedPlan)
 	pf.FillForm(updatedPlan)
 }
 

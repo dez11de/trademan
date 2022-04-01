@@ -44,8 +44,8 @@ func main() {
 		}
 		for _, p := range exchangePairs {
 			time.Sleep(1543 * time.Millisecond)
-			p.Leverage.Long = decimal.NewFromInt(1)
-			p.Leverage.Short = decimal.NewFromInt(1)
+			p.Leverage.Long = decimal.NewFromFloat(10.0)
+			p.Leverage.Short = decimal.NewFromFloat(10.0)
 			e.SendLeverage(p.Name, p.QuoteCurrency, p.Leverage.Long.RoundStep(p.Leverage.Step, false), p.Leverage.Short.RoundStep(p.Leverage.Step, false))
 			db.Create(&p)
 		}
@@ -97,6 +97,7 @@ func main() {
 	pingExchangeTicker := time.NewTicker(1 * time.Minute)
 	refreshWalletTicker := time.NewTicker(2 * time.Hour)
 	refreshPairsTicker := time.NewTicker(24 * time.Hour)
+	refreshFundingTicker := time.NewTicker(8 * time.Minute)
 	quit := make(chan struct{})
 
 	// TODO: what if it can't open the port?
@@ -132,6 +133,13 @@ func main() {
 						log.Printf("error writing pair to database %v", err)
 					}
 				}
+			}
+
+		case <-refreshFundingTicker.C:
+            log.Printf("Refreshing funding")
+			err := processFundings()
+			if err != nil {
+				log.Printf("error updating funding %v", err)
 			}
 
 		case <-pingExchangeTicker.C:

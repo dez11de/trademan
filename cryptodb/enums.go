@@ -1,6 +1,6 @@
 package cryptodb
 
-//go:generate enumer -json -sql -type Direction,Side,TakeProfitStrategy,Status,OrderType,OrderKind,LogSource -output enums_helpers.go
+//go:generate enumer -json -sql -type Direction,Side,TakeProfitStrategy,TakeProfitMoment,Status,OrderType,OrderKind,LogSource -output enums_helpers.go
 
 type Direction int
 
@@ -19,21 +19,21 @@ const (
 type Status int
 
 const (
-    Unplanned Status = iota
+	Unplanned Status = iota
 	Planned
-    Created
+	Created
 	Ordered
-	New         
+	New
 	Untriggered
-    PartiallyFilled
+	PartiallyFilled
 	Filled
-    Rejected
-    Error
+	Rejected
+	Error
 	Stopped
-    PendingCancel
+	PendingCancel
 	Cancelled
 	Deactivated
-	Closed 
+	Closed
 	Liquidated
 	Logged
 )
@@ -43,7 +43,14 @@ type TakeProfitStrategy int
 const (
 	Manual TakeProfitStrategy = iota // NOT implemented yet, this requires an extra field in orders, don't reuse Size
 	AutoLinear
-    // TODO: for auto-rejection trading use Fibonacci retracement, see https://www.investopedia.com/terms/f/fibonacciretracement.asp for values
+	// TODO: for auto-rejection trading use Fibonacci retracement, see https://www.investopedia.com/terms/f/fibonacciretracement.asp for values
+)
+
+type TakeProfitMoment int
+
+const (
+	Immediately TakeProfitMoment = iota
+	OnEntryFilled
 )
 
 type OrderType int

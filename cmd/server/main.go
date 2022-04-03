@@ -136,7 +136,6 @@ func main() {
 			}
 
 		case <-refreshFundingTicker.C:
-            log.Printf("Refreshing funding")
 			err := processFundings()
 			if err != nil {
 				log.Printf("error updating funding %v", err)

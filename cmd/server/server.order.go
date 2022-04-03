@@ -212,11 +212,12 @@ func updateStatus(plan *cryptodb.Plan, dbOrder *cryptodb.Order, exchangeOrder ex
 }
 
 func updatePlanStatus(plan *cryptodb.Plan, newStatus cryptodb.Status) {
-	log.Printf("Updating plan status: %s(%d) -> %s(%d)", plan.Status.String(), plan.Status, newStatus.String(), newStatus)
 	if plan.Status >= newStatus {
+		log.Printf("No change in plan status")
 		return
 	}
 
+	log.Printf("Updating plan status: %s(%d) -> %s(%d)", plan.Status.String(), plan.Status, newStatus.String(), newStatus)
 	db.Create(&cryptodb.Log{
 		PlanID: plan.ID,
 		Source: cryptodb.Server,
@@ -227,11 +228,12 @@ func updatePlanStatus(plan *cryptodb.Plan, newStatus cryptodb.Status) {
 }
 
 func updateOrderStatus(plan *cryptodb.Plan, order *cryptodb.Order, newStatus cryptodb.Status) {
-	log.Printf("Updating order status: %s(%d) -> %s(%d)", order.Status.String(), order.Status, newStatus.String(), newStatus)
 	if order.Status >= newStatus {
+		log.Print("No change in order status")
 		return
 	}
 
+	log.Printf("Updating order status: %s(%d) -> %s(%d)", order.Status.String(), order.Status, newStatus.String(), newStatus)
 	db.Create(&cryptodb.Log{
 		PlanID: plan.ID,
 		Source: cryptodb.Exchange,
@@ -294,7 +296,7 @@ func cancelTakeProfits(p cryptodb.Plan) (err error) {
 	var entry cryptodb.Order
 	result = db.Where("plan_id = ? AND order_kind = ?", p.ID, cryptodb.Entry).Take(&entry)
 	if result.Error != nil {
-		log.Print("No matching TakeProfits found....")
+		log.Print("No matching entry found....")
 		return result.Error
 	}
 	var pair cryptodb.Pair
@@ -311,14 +313,14 @@ func cancelTakeProfits(p cryptodb.Plan) (err error) {
 				db.Create(&cryptodb.Log{
 					PlanID: p.ID,
 					Source: cryptodb.Server,
-					Text:   "Canceling Take Profits failed",
+					Text:   fmt.Sprintf("Canceling Take Profit (%s) failed: %s", o.Price.String(), err),
 				})
 				return err
 			}
 			db.Create(&cryptodb.Log{
 				PlanID: p.ID,
 				Source: cryptodb.Server,
-				Text:   "Canceling Take Profits success",
+				Text:   fmt.Sprintf("Canceling Take Profit (%s) success.", o.Price.String()),
 			})
 		}
 	}

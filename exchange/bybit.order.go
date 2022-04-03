@@ -94,7 +94,7 @@ func (e *Exchange) CancelOrder(symbol, SystemOrderID string) (err error) {
 	params := make(RequestParameters)
 	var response, result OrderResponseRest
     
-		endPoint = "/private/linear/order/create"
+		endPoint = "/private/linear/stop-order/cancel"
 		params["symbol"] = symbol
 	_, responseBuffer, err := e.SignedRequest(http.MethodPost, endPoint, params, &result)
 	if err != nil {
@@ -105,6 +105,7 @@ func (e *Exchange) CancelOrder(symbol, SystemOrderID string) (err error) {
 		return errors.New(fmt.Sprintf("(%d) %s", result.ReturnCode, result.ReturnMessage))
 	}
 
+    // TODO: is this really necessary?
 	err = json.Unmarshal(responseBuffer, &response)
 	if err != nil {
 		return err

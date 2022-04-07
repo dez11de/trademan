@@ -96,6 +96,7 @@ func (e *Exchange) CancelOrder(symbol, SystemOrderID string) (err error) {
     
 		endPoint = "/private/linear/stop-order/cancel"
 		params["symbol"] = symbol
+        params["stop_order_id"] = SystemOrderID
 	_, responseBuffer, err := e.SignedRequest(http.MethodPost, endPoint, params, &result)
 	if err != nil {
 		return err

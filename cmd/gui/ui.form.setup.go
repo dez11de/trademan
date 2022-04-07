@@ -71,9 +71,14 @@ func (pf *planForm) FillForm(p cryptodb.Plan) {
 
 	if ui.activePlan.PairID == 0 {
 		ui.activeOrders = cryptodb.NewOrders(0)
+		ui.activeAssessment= cryptodb.NewAssessment(0)
 	} else {
 		ui.activePair = ui.Pairs[ui.activePlan.PairID-1]
 		ui.activeOrders, err = getOrders(ui.activePlan.ID)
+		if err != nil {
+			dialog.ShowError(err, mainWindow)
+		}
+        ui.activeAssessment, err = getAssessment(ui.activePlan.ID)
 		if err != nil {
 			dialog.ShowError(err, mainWindow)
 		}
@@ -93,17 +98,13 @@ func (pf *planForm) FillForm(p cryptodb.Plan) {
 		pf.TPStratItem.Widget.(*widget.Select).SetSelected(ui.activePlan.TakeProfitStrategy.String())
 		pf.TPStratItem.Widget.(*widget.Select).Disable()
 
-		if ui.activePlan.Status >= cryptodb.Planned {
+		if ui.activeOrders[cryptodb.Entry].Status >= cryptodb.New {
 			pf.riskItem.Widget.(*FloatEntry).Disable()
+			pf.stopLossItem.Widget.(*FloatEntry).Disable()
+			pf.entryItem.Widget.(*FloatEntry).Disable()
+			pf.TPStratItem.Widget.(*widget.Select).Disable()
 		}
 
-		if ui.activeOrders[cryptodb.Entry].Status >= cryptodb.Ordered {
-			pf.stopLossItem.Widget.(*FloatEntry).Disabled()
-			pf.entryItem.Widget.(*FloatEntry).Disabled()
-			pf.TPStratItem.Widget.(*widget.Select).Disabled()
-		}
-
-		// TODO: think about in which statusses changing is allowed, disable editting if required
 		takeProfitCount := 0
 		for _, o := range ui.activeOrders {
 			if o.OrderKind == cryptodb.TakeProfit {

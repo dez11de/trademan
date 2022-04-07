@@ -13,13 +13,12 @@ import (
 )
 
 type UI struct {
-	Pairs      []cryptodb.Pair
-	activePair cryptodb.Pair
-
-	Plans      []cryptodb.Plan
-	activePlan cryptodb.Plan
-
-	activeOrders []cryptodb.Order
+	Pairs            []cryptodb.Pair
+	activePair       cryptodb.Pair
+	Plans            []cryptodb.Plan
+	activePlan       cryptodb.Plan
+	activeOrders     []cryptodb.Order
+	activeAssessment cryptodb.Assessment
 
 	List                *widget.List
 	statisticsContainer *fyne.Container
@@ -80,11 +79,10 @@ func MakePlanListSplit() *container.Split {
 		if err != nil {
 			dialog.ShowError(err, mainWindow)
 		}
-        ui.List.Refresh()
+		ui.List.Refresh()
 	})
 
 	actionBar := widget.NewToolbar(widget.NewToolbarSpacer(), refreshListAction, addPlanAction)
-        // actionBar.Refresh()
 	ListAndButtons = container.NewBorder(nil, actionBar, nil, nil, ui.List)
 	planListSplit.Leading = ListAndButtons
 	planListSplit.Refresh()

@@ -11,6 +11,7 @@ import (
 var trademanCfg trademanConfig
 var BaseURL string
 var mainWindow fyne.Window
+var a fyne.App
 
 func main() {
 	err := readConfig(&trademanCfg)
@@ -19,20 +20,20 @@ func main() {
 		log.Fatalf("Error reading configuration: %s", err)
 	}
 
-	app := app.NewWithID("nl.ganzeinfach.apps.bbtrader")
-	app.Settings().SetTheme(&myTheme{})
+	a = app.NewWithID("nl.ganzeinfach.apps.bbtrader")
+	a.Settings().SetTheme(&myTheme{})
 	dbName, err := getDBName()
 	if err != nil {
 		log.Panicf("unable to connect to server: %s", err)
 	}
-	mainWindow = app.NewWindow(fmt.Sprintf("Trade Manager (%s)", dbName))
+	mainWindow = a.NewWindow(fmt.Sprintf("Trade Manager (%s)", dbName))
 	mainContent := makeMainContent()
-	width := app.Preferences().FloatWithFallback("width", 850)
-	height := app.Preferences().FloatWithFallback("height", 1000)
+	width := a.Preferences().FloatWithFallback("width", 850)
+	height := a.Preferences().FloatWithFallback("height", 1000)
 	mainWindow.Resize(fyne.Size{Width: float32(width), Height: float32(height)})
 	mainWindow.SetCloseIntercept(func() {
-		app.Preferences().SetFloat("width", float64(mainWindow.Canvas().Size().Width))
-		app.Preferences().SetFloat("height", float64(mainWindow.Canvas().Size().Height))
+		a.Preferences().SetFloat("width", float64(mainWindow.Canvas().Size().Width))
+		a.Preferences().SetFloat("height", float64(mainWindow.Canvas().Size().Height))
 		mainWindow.Close()
 	})
 

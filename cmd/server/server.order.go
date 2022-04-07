@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"log"
 
 	"github.com/dez11de/cryptodb"
 	"github.com/dez11de/exchange"
@@ -136,7 +135,6 @@ func setTakeProfit(p cryptodb.Plan, pair cryptodb.Pair, entry, takeProfit *crypt
 }
 
 func matchOrder(incomingOrder *exchange.Order) (o cryptodb.Order, err error) {
-	log.Printf("Matching order: %+v", incomingOrder)
 	var matchOrderID string
 	var order cryptodb.Order
 
@@ -148,8 +146,6 @@ func matchOrder(incomingOrder *exchange.Order) (o cryptodb.Order, err error) {
 		return o, errors.New("both order_id and stop_order_id empty")
 	}
 
-	log.Printf("Finding order: %+v", matchOrderID)
-
 	result := db.Where("system_order_id = ?", matchOrderID).Take(&order)
 	if result.Error != nil && incomingOrder.OrderType == "Market" {
 		// TODO: make sure the plan is still open and in the same direction?
@@ -158,15 +154,12 @@ func matchOrder(incomingOrder *exchange.Order) (o cryptodb.Order, err error) {
 			Where("order_kind = ? AND pairs.name = ?", cryptodb.MarketStopLoss, incomingOrder.Symbol).
 			Take(&order)
 		if result.Error != nil {
-			log.Printf("Error finding market stoploss order: %s", result.Error)
 			return o, result.Error
 		} else {
 			// First sign of stoploss order
-			log.Printf("First sign of marketstoploss order: %+v", order)
 			order.SystemOrderID = incomingOrder.StopOrderID
 		}
 	} else {
-		log.Printf("Found order: %+v", order)
 		return order, result.Error
 	}
 
@@ -177,13 +170,10 @@ func processOrder(incomingOrder exchange.Order) error {
 	var plan cryptodb.Plan
 	order, err := matchOrder(&incomingOrder)
 	if err != nil {
-		log.Printf("Error matching order: %s", err)
 		return err
 	}
-	log.Printf("Finding plan for order: %+v", order)
-	result := db.Debug().Where("id = ?", order.PlanID).Take(&plan)
+	result := db.Where("id = ?", order.PlanID).Take(&plan)
 	if result.Error != nil {
-		log.Printf("Error finding plan: %s", result.Error)
 		return result.Error
 	}
 
@@ -213,11 +203,9 @@ func updateStatus(plan *cryptodb.Plan, dbOrder *cryptodb.Order, exchangeOrder ex
 
 func updatePlanStatus(plan *cryptodb.Plan, newStatus cryptodb.Status) {
 	if plan.Status >= newStatus {
-		log.Printf("No change in plan status")
 		return
 	}
 
-	log.Printf("Updating plan status: %s(%d) -> %s(%d)", plan.Status.String(), plan.Status, newStatus.String(), newStatus)
 	db.Create(&cryptodb.Log{
 		PlanID: plan.ID,
 		Source: cryptodb.Server,
@@ -229,11 +217,9 @@ func updatePlanStatus(plan *cryptodb.Plan, newStatus cryptodb.Status) {
 
 func updateOrderStatus(plan *cryptodb.Plan, order *cryptodb.Order, newStatus cryptodb.Status) {
 	if order.Status >= newStatus {
-		log.Print("No change in order status")
 		return
 	}
 
-	log.Printf("Updating order status: %s(%d) -> %s(%d)", order.Status.String(), order.Status, newStatus.String(), newStatus)
 	db.Create(&cryptodb.Log{
 		PlanID: plan.ID,
 		Source: cryptodb.Exchange,
@@ -253,13 +239,11 @@ func sendTakeProfits(p cryptodb.Plan) (err error) {
 	var takeProfits []cryptodb.Order
 	result := db.Where("plan_id = ? AND order_kind = ?", p.ID, cryptodb.TakeProfit).Find(&takeProfits)
 	if result.Error != nil {
-		log.Print("No matching TakeProfits found....")
 		return result.Error
 	}
 	var entry cryptodb.Order
 	result = db.Where("plan_id = ? AND order_kind = ?", p.ID, cryptodb.Entry).Take(&entry)
 	if result.Error != nil {
-		log.Print("No matching TakeProfits found....")
 		return result.Error
 	}
 	var pair cryptodb.Pair
@@ -270,7 +254,6 @@ func sendTakeProfits(p cryptodb.Plan) (err error) {
 
 	for _, o := range takeProfits {
 		if !o.Price.IsZero() {
-			log.Printf("setting take profit - entry price: %s, trigger price: %s, order price: %s", entry.Price.String(), o.TriggerPrice.String(), o.Price.String())
 			err := setTakeProfit(p, pair, &entry, &o)
 			if err != nil {
 				return err
@@ -290,13 +273,11 @@ func cancelTakeProfits(p cryptodb.Plan) (err error) {
 	var takeProfits []cryptodb.Order
 	result := db.Where("plan_id = ? AND order_kind = ?", p.ID, cryptodb.TakeProfit).Find(&takeProfits)
 	if result.Error != nil {
-		log.Print("No matching TakeProfits found....")
 		return result.Error
 	}
 	var entry cryptodb.Order
 	result = db.Where("plan_id = ? AND order_kind = ?", p.ID, cryptodb.Entry).Take(&entry)
 	if result.Error != nil {
-		log.Print("No matching entry found....")
 		return result.Error
 	}
 	var pair cryptodb.Pair
@@ -306,8 +287,8 @@ func cancelTakeProfits(p cryptodb.Plan) (err error) {
 	}
 
 	for _, o := range takeProfits {
-		if !o.Price.IsZero() {
-			log.Printf("Cancelling take profit (@%s)", o.Price.String())
+		if !o.Price.IsZero() && o.Status < cryptodb.PartiallyFilled {
+            // TODO: should make a differnce between conditional- and active orders.
 			err := e.CancelOrder(pair.Name, o.SystemOrderID)
 			if err != nil {
 				db.Create(&cryptodb.Log{

@@ -48,6 +48,7 @@ func Connect(c DatabaseConfig) (db *Database, err error) {
 }
 
 func (db *Database) TruncTables() {
+	db.Exec("TRUNCATE TABLE `assessments`")
 	db.Exec("TRUNCATE TABLE `logs`")
 	db.Exec("TRUNCATE TABLE `orders`")
 	db.Exec("TRUNCATE TABLE `plans`")
@@ -65,4 +66,6 @@ func (db *Database) CreateTables() {
 	db.Migrator().CreateTable(Log{})
 	db.Migrator().DropTable(Balance{})
 	db.Migrator().CreateTable(Balance{})
+	db.Migrator().DropTable(Assessment{})
+	db.Migrator().CreateTable(Assessment{})
 }

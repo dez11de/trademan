@@ -67,7 +67,7 @@ func (pf *planForm) okAction() {
 	ui.List.Refresh()
 }
 
-func (pf *planForm) cancelAction() {
+func (pf *planForm) undoAction() {
 	reloadedPlan, _ := getPlan(ui.activePlan.ID)
 	pf.FillForm(reloadedPlan)
 }
@@ -80,7 +80,7 @@ func (pf *planForm) executeAction() {
 	ui.List.Refresh()
 }
 
-func (pf *planForm) logAction() {
+func (pf *planForm) historyAction() {
 	entries, err := getLogs(ui.activePlan.ID)
 	if err != nil {
 		dialog.ShowError(err, mainWindow)
@@ -107,4 +107,11 @@ func (pf *planForm) logAction() {
 	logWindow.Resize(fyne.NewSize(0, 0))
 	logWindow.ShowAtPosition(fyne.Position{X: 50, Y: 0})
 	logAnimation.Start()
+}
+
+func (pf *planForm) assessAction() {
+    assessmentForm := NewAssessmentForm(ui.activePlan)
+    assessmentFormWindow := a.NewWindow("Assessment")
+    assessmentFormWindow.SetContent(assessmentForm)
+    assessmentFormWindow.Show()
 }

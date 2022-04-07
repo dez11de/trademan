@@ -222,3 +222,45 @@ func getLogs(PlanID uint64) (entries []cryptodb.Log, err error) {
 	err = json.Unmarshal(body, &entries)
 	return entries, err
 }
+
+func getAssessment(PlanID uint64) (assessment cryptodb.Assessment , err error) {
+	resp, err := http.Get(BaseURL + "assessment/" + strconv.Itoa(int(PlanID)))
+	if err != nil {
+		return assessment, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		errorMessage, _ := ioutil.ReadAll(resp.Body)
+		return assessment, errors.New(string(errorMessage))
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return assessment, err
+	}
+
+	err = json.Unmarshal(body, &assessment)
+	return assessment, err
+}
+
+func saveAssessment(a cryptodb.Assessment) (assessment cryptodb.Assessment, err error) {
+	assessmentJSON, _ := json.Marshal(a)
+	resp, err := http.Post(BaseURL+"assessment", "application/json", bytes.NewBuffer(assessmentJSON))
+	if err != nil {
+		return a, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		errorMessage, _ := ioutil.ReadAll(resp.Body)
+		return a, errors.New(string(errorMessage))
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return a, err
+	}
+
+	err = json.Unmarshal(body, &assessment)
+	return assessment, err
+}

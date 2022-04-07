@@ -346,10 +346,11 @@ func (pf *planForm) makeNotesMultilineItem() *widget.FormItem {
 }
 
 func (pf *planForm) makeToolBar() *widget.Toolbar {
-	logAction := widget.NewToolbarAction(theme.DocumentIcon(), pf.logAction)
+	assessAction := widget.NewToolbarAction(theme.ListIcon(), pf.assessAction)
+	historyAction := widget.NewToolbarAction(theme.HistoryIcon(), pf.historyAction)
 	executeAction := widget.NewToolbarAction(theme.UploadIcon(), pf.executeAction)
-	cancelAction := widget.NewToolbarAction(theme.CancelIcon(), pf.cancelAction)
+	undoAction := widget.NewToolbarAction(theme.ContentUndoIcon(), pf.undoAction)
 	okAction := widget.NewToolbarAction(theme.ConfirmIcon(), pf.okAction)
 
-	return widget.NewToolbar(widget.NewToolbarSpacer(), logAction, executeAction, cancelAction, okAction)
+	return widget.NewToolbar(widget.NewToolbarSpacer(), assessAction, historyAction, executeAction, undoAction, okAction)
 }

@@ -25,6 +25,9 @@ func HandleRequests(c RESTServerConfig) {
 	router.GET(APIv1Base+"orders/:PlanID", getOrdersHandler)
 	router.POST(APIv1Base+"orders", saveOrdersHandler)
 
+	router.GET(APIv1Base+"assessment/:PlanID", getAssessmentHandler)
+	router.POST(APIv1Base+"assessment", saveAssessmentHandler)
+
 	router.GET(APIv1Base+"logs/:PlanID", getLogsHandler)
 
 	log.Printf("==========================[ API Server Ready ]==========================\n")

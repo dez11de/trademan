@@ -9,18 +9,18 @@ import (
 )
 
 func (af *assessmentForm) makeRiskItem() *widget.FormItem {
-	RiskSelect := widget.NewSelect([]string{"Too Low", "Good", "Too High"}, nil)
-	RiskSelect.SetSelected(ui.activeAssessment.Risk)
-	i := widget.NewFormItem("Risk", RiskSelect)
+	af.RiskSelect = widget.NewSelect([]string{"Too Low", "Good", "Too High"}, nil)
+	af.RiskSelect.SetSelected(ui.activeAssessment.Risk)
+	i := widget.NewFormItem("Risk", af.RiskSelect)
 	i.HintText = fmt.Sprintf("Risk was: %s%%", ui.activePlan.Risk.StringFixed(2))
 
 	return i
 }
 
 func (af *assessmentForm) makeTimingItem() *widget.FormItem {
-	TimingSelect := widget.NewSelect([]string{"Early", "On-time", "Late"}, nil)
-	TimingSelect.SetSelected(ui.activeAssessment.Timing)
-	i := widget.NewFormItem("Timing", TimingSelect)
+	af.TimingSelect = widget.NewSelect([]string{"Early", "On-time", "Late"}, nil)
+	af.TimingSelect.SetSelected(ui.activeAssessment.Timing)
+	i := widget.NewFormItem("Timing", af.TimingSelect)
 	i.HintText = " "
 
 	return i

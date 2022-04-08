@@ -22,6 +22,8 @@ type planForm struct {
 	takeProfitItems         [cryptodb.MaxTakeProfits]*widget.FormItem
 	notesMultilineEntryItem *widget.FormItem
 	tradingViewPlanItem     *widget.FormItem
+
+	assessmentForm *assessmentForm
 }
 
 func NewForm() *planForm {
@@ -71,14 +73,14 @@ func (pf *planForm) FillForm(p cryptodb.Plan) {
 
 	if ui.activePlan.PairID == 0 {
 		ui.activeOrders = cryptodb.NewOrders(0)
-		ui.activeAssessment= cryptodb.NewAssessment(0)
+		ui.activeAssessment = cryptodb.NewAssessment(0)
 	} else {
 		ui.activePair = ui.Pairs[ui.activePlan.PairID-1]
 		ui.activeOrders, err = getOrders(ui.activePlan.ID)
 		if err != nil {
 			dialog.ShowError(err, mainWindow)
 		}
-        ui.activeAssessment, err = getAssessment(ui.activePlan.ID)
+		ui.activeAssessment, err = getAssessment(ui.activePlan.ID)
 		if err != nil {
 			dialog.ShowError(err, mainWindow)
 		}

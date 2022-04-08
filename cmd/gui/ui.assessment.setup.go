@@ -8,22 +8,23 @@ import (
 )
 
 type assessmentForm struct {
-    form *widget.Form
-    assessmentFormContainer *fyne.Container
+	form      *widget.Form
+	container *fyne.Container
+	window    fyne.Window
+
+	RiskSelect   *widget.Select
+	TimingSelect *widget.Select
 }
 
-func NewAssessmentForm(p cryptodb.Plan) *fyne.Container {
-    var af assessmentForm
+func NewAssessmentForm(p cryptodb.Plan) *assessmentForm {
+	var af assessmentForm
 
-    af.form = widget.NewForm()
+	af.form = widget.NewForm()
 
-	RiskAssessmentItem := af.makeRiskItem()
-	af.form.AppendItem(RiskAssessmentItem)
+	af.form.AppendItem(af.makeRiskItem())
+	af.form.AppendItem(af.makeTimingItem())
 
-	TimingAssessmentItem := af.makeTimingItem()
-	af.form.AppendItem(TimingAssessmentItem)
+	af.container = container.NewBorder(nil, af.makeToolBar(), nil, nil, af.form)
 
-	c := container.NewBorder(nil, af.makeToolBar(), nil, nil, af.form)
-
-	return c
+	return &af
 }

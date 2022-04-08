@@ -1,13 +1,12 @@
 package main
 
-import (
-	"fyne.io/fyne/v2/dialog"
-)
+func (af *assessmentForm) gatherAssessment() {
+    ui.activeAssessment.Risk = af.RiskSelect.Selected
+    ui.activeAssessment.Timing = af.TimingSelect.Selected
+}
 
 func (af *assessmentForm) saveAssessmentAction() {
-    var err error
-	ui.activeAssessment, err = saveAssessment(ui.activeAssessment)
-	if err != nil {
-		dialog.ShowError(err, mainWindow)
-	}
+    af.gatherAssessment()
+    saveAssessment(ui.activeAssessment)
+    af.window.Close()
 }

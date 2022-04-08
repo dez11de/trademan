@@ -13,7 +13,8 @@ import (
 )
 
 func getAssessmentHandler(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
-	id, err := strconv.Atoi(params.ByName("ID"))
+    log.Printf("Getting assessment %+v", params)
+	id, err := strconv.Atoi(params.ByName("PlanID"))
 	if err != nil || id == 0 {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
@@ -24,7 +25,7 @@ func getAssessmentHandler(w http.ResponseWriter, r *http.Request, params httprou
 	result := db.Where("plan_id = ?", id).First(&assessment)
 	if result.Error != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprint(w, result.Error)
+        fmt.Fprint(w, result.Error)
 		return
 	}
 	jsonResp, err := json.Marshal(assessment)

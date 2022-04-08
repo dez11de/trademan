@@ -13,7 +13,7 @@ import (
 )
 
 func (pf *planForm) gatherPlan() cryptodb.Plan {
-	// TODO: check for errors
+	// TODO: check for errors?
 	ui.activePlan.PairID = ui.activePair.ID
 	ui.activePlan.Direction.Scan(pf.directionItem.Widget.(*widget.RadioGroup).Selected)
 	ui.activePlan.Risk = decimal.RequireFromString(pf.riskItem.Widget.(*FloatEntry).Text)
@@ -53,6 +53,12 @@ func (pf *planForm) saveSetup() {
 	}
 
 	_, err = saveOrders(orders)
+	if err != nil {
+		dialog.ShowError(err, mainWindow)
+	}
+
+    ui.activeAssessment.PlanID = updatedPlan.ID
+    _, err = saveAssessment(ui.activeAssessment)
 	if err != nil {
 		dialog.ShowError(err, mainWindow)
 	}
@@ -110,8 +116,8 @@ func (pf *planForm) historyAction() {
 }
 
 func (pf *planForm) assessAction() {
-    assessmentForm := NewAssessmentForm(ui.activePlan)
-    assessmentFormWindow := a.NewWindow("Assessment")
-    assessmentFormWindow.SetContent(assessmentForm)
-    assessmentFormWindow.Show()
+    pf.assessmentForm = NewAssessmentForm(ui.activePlan)
+    pf.assessmentForm.window = a.NewWindow("Assessment")
+    pf.assessmentForm.window.SetContent(pf.assessmentForm.container)
+    pf.assessmentForm.window.Show()
 }

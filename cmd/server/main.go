@@ -97,7 +97,7 @@ func main() {
 	pingExchangeTicker := time.NewTicker(1 * time.Minute)
 	refreshWalletTicker := time.NewTicker(2 * time.Hour)
 	refreshPairsTicker := time.NewTicker(24 * time.Hour)
-	refreshFundingTicker := time.NewTicker(8 * time.Minute)
+	refreshFundingTicker := time.NewTicker(8 * time.Hour)
 	quit := make(chan struct{})
 
 	// TODO: what if it can't open the port?

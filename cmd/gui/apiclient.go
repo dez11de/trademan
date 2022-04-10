@@ -96,7 +96,7 @@ func getPlans() (plans []cryptodb.Plan, err error) {
 }
 
 func getPlan(id uint64) (plan cryptodb.Plan, err error) {
-	resp, err := http.Get(BaseURL + "plan/" +strconv.Itoa(int(id)))
+	resp, err := http.Get(BaseURL + "plan/" + strconv.Itoa(int(id)))
 	if err != nil {
 		return cryptodb.Plan{}, err
 	}
@@ -137,7 +137,6 @@ func savePlan(p cryptodb.Plan) (plan cryptodb.Plan, err error) {
 	err = json.Unmarshal(body, &plan)
 	return plan, err
 }
-
 
 func executePlan(id uint64) (plan cryptodb.Plan, err error) {
 	resp, err := http.Get(BaseURL + "execute/" + strconv.Itoa(int(id)))
@@ -202,7 +201,6 @@ func saveOrders(o []cryptodb.Order) (orders []cryptodb.Order, err error) {
 	return orders, err
 }
 
-
 func getLogs(PlanID uint64) (entries []cryptodb.Log, err error) {
 	resp, err := http.Get(BaseURL + "logs/" + strconv.Itoa(int(PlanID)))
 	if err != nil {
@@ -223,7 +221,7 @@ func getLogs(PlanID uint64) (entries []cryptodb.Log, err error) {
 	return entries, err
 }
 
-func getAssessment(PlanID uint64) (assessment cryptodb.Assessment , err error) {
+func getAssessment(PlanID uint64) (assessment cryptodb.Assessment, err error) {
 	resp, err := http.Get(BaseURL + "assessment/" + strconv.Itoa(int(PlanID)))
 	if err != nil {
 		return assessment, err
@@ -263,4 +261,24 @@ func saveAssessment(a cryptodb.Assessment) (assessment cryptodb.Assessment, err 
 
 	err = json.Unmarshal(body, &assessment)
 	return assessment, err
+}
+
+func getAssessmentOptions() (options map[string][]string, err error) {
+	resp, err := http.Get(BaseURL + "assessmentOptions")
+	if err != nil {
+		return options, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		errorMessage, _ := ioutil.ReadAll(resp.Body)
+		return options, errors.New(string(errorMessage))
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return options, err
+	}
+
+	err = json.Unmarshal(body, &options)
+	return options, err
 }

@@ -28,8 +28,10 @@ func HandleRequests(c RESTServerConfig) {
 	router.GET(APIv1Base+"assessment/:PlanID", getAssessmentHandler)
 	router.POST(APIv1Base+"assessment", saveAssessmentHandler)
 
+	router.GET(APIv1Base+"assessmentOptions", getAssessmentOptionsHandler)
+
 	router.GET(APIv1Base+"logs/:PlanID", getLogsHandler)
 
-	log.Printf("==========================[ API Server Ready ]==========================\n")
+	log.Println("==========================[ API Server Ready ]==========================")
 	log.Fatal(http.ListenAndServe(fmt.Sprintf("%s:%s", c.Host, c.Port), router))
 }

@@ -9,90 +9,90 @@ import (
 )
 
 func (af *assessmentForm) makeRiskItem() *widget.FormItem {
-	af.RiskSelect = widget.NewSelect([]string{"Too Low", "Good", "Too High"}, nil)
-	af.RiskSelect.SetSelected(ui.activeAssessment.Risk)
-	i := widget.NewFormItem("Risk", af.RiskSelect)
+	af.RiskSelectEntry = widget.NewSelectEntry(af.assessmentOptions["risk"])
+	af.RiskSelectEntry.SetText(ui.activeAssessment.Risk)
+	i := widget.NewFormItem("Risk", af.RiskSelectEntry)
 	i.HintText = fmt.Sprintf("Risk was: %s%%", ui.activePlan.Risk.StringFixed(2))
 
 	return i
 }
 
 func (af *assessmentForm) makeTimingItem() *widget.FormItem {
-	af.TimingSelect = widget.NewSelect([]string{"Early", "On-time", "Late"}, nil)
-	af.TimingSelect.SetSelected(ui.activeAssessment.Timing)
-	i := widget.NewFormItem("Timing", af.TimingSelect)
+	af.TimingSelectEntry = widget.NewSelectEntry(af.assessmentOptions["timing"])
+	af.TimingSelectEntry.SetText(ui.activeAssessment.Timing)
+	i := widget.NewFormItem("Timing", af.TimingSelectEntry)
 	i.HintText = " "
 
 	return i
 }
 
 func (af *assessmentForm) makeStopLossItem() *widget.FormItem {
-	StopLossSelect := widget.NewSelect([]string{"Too tight", "Good", "Too wide"}, nil)
-	StopLossSelect.SetSelected(ui.activeAssessment.StopLossPosition)
-	i := widget.NewFormItem("StopLoss", StopLossSelect)
+	af.StopLossSelectEntry = widget.NewSelectEntry(af.assessmentOptions["stop_loss"])
+	af.StopLossSelectEntry.SetText(ui.activeAssessment.StopLoss)
+	i := widget.NewFormItem("StopLoss", af.StopLossSelectEntry)
 	i.HintText = fmt.Sprintf("StopLoss was: %s %s", ui.activeOrders[cryptodb.MarketStopLoss].Price.StringFixed(ui.activePair.PriceScale), ui.activePair.QuoteCurrency)
 
 	return i
 }
 
 func (af *assessmentForm) makeEntryItem() *widget.FormItem {
-	EntrySelect := widget.NewSelect([]string{"Too tight", "Good", "Too wide"}, nil)
-	EntrySelect.SetSelected(ui.activeAssessment.EntryPosition)
-	i := widget.NewFormItem("Entry", EntrySelect)
+	af.EntrySelectEntry = widget.NewSelectEntry(af.assessmentOptions["entry"])
+	af.EntrySelectEntry.SetText(ui.activeAssessment.Entry)
+	i := widget.NewFormItem("Entry", af.EntrySelectEntry)
 	i.HintText = fmt.Sprintf("Entry was: %s %s", ui.activeOrders[cryptodb.Entry].Price.StringFixed(ui.activePair.PriceScale), ui.activePair.QuoteCurrency)
 
 	return i
 }
 
 func (af *assessmentForm) makeEmotionItem() *widget.FormItem {
-	EmotionSelect := widget.NewSelect([]string{"FOMO", "In control", "FOJI"}, nil)
-	EmotionSelect.SetSelected(ui.activeAssessment.Emotion)
-	i := widget.NewFormItem("Emotion", EmotionSelect)
+	af.EmotionSelectEntry = widget.NewSelectEntry(af.assessmentOptions["emotion"])
+	af.EmotionSelectEntry.SetText(ui.activeAssessment.Emotion)
+	i := widget.NewFormItem("Emotion", af.EmotionSelectEntry)
 	i.HintText = " "
 
 	return i
 }
 
 func (af *assessmentForm) makeFollowPlanItem() *widget.FormItem {
-	FolowPlanSelect := widget.NewSelect([]string{"No", "Neutral", "Yes"}, nil)
-	FolowPlanSelect.SetSelected(ui.activeAssessment.FollowPlan)
-	i := widget.NewFormItem("Follow plan", FolowPlanSelect)
+	af.FollowPlanSelectEntry = widget.NewSelectEntry(af.assessmentOptions["follow_plan"])
+	af.FollowPlanSelectEntry.SetText(ui.activeAssessment.FollowPlan)
+	i := widget.NewFormItem("Follow plan", af.FollowPlanSelectEntry)
 	i.HintText = " "
 
 	return i
 }
 
 func (af *assessmentForm) makeOrderManagementItem() *widget.FormItem {
-	OrderManagementSelect := widget.NewSelect([]string{"Bad", "Neutral", "Good"}, nil)
-	OrderManagementSelect.SetSelected(ui.activeAssessment.OrderManagement)
-	i := widget.NewFormItem("Order management", OrderManagementSelect)
+	af.OrderManagementSelectEntry = widget.NewSelectEntry(af.assessmentOptions["order_management"])
+	af.OrderManagementSelectEntry.SetText(ui.activeAssessment.OrderManagement)
+	i := widget.NewFormItem("Order management", af.OrderManagementSelectEntry)
 	i.HintText = " "
 
 	return i
 }
 
 func (af *assessmentForm) makeMoveStopLossInProfitItem() *widget.FormItem {
-	MoveStopLossInProfitSelect := widget.NewSelect([]string{"Early", "On-time", "Late"}, nil)
-	MoveStopLossInProfitSelect.SetSelected(ui.activeAssessment.MoveStopLossInProfit)
-	i := widget.NewFormItem("StopLoss in Profit", MoveStopLossInProfitSelect)
+	af.MoveStopLossInProfitSelectEntry = widget.NewSelectEntry(af.assessmentOptions["move_stop_loss_in_profit"])
+	af.MoveStopLossInProfitSelectEntry.SetText(ui.activeAssessment.MoveStopLossInProfit)
+	i := widget.NewFormItem("StopLoss in Profit", af.MoveStopLossInProfitSelectEntry)
 	i.HintText = " "
 
 	return i
 }
 
 func (af *assessmentForm) makeTakeProfitStrategyItem() *widget.FormItem {
-	TakeProfitStrategySelect := widget.NewSelect([]string{"Bad", "Neutral", "Good"}, nil)
-	TakeProfitStrategySelect.SetSelected(ui.activeAssessment.TakeProfitStrategy)
-	i := widget.NewFormItem("Take Profit Strategy", TakeProfitStrategySelect)
+	af.TakeProfitStrategySelectEntry = widget.NewSelectEntry(af.assessmentOptions["take_profit_strategy"])
+	af.TakeProfitStrategySelectEntry.SetText(ui.activeAssessment.TakeProfitStrategy)
+	i := widget.NewFormItem("Take Profit Strategy", af.TakeProfitStrategySelectEntry)
 	i.HintText = fmt.Sprintf("Strategy was: %s", ui.activePlan.TakeProfitStrategy.String())
 
 	return i
 }
 
 func (af *assessmentForm) makeTakeProfitCountItem() *widget.FormItem {
-	TakeProfitCountSelect := widget.NewSelect([]string{"Too few", "Good", "Too many"}, nil)
-	TakeProfitCountSelect.SetSelected(ui.activeAssessment.TakeProfitCount)
-	i := widget.NewFormItem("Take Profit Strategy", TakeProfitCountSelect)
+	af.TakeProfitCountSelectEntry = widget.NewSelectEntry(af.assessmentOptions["take_profit_count"])
+	af.TakeProfitCountSelectEntry.SetText(ui.activeAssessment.TakeProfitCount)
+	i := widget.NewFormItem("Take Profit Count", af.TakeProfitCountSelectEntry)
 	i.HintText = "too diffucult to calculate"
 
 	return i

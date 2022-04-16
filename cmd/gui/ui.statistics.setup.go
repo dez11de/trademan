@@ -17,7 +17,7 @@ func (pf *planForm) makeStatContainer() *fyne.Container {
 	evolvedRewardRiskRatioValue := widget.NewLabel(fmt.Sprintf("%.1f", 0.0))
 
 	currentPnLLabel := widget.NewLabel("PnL: ")
-	currentPnLValue := widget.NewLabel(fmt.Sprintf("%s%%", ui.activePlan.Profit.StringFixed(1))) // TODO: should be relative to entrySize.
+	currentPnLValue := widget.NewLabel(fmt.Sprintf("%s%%", act.plan.Profit.StringFixed(1))) // TODO: should be relative to entrySize.
 	// TODO: figure out what this even means, see CryptoCred.
 	breakEvenLabel := widget.NewLabel("B/E: ")
 	breakEvenValue := widget.NewLabel(fmt.Sprintf("%.0f%%", 0.0))

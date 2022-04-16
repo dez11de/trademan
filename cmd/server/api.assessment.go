@@ -75,7 +75,7 @@ func saveAssessmentHandler(w http.ResponseWriter, r *http.Request, _ httprouter.
 }
 
 func getAssessmentOptionsHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	colNames := []string{"risk", "timing", "stop_loss_position", "entry_position", "emotion", "follow_plan", "order_management", "move_stop_loss_in_profit", "take_profit_strategy", "take_profit_count"}
+	colNames := []string{"risk", "timing", "stop_loss", "entry", "emotion", "follow_plan", "order_management", "move_stop_loss_in_profit", "take_profit_strategy", "take_profit_count"}
 	var colOptions []string
 	options := make(map[string][]string)
 

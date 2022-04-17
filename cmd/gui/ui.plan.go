@@ -8,14 +8,15 @@ import (
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
 	"github.com/bart613/decimal"
 	"github.com/dez11de/cryptodb"
 )
 
 type planForm struct {
-	form          *widget.Form
-	formContainer *fyne.Container
+	leftForm  *widget.Form
+	rightForm *widget.Form
 
 	pairItem            *widget.FormItem
 	directionItem       *widget.FormItem
@@ -30,34 +31,35 @@ type planForm struct {
 
 var pf planForm
 
-func makePlanForm() *fyne.Container {
-	pf.form = widget.NewForm()
+func NewPlanContainer() *fyne.Container {
+	pf.leftForm = widget.NewForm()
+	pf.rightForm = widget.NewForm()
+	bottomForm := widget.NewForm()
 
-	pf.form.AppendItem(pf.makePairItem())
-	pf.form.AppendItem(pf.makeDirectionItem())
-	pf.form.AppendItem(pf.makeRiskItem())
-	pf.form.AppendItem(pf.makeStopLossItem())
-	pf.form.AppendItem(pf.makeEntryItem())
-	pf.form.AppendItem(pf.makeTakeProfitStrategyItem())
+	pf.leftForm.AppendItem(pf.makePairItem())
+	pf.leftForm.AppendItem(pf.makeDirectionItem())
+	pf.leftForm.AppendItem(pf.makeRiskItem())
+	pf.leftForm.AppendItem(pf.makeTradingViewItem())
+	pf.leftForm.AppendItem(pf.makeTakeProfitStrategyItem())
+	// pf.leftForm.Refresh()
+	pf.rightForm.AppendItem(pf.makeStopLossItem())
+	pf.rightForm.AppendItem(pf.makeEntryItem())
 
 	for i := 0; i <= cryptodb.MaxTakeProfits-1; i++ {
-		pf.form.AppendItem(pf.makeTakeProfitItem(i, act.pair.PriceScale, act.pair.Price.Tick))
+		pf.rightForm.AppendItem(pf.makeTakeProfitItem(i, act.pair.PriceScale, act.pair.Price.Tick))
 	}
-
-	pf.form.AppendItem(pf.makeTradingViewItem())
-	pf.form.AppendItem(pf.makeNotesItem())
-
 	pf.setQuoteCurrency()
 	pf.setPriceScale()
+	// pf.rightForm.Refresh()
 
-	toolBar := pf.makeToolBar()
+	bottomForm.AppendItem(pf.makeNotesItem())
 
-	act.statisticsContainer = pf.makeStatContainer()
+	totalContainer := container.NewVBox(pf.makeStatContainer(),
+		container.New(layout.NewGridLayoutWithColumns(2), pf.leftForm, pf.rightForm),
+        bottomForm,
+		pf.makeToolBar())
 
-	pf.form.Refresh()
-	pf.formContainer = container.NewBorder(act.statisticsContainer, toolBar, nil, nil, pf.form)
-
-	return pf.formContainer
+	return totalContainer
 }
 
 func (pf *planForm) gatherPlan() {
@@ -89,7 +91,7 @@ func (pf *planForm) saveSetup() {
 	var err error
 	act.plan, err = savePlan(act.plan)
 	if err != nil {
-		dialog.ShowError(err, mainWindow)
+		dialog.ShowError(err, application.mw)
 	}
 
 	pf.gatherOrders()
@@ -101,28 +103,30 @@ func (pf *planForm) saveSetup() {
 
 	_, err = saveOrders(act.orders)
 	if err != nil {
-		dialog.ShowError(err, mainWindow)
+		dialog.ShowError(err, application.mw)
 	}
 
-	act.assessment.PlanID = act.plan.ID
-	_, err = saveAssessment(act.assessment)
+	act.review.PlanID = act.plan.ID
+	_, err = saveReview(act.review)
 	if err != nil {
-		dialog.ShowError(err, mainWindow)
+		dialog.ShowError(err, application.mw)
 	}
-
-	// pf.FillForm(updatedPlan)
 }
 
 func (pf *planForm) okAction() {
 	pf.saveSetup()
 
 	tm.plans, _ = getPlans()
-	act.List.Refresh()
+	application.planList.Refresh()
+	// makePlanForm()
 }
 
 func (pf *planForm) undoAction() {
-	// reloadedPlan, _ := getPlan(act.plan.ID)
-	// pf.FillForm(reloadedPlan)
+	act.plan, _ = getPlan(act.plan.ID)
+	act.orders, _ = getOrders(act.plan.ID)
+	// makePlanForm()
+	// pf.leftForm.Refresh()
+	// pf.rightForm.Refresh()
 }
 
 func (pf *planForm) executeAction() {
@@ -130,41 +134,40 @@ func (pf *planForm) executeAction() {
 	executePlan(act.plan.ID)
 
 	tm.plans, _ = getPlans()
-	act.List.Refresh()
+	application.planList.Refresh()
 }
 
 func (pf *planForm) historyAction() {
-	entries, err := getLogs(act.plan.ID)
+	logEntries, err := getLogs(act.plan.ID)
 	if err != nil {
-		dialog.ShowError(err, mainWindow)
+		dialog.ShowError(err, application.mw)
 	}
 
 	logFile := widget.NewRichText()
-	for _, e := range entries {
-		seg := &widget.TextSegment{
+	for _, entry := range logEntries {
+		logSegment := &widget.TextSegment{
 			Style: widget.RichTextStyle{},
-			Text:  fmt.Sprintf("%s  %s", e.CreatedAt.Format("2006-01-02 15:04:05"), e.Text),
+			Text:  fmt.Sprintf("%s - %s", entry.CreatedAt.Format("2006-01-02 15:04:05"), entry.Text),
 		}
-		logFile.Segments = append(logFile.Segments, seg)
+		logFile.Segments = append(logFile.Segments, logSegment)
 	}
 
-	logWindow := widget.NewPopUp(logFile, mainWindow.Canvas())
+	logWindow := widget.NewPopUp(container.NewVScroll(logFile), application.mw.Canvas())
 	logAnimation := canvas.NewSizeAnimation(
-		fyne.NewSize(mainWindow.Canvas().Size().Width-2*50.0, 0),
-		fyne.NewSize(mainWindow.Canvas().Size().Width-2*50.0, mainWindow.Canvas().Size().Height-1*50.0),
-		50*time.Millisecond,
+		fyne.NewSize(application.mw.Canvas().Size().Width-2*50.0, 0),
+		fyne.NewSize(application.mw.Canvas().Size().Width-2*50.0, application.mw.Canvas().Size().Height-1*50.0),
+		150*time.Millisecond,
 		func(s fyne.Size) {
 			logWindow.Resize(s)
 		})
 
-	logWindow.Resize(fyne.NewSize(0, 0))
 	logWindow.ShowAtPosition(fyne.Position{X: 50, Y: 0})
 	logAnimation.Start()
 }
 
-func (pf *planForm) assessAction() {
-	container := makeAssessmentForm()
-	af.window = a.NewWindow("Assessment")
-	af.window.SetContent(container)
-	af.window.Show()
+func (pf *planForm) reviewAction() {
+	reviewContainer := makeReviewForm()
+	af.parentWindow = application.fa.NewWindow("Review")
+	af.parentWindow.SetContent(reviewContainer)
+	af.parentWindow.Show()
 }

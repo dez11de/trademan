@@ -66,6 +66,6 @@ func (db *Database) CreateTables() {
 	db.Migrator().CreateTable(Log{})
 	db.Migrator().DropTable(Balance{})
 	db.Migrator().CreateTable(Balance{})
-	db.Migrator().DropTable(Assessment{})
-	db.Migrator().CreateTable(Assessment{})
+	db.Migrator().DropTable(Review{})
+	db.Migrator().CreateTable(Review{})
 }

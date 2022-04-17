@@ -221,50 +221,50 @@ func getLogs(PlanID uint64) (entries []cryptodb.Log, err error) {
 	return entries, err
 }
 
-func getAssessment(PlanID uint64) (assessment cryptodb.Assessment, err error) {
-	resp, err := http.Get(BaseURL + "assessment/" + strconv.Itoa(int(PlanID)))
+func getReview(PlanID uint64) (review cryptodb.Review, err error) {
+	resp, err := http.Get(BaseURL + "review/" + strconv.Itoa(int(PlanID)))
 	if err != nil {
-		return assessment, err
+		return review, err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		errorMessage, _ := ioutil.ReadAll(resp.Body)
-		return assessment, errors.New(string(errorMessage))
+		return review, errors.New(string(errorMessage))
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return assessment, err
+		return review, err
 	}
 
-	err = json.Unmarshal(body, &assessment)
-	return assessment, err
+	err = json.Unmarshal(body, &review)
+	return review, err
 }
 
-func saveAssessment(a cryptodb.Assessment) (assessment cryptodb.Assessment, err error) {
-	assessmentJSON, _ := json.Marshal(a)
-	resp, err := http.Post(BaseURL+"assessment", "application/json", bytes.NewBuffer(assessmentJSON))
+func saveReview(r cryptodb.Review) (review cryptodb.Review, err error) {
+	reviewJSON, _ := json.Marshal(r)
+	resp, err := http.Post(BaseURL+"review", "application/json", bytes.NewBuffer(reviewJSON))
 	if err != nil {
-		return a, err
+		return r, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		errorMessage, _ := ioutil.ReadAll(resp.Body)
-		return a, errors.New(string(errorMessage))
+		return r, errors.New(string(errorMessage))
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return a, err
+		return r, err
 	}
 
-	err = json.Unmarshal(body, &assessment)
-	return assessment, err
+	err = json.Unmarshal(body, &review)
+	return review, err
 }
 
-func getAssessmentOptions() (options map[string][]string, err error) {
-	resp, err := http.Get(BaseURL + "assessmentOptions")
+func getReviewOptions() (options map[string][]string, err error) {
+	resp, err := http.Get(BaseURL + "reviewOptions")
 	if err != nil {
 		return options, err
 	}

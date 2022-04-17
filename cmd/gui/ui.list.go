@@ -14,7 +14,7 @@ import (
 
 func MakePlanListSplit() *container.Split {
 	var err error
-	act.List = widget.NewList(
+	application.planList = widget.NewList(
 		func() int {
 			return len(tm.plans)
 		},
@@ -44,12 +44,12 @@ func MakePlanListSplit() *container.Split {
 	planListSplit := container.NewHSplit(ListAndButtons, container.NewMax(selectPlanLabel))
 	planListSplit.SetOffset(0.22)
 
-	act.List.OnSelected = func(id widget.ListItemID) {
+	application.planList.OnSelected = func(id widget.ListItemID) {
 		act.plan, _ = getPlan(tm.plans[id].ID)
 		act.pair = tm.pairs[int64(act.plan.PairID-1)]
 		act.orders, _ = getOrders(act.plan.ID)
-		act.assessment, _ = getAssessment(act.plan.ID)
-		planListSplit.Trailing = makePlanForm()
+		act.review, _ = getReview(act.plan.ID)
+		planListSplit.Trailing = NewPlanContainer()
 
 		planListSplit.Refresh()
 	}
@@ -59,9 +59,9 @@ func MakePlanListSplit() *container.Split {
 		act.pair = cryptodb.Pair{}
 		act.pair.QuoteCurrency = " . . . "
 		act.orders = cryptodb.NewOrders(0)
-		act.assessment = cryptodb.Assessment{}
+		act.review = cryptodb.NewReview(0)
 
-		planListSplit.Trailing = makePlanForm()
+		planListSplit.Trailing = NewPlanContainer()
 
 		planListSplit.Refresh()
 	})
@@ -69,13 +69,13 @@ func MakePlanListSplit() *container.Split {
 	refreshListAction := widget.NewToolbarAction(theme.ViewRefreshIcon(), func() {
 		tm.plans, err = getPlans()
 		if err != nil {
-			dialog.ShowError(err, mainWindow)
+			dialog.ShowError(err, application.mw)
 		}
-		act.List.Refresh()
+		application.planList.Refresh()
 	})
 
 	actionBar := widget.NewToolbar(widget.NewToolbarSpacer(), refreshListAction, addPlanAction)
-	ListAndButtons = container.NewBorder(nil, actionBar, nil, nil, act.List)
+	ListAndButtons = container.NewBorder(nil, actionBar, nil, nil, application.planList)
 	planListSplit.Leading = ListAndButtons
 	planListSplit.Refresh()
 

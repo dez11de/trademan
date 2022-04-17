@@ -12,28 +12,29 @@ import (
 
 var trademanCfg trademanConfig
 var BaseURL string
-var mainWindow fyne.Window
-var a fyne.App
 
 type tradeMan struct {
-	pairs             []cryptodb.Pair
-    plans             []cryptodb.Plan
-	assessmentOptions map[string][]string
+	pairs         []cryptodb.Pair
+	plans         []cryptodb.Plan
+	reviewOptions map[string][]string
 }
 
 var tm tradeMan
 
 type active struct {
-	pair       cryptodb.Pair
-	plan       cryptodb.Plan
-	orders     []cryptodb.Order
-	assessment cryptodb.Assessment
-
-	List                *widget.List
-	statisticsContainer *fyne.Container
+	pair   cryptodb.Pair
+	plan   cryptodb.Plan
+	orders []cryptodb.Order
+	review cryptodb.Review
 }
 
 var act active
+
+var application struct {
+	fa       fyne.App
+	mw       fyne.Window
+	planList *widget.List
+}
 
 func main() {
 	err := readConfig(&trademanCfg)
@@ -41,10 +42,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error reading configuration: %s", err)
 	}
-
-	a = app.NewWithID("nl.ganzeinfach.apps.bbtrader")
-
-	a.Settings().SetTheme(&myTheme{})
 	dbName, err := getDBName()
 	if err != nil {
 		log.Panicf("unable to connect to server: %s", err)
@@ -52,30 +49,32 @@ func main() {
 
 	tm.pairs, err = getPairs()
 	if err != nil {
-        log.Panicf("unable to load pairs: %s", err)
+		log.Panicf("unable to load pairs: %s", err)
 	}
 	tm.plans, err = getPlans()
 	if err != nil {
-        log.Panicf("unable to load plans: %s", err)
+		log.Panicf("unable to load plans: %s", err)
 	}
 
-	tm.assessmentOptions, err = getAssessmentOptions()
+	tm.reviewOptions, err = getReviewOptions()
 	if err != nil {
-        log.Panicf("unable to load assessment options: %s", err)
+		log.Panicf("unable to load review options: %s", err)
 	}
 
-	mainWindow = a.NewWindow(fmt.Sprintf("Trade Manager (%s)", dbName))
+	application.fa = app.NewWithID("nl.ganzeinfach.apps.bbtrader")
+	application.fa.Settings().SetTheme(&myTheme{})
+	application.mw = application.fa.NewWindow(fmt.Sprintf("Trade Manager (%s)", dbName))
 	mainContent := makeMainContent()
-	width := a.Preferences().FloatWithFallback("width", 850)
-	height := a.Preferences().FloatWithFallback("height", 1000)
-	mainWindow.Resize(fyne.Size{Width: float32(width), Height: float32(height)})
-	mainWindow.SetCloseIntercept(func() {
-		a.Preferences().SetFloat("width", float64(mainWindow.Canvas().Size().Width))
-		a.Preferences().SetFloat("height", float64(mainWindow.Canvas().Size().Height))
-		mainWindow.Close()
+	width := application.fa.Preferences().FloatWithFallback("main-width", 815.0)
+	height := application.fa.Preferences().FloatWithFallback("main-height", 610.0)
+	application.mw.Resize(fyne.Size{Width: float32(width), Height: float32(height)})
+	application.mw.SetCloseIntercept(func() {
+		application.fa.Preferences().SetFloat("main-width", float64(application.mw.Canvas().Size().Width))
+		application.fa.Preferences().SetFloat("main-height", float64(application.mw.Canvas().Size().Height))
+		application.mw.Close()
 	})
 
-	mainWindow.SetContent(mainContent)
-	mainWindow.CenterOnScreen() // TODO: also remember position
-	mainWindow.ShowAndRun()
+	application.mw.SetContent(mainContent)
+	application.mw.CenterOnScreen() // TODO: also remember position
+	application.mw.ShowAndRun()
 }

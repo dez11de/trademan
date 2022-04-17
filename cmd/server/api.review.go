@@ -11,7 +11,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func getAssessmentHandler(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
+func getReviewHandler(w http.ResponseWriter, r *http.Request, params httprouter.Params) {
 	id, err := strconv.Atoi(params.ByName("PlanID"))
 	if err != nil || id == 0 {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -19,14 +19,14 @@ func getAssessmentHandler(w http.ResponseWriter, r *http.Request, params httprou
 		return
 	}
 
-	var assessment cryptodb.Assessment
-	result := db.Where("plan_id = ?", id).First(&assessment)
+	var Review cryptodb.Review
+	result := db.Where("plan_id = ?", id).First(&Review)
 	if result.Error != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprint(w, result.Error)
 		return
 	}
-	jsonResp, err := json.Marshal(assessment)
+	jsonResp, err := json.Marshal(Review)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
@@ -36,9 +36,9 @@ func getAssessmentHandler(w http.ResponseWriter, r *http.Request, params httprou
 	w.Write(jsonResp)
 }
 
-func saveAssessmentHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	var assessment cryptodb.Assessment
-	err := json.NewDecoder(r.Body).Decode(&assessment)
+func saveReviewHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	var review cryptodb.Review
+	err := json.NewDecoder(r.Body).Decode(&review)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprint(w, err)
@@ -46,10 +46,10 @@ func saveAssessmentHandler(w http.ResponseWriter, r *http.Request, _ httprouter.
 	}
 
 	var result *gorm.DB
-	if assessment.ID == 0 {
-		result = db.Create(&assessment)
+	if review.ID == 0 {
+		result = db.Create(&review)
 	} else {
-		result = db.Save(&assessment)
+		result = db.Save(&review)
 	}
 	if result.Error != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -57,14 +57,14 @@ func saveAssessmentHandler(w http.ResponseWriter, r *http.Request, _ httprouter.
 		return
 	}
 
-	if assessment.Status == "Completed" {
+	if review.Status == "Completed" {
 		var plan cryptodb.Plan
-		db.Where("id = ?", assessment.PlanID).First(&plan)
+		db.Where("id = ?", review.PlanID).First(&plan)
 		plan.Status = cryptodb.Logged
 		db.Save(&plan)
 	}
 
-	jsonResp, err := json.Marshal(assessment)
+	jsonResp, err := json.Marshal(review)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(err.Error()))
@@ -74,13 +74,13 @@ func saveAssessmentHandler(w http.ResponseWriter, r *http.Request, _ httprouter.
 	w.Write(jsonResp)
 }
 
-func getAssessmentOptionsHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+func getReviewOptionsHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	colNames := []string{"risk", "timing", "stop_loss", "entry", "emotion", "follow_plan", "order_management", "move_stop_loss_in_profit", "take_profit_strategy", "take_profit_count"}
 	var colOptions []string
 	options := make(map[string][]string)
 
 	for _, colName := range colNames {
-		result := db.Table("assessments").Distinct(colName).Find(&colOptions)
+		result := db.Table("reviews").Distinct(colName).Find(&colOptions)
 		if result.Error != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprint(w, result.Error)

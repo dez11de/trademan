@@ -8,6 +8,7 @@ import (
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	xwidget "fyne.io/x/fyne/widget"
@@ -22,8 +23,9 @@ func (pf *planForm) setQuoteCurrency() {
 	pf.entryItem.Text = fmt.Sprintf("Entry (%s)", act.pair.QuoteCurrency)
 
 	for i, takeProfitItem := range pf.takeProfitItems {
-		takeProfitItem.Text = fmt.Sprintf("Take Profit #%d (%s)", i+1, act.pair.QuoteCurrency)
+		takeProfitItem.Text = fmt.Sprintf("TP #%d (%s)", i+1, act.pair.QuoteCurrency)
 	}
+	pf.rightForm.Refresh()
 }
 
 func (pf *planForm) setPriceScale() {
@@ -89,6 +91,29 @@ func (ui *active) fzfPairs(s string) (possiblePairs []string) {
 	return possiblePairs
 }
 
+func (pf *planForm) makeStatContainer() *fyne.Container {
+	// TODO: make distinction between start RRR and evolved RRR
+	startRewardRiskRatioLabel := widget.NewLabel("Start RRR: ")
+	startRewardRiskRatioValue := widget.NewLabel(fmt.Sprintf("%.1f", 0.0))
+	evolvedRewardRiskRatioLabel := widget.NewLabel("Current RRR: ")
+	evolvedRewardRiskRatioValue := widget.NewLabel(fmt.Sprintf("%.1f", 0.0))
+
+	currentPnLLabel := widget.NewLabel("PnL: ")
+	currentPnLValue := widget.NewLabel(fmt.Sprintf("%s%%", act.plan.Profit.StringFixed(1))) // TODO: should be relative to entrySize.
+	// TODO: figure out what this even means, see CryptoCred.
+	breakEvenLabel := widget.NewLabel("B/E: ")
+	breakEvenValue := widget.NewLabel(fmt.Sprintf("%.0f%%", 0.0))
+	container := container.NewHBox(
+		layout.NewSpacer(),
+		startRewardRiskRatioLabel, startRewardRiskRatioValue,
+		evolvedRewardRiskRatioLabel, evolvedRewardRiskRatioValue,
+		currentPnLLabel, currentPnLValue,
+		breakEvenLabel, breakEvenValue,
+		layout.NewSpacer())
+
+	return container
+}
+
 func (pf *planForm) makePairItem() *widget.FormItem {
 	pairEntry := xwidget.NewCompletionEntry([]string{})
 	pairEntry.SetPlaceHolder("Select pair from list")
@@ -124,7 +149,7 @@ func (pf *planForm) makePairItem() *widget.FormItem {
 				pf.setPriceScale()
 
 				pf.directionItem.Widget.(*widget.RadioGroup).Enable()
-				pf.form.Refresh()
+				pf.leftForm.Refresh()
 				break
 			}
 		}
@@ -148,7 +173,7 @@ func (pf *planForm) makeDirectionItem() *widget.FormItem {
 	directionRadio.OnChanged =
 		func(s string) {
 			pf.riskItem.Widget.(*FloatEntry).Enable()
-			pf.form.Refresh()
+			pf.leftForm.Refresh()
 		}
 
 	return pf.directionItem
@@ -171,15 +196,38 @@ func (pf *planForm) makeRiskItem() *widget.FormItem {
 		tempRisk, err := decimal.NewFromString(s)
 		if err != nil || tempRisk.GreaterThan(decimal.NewFromFloat(5.0)) || tempRisk.LessThan(decimal.NewFromFloat(0.5)) {
 			pf.riskItem.HintText = "enter a 0.5 > risk < 5.0"
-			pf.stopLossItem.Widget.(*FloatEntry).Disable()
+			pf.TPStratItem.Widget.(*widget.Select).Disable()
 		} else {
 			pf.riskItem.HintText = " "
-			pf.stopLossItem.Widget.(*FloatEntry).Enable()
+			pf.TPStratItem.Widget.(*widget.Select).Enable()
 		}
-		pf.form.Refresh()
+		pf.leftForm.Refresh()
 	}
 
 	return pf.riskItem
+}
+
+func (pf *planForm) makeTakeProfitStrategyItem() *widget.FormItem {
+	tPStratSelect := widget.NewSelect(nil, nil)
+	tPStratSelect.Options = cryptodb.TakeProfitStrategyStrings()
+	tPStratSelect.Disable()
+
+	if act.plan.ID != 0 {
+		tPStratSelect.SetSelected(act.plan.TakeProfitStrategy.String())
+		if act.orders[3].Status <= cryptodb.PartiallyFilled {
+			tPStratSelect.Enable()
+		}
+	}
+
+	tPStratSelect.OnChanged = func(s string) {
+		pf.stopLossItem.Widget.(*FloatEntry).Enable()
+		pf.rightForm.Refresh()
+	}
+
+	pf.TPStratItem = widget.NewFormItem("TP Strategy", tPStratSelect)
+	pf.TPStratItem.HintText = " "
+
+	return pf.TPStratItem
 }
 
 func (pf *planForm) makeStopLossItem() *widget.FormItem {
@@ -204,7 +252,7 @@ func (pf *planForm) makeStopLossItem() *widget.FormItem {
 			pf.entryItem.Widget.(*FloatEntry).Enable()
 			pf.stopLossItem.HintText = " "
 		}
-		pf.form.Refresh()
+		pf.rightForm.Refresh()
 	}
 
 	return pf.stopLossItem
@@ -213,7 +261,7 @@ func (pf *planForm) makeStopLossItem() *widget.FormItem {
 func (pf *planForm) makeEntryItem() *widget.FormItem {
 	entryFloatEntry := NewFloatEntry(act.pair.PriceScale, act.pair.Price.Tick)
 	entryFloatEntry.Disable()
-	pf.entryItem = widget.NewFormItem("Entry (%s)", entryFloatEntry)
+	pf.entryItem = widget.NewFormItem(fmt.Sprintf("Entry (%s)", act.pair.QuoteCurrency), entryFloatEntry)
 	pf.entryItem.HintText = " "
 
 	if act.plan.ID != 0 {
@@ -237,44 +285,21 @@ func (pf *planForm) makeEntryItem() *widget.FormItem {
 			pf.TPStratItem.Widget.(*widget.Select).Disable()
 		case pf.directionItem.Widget.(*widget.RadioGroup).Selected == cryptodb.Short.String() && marketStopLossPrice.LessThanOrEqual(entryPrice):
 			pf.entryItem.HintText = "must be lower than stoploss"
-			pf.TPStratItem.Widget.(*widget.Select).Disable()
+			pf.takeProfitItems[0].Widget.(*FloatEntry).Disable()
 		default:
-			pf.TPStratItem.Widget.(*widget.Select).Enable()
+			pf.takeProfitItems[0].Widget.(*FloatEntry).Enable()
 			pf.entryItem.HintText = " "
 		}
-		pf.form.Refresh()
+		pf.rightForm.Refresh()
 	}
 
 	return pf.entryItem
 }
 
-func (pf *planForm) makeTakeProfitStrategyItem() *widget.FormItem {
-	tPStratSelect := widget.NewSelect(nil, nil)
-	tPStratSelect.Options = cryptodb.TakeProfitStrategyStrings()
-	tPStratSelect.Disable()
-
-	if act.plan.ID != 0 {
-		tPStratSelect.SetSelected(act.plan.TakeProfitStrategy.String())
-		if act.orders[3].Status <= cryptodb.PartiallyFilled {
-			tPStratSelect.Enable()
-		}
-	}
-
-	tPStratSelect.OnChanged = func(s string) {
-		pf.takeProfitItems[0].Widget.(*FloatEntry).Enable()
-		pf.form.Refresh()
-	}
-
-	pf.TPStratItem = widget.NewFormItem("TP Strategy", tPStratSelect)
-	pf.TPStratItem.HintText = " "
-
-	return pf.TPStratItem
-}
-
 func (pf *planForm) makeTakeProfitItem(n int, decimals int32, tick decimal.Decimal) *widget.FormItem {
 	takeProfitFloatEntry := NewFloatEntry(decimals, tick)
 	takeProfitFloatEntry.Disable()
-	pf.takeProfitItems[n] = widget.NewFormItem("Take profit #", takeProfitFloatEntry)
+	pf.takeProfitItems[n] = widget.NewFormItem(fmt.Sprintf("TP #%d (%s)", n+1, act.pair.QuoteCurrency), takeProfitFloatEntry)
 	pf.takeProfitItems[n].HintText = " "
 
 	if act.plan.ID != 0 {
@@ -326,7 +351,7 @@ func (pf *planForm) makeTakeProfitItem(n int, decimals int32, tick decimal.Decim
 			}
 		}
 
-		pf.form.Refresh()
+		pf.rightForm.Refresh()
 	}
 
 	return pf.takeProfitItems[n]
@@ -341,13 +366,12 @@ func (pf *planForm) makeTradingViewItem() *widget.FormItem {
 
 	if act.plan.TradingViewPlan != "" {
 		tradingViewLink.URL, _ = url.Parse(act.plan.TradingViewPlan)
-		tradingViewLink.SetText(act.plan.TradingViewPlan)
-		saveButton.Hide()
+		tradingViewLink.SetText("Open")
 		editEntry.Hide()
-		if act.plan.Status <= cryptodb.Logged {
-			createButton.Show()
-			tradingViewLink.Show()
-		}
+		saveButton.Hide()
+	} else {
+		tradingViewLink.Hide()
+		createButton.Hide()
 	}
 
 	saveButton.OnTapped = func() {
@@ -356,7 +380,7 @@ func (pf *planForm) makeTradingViewItem() *widget.FormItem {
 			saveButton.Hide()
 			editEntry.Hide()
 			createButton.Show()
-			tradingViewLink.SetText(tvurl.String())
+			tradingViewLink.SetText("Open")
 			tradingViewLink.Show()
 			tradingViewLink.URL = tvurl
 		}
@@ -386,23 +410,22 @@ func (pf *planForm) makeNotesItem() *widget.FormItem {
 	if act.plan.Notes != "" {
 		notesMultiLineEntry.SetText(act.plan.Notes)
 	}
-	if act.plan.Status <= cryptodb.Logged {
+	if act.plan.Status == cryptodb.Logged {
 		notesMultiLineEntry.Disable()
 	}
 	notesMultiLineEntry.Wrapping = fyne.TextWrapWord
 
 	pf.notesItem = widget.NewFormItem("Notes", notesMultiLineEntry)
-	pf.notesItem.HintText = " "
 
 	return pf.notesItem
 }
 
 func (pf *planForm) makeToolBar() *widget.Toolbar {
-	assessAction := widget.NewToolbarAction(theme.ListIcon(), pf.assessAction)
+	reviewAction := widget.NewToolbarAction(theme.ListIcon(), pf.reviewAction)
 	historyAction := widget.NewToolbarAction(theme.HistoryIcon(), pf.historyAction)
 	executeAction := widget.NewToolbarAction(theme.UploadIcon(), pf.executeAction)
 	undoAction := widget.NewToolbarAction(theme.ContentUndoIcon(), pf.undoAction)
 	okAction := widget.NewToolbarAction(theme.ConfirmIcon(), pf.okAction)
 
-	return widget.NewToolbar(widget.NewToolbarSpacer(), assessAction, historyAction, executeAction, undoAction, okAction)
+	return widget.NewToolbar(widget.NewToolbarSpacer(), reviewAction, historyAction, executeAction, undoAction, okAction)
 }

@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-type Assessment struct {
+type Review struct {
 	ID                   uint64
 	PlanID               uint64
 	Status               string `gorm:"type:varchar(25)"`
@@ -23,8 +23,8 @@ type Assessment struct {
 	UpdatedAt            time.Time `gorm:"index"`
 }
 
-func NewAssessment(planID uint64) Assessment {
-	return Assessment{
+func NewReview(planID uint64) Review {
+	return Review{
 		PlanID: planID,
 	}
 }

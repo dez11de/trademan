@@ -69,7 +69,7 @@ func MakePlanListSplit() *container.Split {
 	refreshListAction := widget.NewToolbarAction(theme.ViewRefreshIcon(), func() {
 		tm.plans, err = getPlans()
 		if err != nil {
-			dialog.ShowError(err, application.mw)
+			dialog.ShowError(err, application.mainWindow)
 		}
 		application.planList.Refresh()
 	})

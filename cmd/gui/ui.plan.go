@@ -91,7 +91,7 @@ func (pf *planForm) saveSetup() {
 	var err error
 	act.plan, err = savePlan(act.plan)
 	if err != nil {
-		dialog.ShowError(err, application.mw)
+		dialog.ShowError(err, application.mainWindow)
 	}
 
 	pf.gatherOrders()
@@ -103,13 +103,13 @@ func (pf *planForm) saveSetup() {
 
 	_, err = saveOrders(act.orders)
 	if err != nil {
-		dialog.ShowError(err, application.mw)
+		dialog.ShowError(err, application.mainWindow)
 	}
 
 	act.review.PlanID = act.plan.ID
 	_, err = saveReview(act.review)
 	if err != nil {
-		dialog.ShowError(err, application.mw)
+		dialog.ShowError(err, application.mainWindow)
 	}
 }
 
@@ -140,7 +140,7 @@ func (pf *planForm) executeAction() {
 func (pf *planForm) historyAction() {
 	logEntries, err := getLogs(act.plan.ID)
 	if err != nil {
-		dialog.ShowError(err, application.mw)
+		dialog.ShowError(err, application.mainWindow)
 	}
 
 	logFile := widget.NewRichText()
@@ -152,10 +152,10 @@ func (pf *planForm) historyAction() {
 		logFile.Segments = append(logFile.Segments, logSegment)
 	}
 
-	logWindow := widget.NewPopUp(container.NewVScroll(logFile), application.mw.Canvas())
+	logWindow := widget.NewPopUp(container.NewVScroll(logFile), application.mainWindow.Canvas())
 	logAnimation := canvas.NewSizeAnimation(
-		fyne.NewSize(application.mw.Canvas().Size().Width-2*50.0, 0),
-		fyne.NewSize(application.mw.Canvas().Size().Width-2*50.0, application.mw.Canvas().Size().Height-1*50.0),
+		fyne.NewSize(application.mainWindow.Canvas().Size().Width-2*50.0, 0),
+		fyne.NewSize(application.mainWindow.Canvas().Size().Width-2*50.0, application.mainWindow.Canvas().Size().Height-1*50.0),
 		150*time.Millisecond,
 		func(s fyne.Size) {
 			logWindow.Resize(s)

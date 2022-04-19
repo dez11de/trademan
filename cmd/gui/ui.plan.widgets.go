@@ -302,8 +302,18 @@ func (pf *planForm) makeTakeProfitItem(n int, decimals int32, tick decimal.Decim
 	pf.takeProfitItems[n] = widget.NewFormItem(fmt.Sprintf("TP #%d (%s)", n+1, act.pair.QuoteCurrency), takeProfitFloatEntry)
 	pf.takeProfitItems[n].HintText = " "
 
-	if act.plan.ID != 0 {
+	if act.plan.ID != 0 && act.orders[3+n].Price.GreaterThan(decimal.Zero) {
+		var prevPrice decimal.Decimal
+		entryPrice := decimal.RequireFromString(pf.entryItem.Widget.(*FloatEntry).Text)
+		if n == 0 {
+			prevPrice = entryPrice
+		} else {
+			prevPrice = decimal.RequireFromString(pf.takeProfitItems[n-1].Widget.(*FloatEntry).Text)
+		}
 		takeProfitFloatEntry.SetText(act.orders[3+n].Price.StringFixed(decimals))
+			pf.takeProfitItems[n].HintText = fmt.Sprintf("%.1f%% / %.1f%%",
+				act.orders[3+n].Price.Sub(prevPrice).Abs().Div(prevPrice).Mul(decimal.NewFromInt(100)).InexactFloat64(),
+				act.orders[3+n].Price.Sub(entryPrice).Abs().Div(entryPrice).Mul(decimal.NewFromInt(100)).InexactFloat64())
 		if act.orders[3+n].Status <= cryptodb.PartiallyFilled {
 			takeProfitFloatEntry.Enable()
 		}

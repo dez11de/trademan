@@ -56,6 +56,7 @@ func (e *Exchange) SendOrder(plan cryptodb.Plan, pair cryptodb.Pair, entry, orde
 		endPoint = "/private/linear/order/replace"
 		params["order_id"] = entry.SystemOrderID
 		params["p_r_price"] = entry.Price.InexactFloat64()
+		params["stop_px"] = order.TriggerPrice.InexactFloat64()
 
 	case order.SystemOrderID != "":
 		endPoint = "/private/linear/stop-order/replace"

@@ -31,9 +31,9 @@ type active struct {
 var act active
 
 var application struct {
-	fa       fyne.App
-	mw       fyne.Window
-	planList *widget.List
+	fa         fyne.App
+	mainWindow fyne.Window
+	planList   *widget.List
 }
 
 func main() {
@@ -63,18 +63,18 @@ func main() {
 
 	application.fa = app.NewWithID("nl.ganzeinfach.apps.bbtrader")
 	application.fa.Settings().SetTheme(&myTheme{})
-	application.mw = application.fa.NewWindow(fmt.Sprintf("Trade Manager (%s)", dbName))
+	application.mainWindow = application.fa.NewWindow(fmt.Sprintf("Trade Manager (%s)", dbName))
 	mainContent := makeMainContent()
 	width := application.fa.Preferences().FloatWithFallback("main-width", 815.0)
 	height := application.fa.Preferences().FloatWithFallback("main-height", 610.0)
-	application.mw.Resize(fyne.Size{Width: float32(width), Height: float32(height)})
-	application.mw.SetCloseIntercept(func() {
-		application.fa.Preferences().SetFloat("main-width", float64(application.mw.Canvas().Size().Width))
-		application.fa.Preferences().SetFloat("main-height", float64(application.mw.Canvas().Size().Height))
-		application.mw.Close()
+	application.mainWindow.Resize(fyne.Size{Width: float32(width), Height: float32(height)})
+	application.mainWindow.SetCloseIntercept(func() {
+		application.fa.Preferences().SetFloat("main-width", float64(application.mainWindow.Canvas().Size().Width))
+		application.fa.Preferences().SetFloat("main-height", float64(application.mainWindow.Canvas().Size().Height))
+		application.mainWindow.Close()
 	})
 
-	application.mw.SetContent(mainContent)
-	application.mw.CenterOnScreen() // TODO: also remember position
-	application.mw.ShowAndRun()
+	application.mainWindow.SetContent(mainContent)
+	application.mainWindow.CenterOnScreen() // TODO: also remember position
+	application.mainWindow.ShowAndRun()
 }

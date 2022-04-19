@@ -1,9 +1,21 @@
 NeoVIM
     Configure go run, reformat before save, import before save
+    Start using hotkey for references
+
+Golang
+    Investigate workspaces
 
 Refactor!
     Might not be the most fun, but is always worth it
-    Is it actually worth it to keep everything in seperate modules?
+
+Remember window size and position
+    For main window, review and confirmations
+
+Reports
+    Results per week, month, quarter, year
+    Reviews
+    Confirmations
+    Graphs
 
 Investigate 
     Evolving RRR

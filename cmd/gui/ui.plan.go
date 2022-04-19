@@ -41,19 +41,16 @@ func NewPlanContainer() *fyne.Container {
 	pf.leftForm.AppendItem(pf.makeRiskItem())
 	pf.leftForm.AppendItem(pf.makeTradingViewItem())
 	pf.leftForm.AppendItem(pf.makeTakeProfitStrategyItem())
-	// pf.leftForm.Refresh()
 	pf.rightForm.AppendItem(pf.makeStopLossItem())
 	pf.rightForm.AppendItem(pf.makeEntryItem())
 
 	for i := 0; i <= cryptodb.MaxTakeProfits-1; i++ {
-		pf.rightForm.AppendItem(pf.makeTakeProfitItem(i, act.pair.PriceScale, act.pair.Price.Tick))
+		pf.rightForm.AppendItem(pf.makeTakeProfitItem(i, tm.pair.PriceScale, tm.pair.Price.Tick))
 	}
 	pf.setQuoteCurrency()
 	pf.setPriceScale()
-	// pf.rightForm.Refresh()
 
 	bottomForm.AppendItem(pf.makeNotesItem())
-
 	totalContainer := container.NewVBox(pf.makeStatContainer(),
 		container.New(layout.NewGridLayoutWithColumns(2), pf.leftForm, pf.rightForm),
         bottomForm,
@@ -63,25 +60,25 @@ func NewPlanContainer() *fyne.Container {
 }
 
 func (pf *planForm) gatherPlan() {
-	act.plan.PairID = act.pair.ID
-	act.plan.Direction.Scan(pf.directionItem.Widget.(*widget.RadioGroup).Selected)
-	act.plan.Risk = decimal.RequireFromString(pf.riskItem.Widget.(*FloatEntry).Text)
-	act.plan.TakeProfitStrategy.Scan(pf.TPStratItem.Widget.(*widget.Select).Selected)
+	tm.plan.PairID = tm.pair.ID
+	tm.plan.Direction.Scan(pf.directionItem.Widget.(*widget.RadioGroup).Selected)
+	tm.plan.Risk = decimal.RequireFromString(pf.riskItem.Widget.(*FloatEntry).Text)
+	tm.plan.TakeProfitStrategy.Scan(pf.TPStratItem.Widget.(*widget.Select).Selected)
 	if pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[0].(*fyne.Container).Objects[1].(*widget.Hyperlink).URL != nil {
-		act.plan.TradingViewPlan = pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[0].(*fyne.Container).Objects[1].(*widget.Hyperlink).URL.String()
+		tm.plan.TradingViewPlan = pf.tradingViewPlanItem.Widget.(*fyne.Container).Objects[0].(*fyne.Container).Objects[1].(*widget.Hyperlink).URL.String()
 	}
-	act.plan.Notes = pf.notesItem.Widget.(*widget.Entry).Text
+	tm.plan.Notes = pf.notesItem.Widget.(*widget.Entry).Text
 }
 
 func (pf *planForm) gatherOrders() {
-	act.orders[cryptodb.MarketStopLoss].Price = decimal.RequireFromString(pf.stopLossItem.Widget.(*FloatEntry).Text)
-	act.orders[cryptodb.Entry].Price = decimal.RequireFromString(pf.entryItem.Widget.(*FloatEntry).Text)
+	tm.orders[cryptodb.MarketStopLoss].Price = decimal.RequireFromString(pf.stopLossItem.Widget.(*FloatEntry).Text)
+	tm.orders[cryptodb.Entry].Price = decimal.RequireFromString(pf.entryItem.Widget.(*FloatEntry).Text)
 	for i := 0; i < cryptodb.MaxTakeProfits; i++ {
 		tempPrice, err := decimal.NewFromString(pf.takeProfitItems[i].Widget.(*FloatEntry).Text)
 		if err == nil {
-			act.orders[3+i].Price = tempPrice
+			tm.orders[3+i].Price = tempPrice
 		} else {
-			act.orders[3+i].Price = decimal.Zero
+			tm.orders[3+i].Price = decimal.Zero
 		}
 	}
 }
@@ -89,27 +86,27 @@ func (pf *planForm) gatherOrders() {
 func (pf *planForm) saveSetup() {
 	pf.gatherPlan()
 	var err error
-	act.plan, err = savePlan(act.plan)
+	tm.plan, err = savePlan(tm.plan)
 	if err != nil {
-		dialog.ShowError(err, application.mainWindow)
+		dialog.ShowError(err, ui.mainWindow)
 	}
 
 	pf.gatherOrders()
-	if act.orders[cryptodb.MarketStopLoss].PlanID == 0 {
-		for i := range act.orders {
-			act.orders[i].PlanID = act.plan.ID
+	if tm.orders[cryptodb.MarketStopLoss].PlanID == 0 {
+		for i := range tm.orders {
+			tm.orders[i].PlanID = tm.plan.ID
 		}
 	}
 
-	_, err = saveOrders(act.orders)
+	_, err = saveOrders(tm.orders)
 	if err != nil {
-		dialog.ShowError(err, application.mainWindow)
+		dialog.ShowError(err, ui.mainWindow)
 	}
 
-	act.review.PlanID = act.plan.ID
-	_, err = saveReview(act.review)
+	tm.review.PlanID = tm.plan.ID
+	_, err = saveReview(tm.review)
 	if err != nil {
-		dialog.ShowError(err, application.mainWindow)
+		dialog.ShowError(err, ui.mainWindow)
 	}
 }
 
@@ -117,13 +114,13 @@ func (pf *planForm) okAction() {
 	pf.saveSetup()
 
 	tm.plans, _ = getPlans()
-	application.planList.Refresh()
+	ui.planList.Refresh()
 	// makePlanForm()
 }
 
 func (pf *planForm) undoAction() {
-	act.plan, _ = getPlan(act.plan.ID)
-	act.orders, _ = getOrders(act.plan.ID)
+	tm.plan, _ = getPlan(tm.plan.ID)
+	tm.orders, _ = getOrders(tm.plan.ID)
 	// makePlanForm()
 	// pf.leftForm.Refresh()
 	// pf.rightForm.Refresh()
@@ -131,16 +128,16 @@ func (pf *planForm) undoAction() {
 
 func (pf *planForm) executeAction() {
 	pf.saveSetup()
-	executePlan(act.plan.ID)
+	executePlan(tm.plan.ID)
 
 	tm.plans, _ = getPlans()
-	application.planList.Refresh()
+	ui.planList.Refresh()
 }
 
 func (pf *planForm) historyAction() {
-	logEntries, err := getLogs(act.plan.ID)
+	logEntries, err := getLogs(tm.plan.ID)
 	if err != nil {
-		dialog.ShowError(err, application.mainWindow)
+		dialog.ShowError(err, ui.mainWindow)
 	}
 
 	logFile := widget.NewRichText()
@@ -152,10 +149,10 @@ func (pf *planForm) historyAction() {
 		logFile.Segments = append(logFile.Segments, logSegment)
 	}
 
-	logWindow := widget.NewPopUp(container.NewVScroll(logFile), application.mainWindow.Canvas())
+	logWindow := widget.NewPopUp(container.NewVScroll(logFile), ui.mainWindow.Canvas())
 	logAnimation := canvas.NewSizeAnimation(
-		fyne.NewSize(application.mainWindow.Canvas().Size().Width-2*50.0, 0),
-		fyne.NewSize(application.mainWindow.Canvas().Size().Width-2*50.0, application.mainWindow.Canvas().Size().Height-1*50.0),
+		fyne.NewSize(ui.mainWindow.Canvas().Size().Width-2*50.0, 0),
+		fyne.NewSize(ui.mainWindow.Canvas().Size().Width-2*50.0, ui.mainWindow.Canvas().Size().Height-1*50.0),
 		150*time.Millisecond,
 		func(s fyne.Size) {
 			logWindow.Resize(s)
@@ -167,7 +164,7 @@ func (pf *planForm) historyAction() {
 
 func (pf *planForm) reviewAction() {
 	reviewContainer := makeReviewForm()
-	af.parentWindow = application.fa.NewWindow("Review")
+	af.parentWindow = ui.app.NewWindow("Review")
 	af.parentWindow.SetContent(reviewContainer)
 	af.parentWindow.Show()
 }

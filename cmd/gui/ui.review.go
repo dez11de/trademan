@@ -51,25 +51,25 @@ func makeReviewForm() *fyne.Container {
 }
 
 func (af *reviewForm) gatherReview() {
-	act.review.Risk = af.RiskSelectEntry.Text
-	act.review.Timing = af.TimingSelectEntry.Text
-	act.review.StopLoss = af.StopLossSelectEntry.Text
-	act.review.Entry = af.EntrySelectEntry.Text
-	act.review.Emotion = af.EmotionSelectEntry.Text
-	act.review.FollowPlan = af.FollowPlanSelectEntry.Text
-	act.review.OrderManagement = af.OrderManagementSelectEntry.Text
-	act.review.TakeProfitStrategy = af.TakeProfitStrategySelectEntry.Text
-	act.review.TakeProfitCount = af.TakeProfitCountSelectEntry.Text
-	act.review.Notes = af.NotesEntry.Text
+	tm.review.Risk = af.RiskSelectEntry.Text
+	tm.review.Timing = af.TimingSelectEntry.Text
+	tm.review.StopLoss = af.StopLossSelectEntry.Text
+	tm.review.Entry = af.EntrySelectEntry.Text
+	tm.review.Emotion = af.EmotionSelectEntry.Text
+	tm.review.FollowPlan = af.FollowPlanSelectEntry.Text
+	tm.review.OrderManagement = af.OrderManagementSelectEntry.Text
+	tm.review.TakeProfitStrategy = af.TakeProfitStrategySelectEntry.Text
+	tm.review.TakeProfitCount = af.TakeProfitCountSelectEntry.Text
+	tm.review.Notes = af.NotesEntry.Text
 }
 
 func (af *reviewForm) saveReviewAction() {
 	af.gatherReview()
-	saveReview(act.review)
+	saveReview(tm.review)
 	af.parentWindow.Close()
 }
 
 func (af *reviewForm) loadReviewAction() {
-	act.review, _ = getReview(act.plan.ID)
+	tm.review, _ = getReview(tm.plan.ID)
 	af.parentWindow.Close()
 }

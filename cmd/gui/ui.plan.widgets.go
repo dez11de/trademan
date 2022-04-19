@@ -18,29 +18,29 @@ import (
 )
 
 func (pf *planForm) setQuoteCurrency() {
-	pf.stopLossItem.Text = fmt.Sprintf("Stop Loss (%s)", act.pair.QuoteCurrency)
+	pf.stopLossItem.Text = fmt.Sprintf("Stop Loss (%s)", tm.pair.QuoteCurrency)
 
-	pf.entryItem.Text = fmt.Sprintf("Entry (%s)", act.pair.QuoteCurrency)
+	pf.entryItem.Text = fmt.Sprintf("Entry (%s)", tm.pair.QuoteCurrency)
 
 	for i, takeProfitItem := range pf.takeProfitItems {
-		takeProfitItem.Text = fmt.Sprintf("TP #%d (%s)", i+1, act.pair.QuoteCurrency)
+		takeProfitItem.Text = fmt.Sprintf("TP #%d (%s)", i+1, tm.pair.QuoteCurrency)
 	}
 	pf.rightForm.Refresh()
 }
 
 func (pf *planForm) setPriceScale() {
-	pf.stopLossItem.Widget.(*FloatEntry).decimals = act.pair.PriceScale
-	pf.stopLossItem.Widget.(*FloatEntry).tick = act.pair.Price.Tick
-	pf.stopLossItem.Widget.(*FloatEntry).SetPlaceHolder(decimal.Zero.StringFixed(act.pair.PriceScale))
+	pf.stopLossItem.Widget.(*FloatEntry).decimals = tm.pair.PriceScale
+	pf.stopLossItem.Widget.(*FloatEntry).tick = tm.pair.Price.Tick
+	pf.stopLossItem.Widget.(*FloatEntry).SetPlaceHolder(decimal.Zero.StringFixed(tm.pair.PriceScale))
 
-	pf.entryItem.Widget.(*FloatEntry).decimals = act.pair.PriceScale
-	pf.entryItem.Widget.(*FloatEntry).tick = act.pair.Price.Tick
-	pf.entryItem.Widget.(*FloatEntry).SetPlaceHolder(decimal.Zero.StringFixed(act.pair.PriceScale))
+	pf.entryItem.Widget.(*FloatEntry).decimals = tm.pair.PriceScale
+	pf.entryItem.Widget.(*FloatEntry).tick = tm.pair.Price.Tick
+	pf.entryItem.Widget.(*FloatEntry).SetPlaceHolder(decimal.Zero.StringFixed(tm.pair.PriceScale))
 
 	for _, takeProfitItem := range pf.takeProfitItems {
-		takeProfitItem.Widget.(*FloatEntry).decimals = act.pair.PriceScale
-		takeProfitItem.Widget.(*FloatEntry).tick = act.pair.Price.Tick
-		takeProfitItem.Widget.(*FloatEntry).SetPlaceHolder(decimal.Zero.StringFixed(act.pair.PriceScale))
+		takeProfitItem.Widget.(*FloatEntry).decimals = tm.pair.PriceScale
+		takeProfitItem.Widget.(*FloatEntry).tick = tm.pair.Price.Tick
+		takeProfitItem.Widget.(*FloatEntry).SetPlaceHolder(decimal.Zero.StringFixed(tm.pair.PriceScale))
 	}
 }
 
@@ -72,7 +72,7 @@ func (fe *FloatEntry) FocusLost() {
 	fe.Entry.FocusLost()
 }
 
-func (ui *active) fzfPairs(s string) (possiblePairs []string) {
+func (ui *planForm) fzfPairs(s string) (possiblePairs []string) {
 	var pairNames []string
 	for _, p := range tm.pairs {
 		pairNames = append(pairNames, p.Name)
@@ -99,7 +99,7 @@ func (pf *planForm) makeStatContainer() *fyne.Container {
 	evolvedRewardRiskRatioValue := widget.NewLabel(fmt.Sprintf("%.1f", 0.0))
 
 	currentPnLLabel := widget.NewLabel("PnL: ")
-	currentPnLValue := widget.NewLabel(fmt.Sprintf("%s%%", act.plan.Profit.StringFixed(1))) // TODO: should be relative to entrySize.
+	currentPnLValue := widget.NewLabel(fmt.Sprintf("%s%%", tm.plan.Profit.StringFixed(1))) // TODO: should be relative to entrySize.
 	// TODO: figure out what this even means, see CryptoCred.
 	breakEvenLabel := widget.NewLabel("B/E: ")
 	breakEvenValue := widget.NewLabel(fmt.Sprintf("%.0f%%", 0.0))
@@ -117,8 +117,8 @@ func (pf *planForm) makeStatContainer() *fyne.Container {
 func (pf *planForm) makePairItem() *widget.FormItem {
 	pairEntry := xwidget.NewCompletionEntry([]string{})
 	pairEntry.SetPlaceHolder("Select pair from list")
-	if act.plan.PairID != 0 {
-		pairEntry.SetText(tm.pairs[act.plan.PairID-1].Name)
+	if tm.plan.PairID != 0 {
+		pairEntry.SetText(tm.pairs[tm.plan.PairID-1].Name)
 		pairEntry.Disable()
 	}
 
@@ -128,7 +128,7 @@ func (pf *planForm) makePairItem() *widget.FormItem {
 	pairEntry.OnChanged = func(s string) {
 		pairEntry.SetText(strings.ToUpper(s))
 		if len(s) >= 2 {
-			possiblePairs := act.fzfPairs(strings.ToUpper(s))
+			possiblePairs := pf.fzfPairs(strings.ToUpper(s))
 			if len(possiblePairs) == 1 {
 				pairEntry.SetText(possiblePairs[0])
 				pairEntry.HideCompletion()
@@ -143,8 +143,8 @@ func (pf *planForm) makePairItem() *widget.FormItem {
 		s = strings.ToUpper(s)
 		for _, p := range tm.pairs {
 			if s == p.Name {
-				act.pair = p
-				act.plan.PairID = act.pair.ID
+				tm.pair = p
+				tm.plan.PairID = tm.pair.ID
 				pf.setQuoteCurrency()
 				pf.setPriceScale()
 
@@ -166,8 +166,8 @@ func (pf *planForm) makeDirectionItem() *widget.FormItem {
 	pf.directionItem = widget.NewFormItem("Direction", directionRadio)
 	pf.directionItem.HintText = " "
 
-	if act.plan.ID != 0 {
-		directionRadio.SetSelected(act.plan.Direction.String())
+	if tm.plan.ID != 0 {
+		directionRadio.SetSelected(tm.plan.Direction.String())
 	}
 
 	directionRadio.OnChanged =
@@ -186,9 +186,9 @@ func (pf *planForm) makeRiskItem() *widget.FormItem {
 	pf.riskItem = widget.NewFormItem("Risk (%)", riskEntry)
 	pf.riskItem.HintText = " "
 
-	if act.plan.ID != 0 {
-		riskEntry.SetText(act.plan.Risk.StringFixed(1))
-		if act.plan.Status <= cryptodb.PartiallyFilled {
+	if tm.plan.ID != 0 {
+		riskEntry.SetText(tm.plan.Risk.StringFixed(1))
+		if tm.plan.Status <= cryptodb.PartiallyFilled {
 			riskEntry.Enable()
 		}
 	}
@@ -212,9 +212,9 @@ func (pf *planForm) makeTakeProfitStrategyItem() *widget.FormItem {
 	tPStratSelect.Options = cryptodb.TakeProfitStrategyStrings()
 	tPStratSelect.Disable()
 
-	if act.plan.ID != 0 {
-		tPStratSelect.SetSelected(act.plan.TakeProfitStrategy.String())
-		if act.orders[3].Status <= cryptodb.PartiallyFilled {
+	if tm.plan.ID != 0 {
+		tPStratSelect.SetSelected(tm.plan.TakeProfitStrategy.String())
+		if tm.orders[3].Status <= cryptodb.PartiallyFilled {
 			tPStratSelect.Enable()
 		}
 	}
@@ -231,14 +231,14 @@ func (pf *planForm) makeTakeProfitStrategyItem() *widget.FormItem {
 }
 
 func (pf *planForm) makeStopLossItem() *widget.FormItem {
-	StopLossFloatEntry := NewFloatEntry(act.pair.PriceScale, act.pair.Price.Tick)
+	StopLossFloatEntry := NewFloatEntry(tm.pair.PriceScale, tm.pair.Price.Tick)
 	StopLossFloatEntry.Disable()
-	pf.stopLossItem = widget.NewFormItem(fmt.Sprintf("Stop Loss (%s)", act.pair.QuoteCurrency), StopLossFloatEntry)
+	pf.stopLossItem = widget.NewFormItem(fmt.Sprintf("Stop Loss (%s)", tm.pair.QuoteCurrency), StopLossFloatEntry)
 	pf.stopLossItem.HintText = " "
 
-	if act.plan.ID != 0 {
-		StopLossFloatEntry.SetText(act.orders[cryptodb.MarketStopLoss].Price.StringFixed(act.pair.PriceScale))
-		if act.orders[cryptodb.MarketStopLoss].Status <= cryptodb.PartiallyFilled {
+	if tm.plan.ID != 0 {
+		StopLossFloatEntry.SetText(tm.orders[cryptodb.MarketStopLoss].Price.StringFixed(tm.pair.PriceScale))
+		if tm.orders[cryptodb.MarketStopLoss].Status <= cryptodb.PartiallyFilled {
 			StopLossFloatEntry.Enable()
 		}
 	}
@@ -247,7 +247,7 @@ func (pf *planForm) makeStopLossItem() *widget.FormItem {
 		_, err := decimal.NewFromString(s)
 		if err != nil {
 			pf.entryItem.Widget.(*FloatEntry).Disable()
-			pf.stopLossItem.HintText = fmt.Sprintf("Enter a valid price in %s", act.pair.QuoteCurrency)
+			pf.stopLossItem.HintText = fmt.Sprintf("Enter a valid price in %s", tm.pair.QuoteCurrency)
 		} else {
 			pf.entryItem.Widget.(*FloatEntry).Enable()
 			pf.stopLossItem.HintText = " "
@@ -259,14 +259,14 @@ func (pf *planForm) makeStopLossItem() *widget.FormItem {
 }
 
 func (pf *planForm) makeEntryItem() *widget.FormItem {
-	entryFloatEntry := NewFloatEntry(act.pair.PriceScale, act.pair.Price.Tick)
+	entryFloatEntry := NewFloatEntry(tm.pair.PriceScale, tm.pair.Price.Tick)
 	entryFloatEntry.Disable()
-	pf.entryItem = widget.NewFormItem(fmt.Sprintf("Entry (%s)", act.pair.QuoteCurrency), entryFloatEntry)
+	pf.entryItem = widget.NewFormItem(fmt.Sprintf("Entry (%s)", tm.pair.QuoteCurrency), entryFloatEntry)
 	pf.entryItem.HintText = " "
 
-	if act.plan.ID != 0 {
-		entryFloatEntry.SetText(act.orders[cryptodb.Entry].Price.StringFixed(act.pair.PriceScale))
-		if act.orders[cryptodb.Entry].Status <= cryptodb.PartiallyFilled {
+	if tm.plan.ID != 0 {
+		entryFloatEntry.SetText(tm.orders[cryptodb.Entry].Price.StringFixed(tm.pair.PriceScale))
+		if tm.orders[cryptodb.Entry].Status <= cryptodb.PartiallyFilled {
 			entryFloatEntry.Enable()
 		}
 	}
@@ -277,7 +277,7 @@ func (pf *planForm) makeEntryItem() *widget.FormItem {
 		switch {
 		case err != nil:
 			pf.TPStratItem.Widget.(*fyne.Container).Objects[0].(*widget.Select).Disable()
-			pf.entryItem.HintText = fmt.Sprintf("enter a valid price in %s", act.pair.QuoteCurrency)
+			pf.entryItem.HintText = fmt.Sprintf("enter a valid price in %s", tm.pair.QuoteCurrency)
 		case entryPrice.IsZero():
 			pf.entryItem.HintText = " "
 		case pf.directionItem.Widget.(*widget.RadioGroup).Selected == cryptodb.Long.String() && marketStopLossPrice.GreaterThanOrEqual(entryPrice):
@@ -299,10 +299,10 @@ func (pf *planForm) makeEntryItem() *widget.FormItem {
 func (pf *planForm) makeTakeProfitItem(n int, decimals int32, tick decimal.Decimal) *widget.FormItem {
 	takeProfitFloatEntry := NewFloatEntry(decimals, tick)
 	takeProfitFloatEntry.Disable()
-	pf.takeProfitItems[n] = widget.NewFormItem(fmt.Sprintf("TP #%d (%s)", n+1, act.pair.QuoteCurrency), takeProfitFloatEntry)
+	pf.takeProfitItems[n] = widget.NewFormItem(fmt.Sprintf("TP #%d (%s)", n+1, tm.pair.QuoteCurrency), takeProfitFloatEntry)
 	pf.takeProfitItems[n].HintText = " "
 
-	if act.plan.ID != 0 && act.orders[3+n].Price.GreaterThan(decimal.Zero) {
+	if tm.plan.ID != 0 && tm.orders[3+n].Price.GreaterThan(decimal.Zero) {
 		var prevPrice decimal.Decimal
 		entryPrice := decimal.RequireFromString(pf.entryItem.Widget.(*FloatEntry).Text)
 		if n == 0 {
@@ -310,11 +310,11 @@ func (pf *planForm) makeTakeProfitItem(n int, decimals int32, tick decimal.Decim
 		} else {
 			prevPrice = decimal.RequireFromString(pf.takeProfitItems[n-1].Widget.(*FloatEntry).Text)
 		}
-		takeProfitFloatEntry.SetText(act.orders[3+n].Price.StringFixed(decimals))
+		takeProfitFloatEntry.SetText(tm.orders[3+n].Price.StringFixed(decimals))
 			pf.takeProfitItems[n].HintText = fmt.Sprintf("%.1f%% / %.1f%%",
-				act.orders[3+n].Price.Sub(prevPrice).Abs().Div(prevPrice).Mul(decimal.NewFromInt(100)).InexactFloat64(),
-				act.orders[3+n].Price.Sub(entryPrice).Abs().Div(entryPrice).Mul(decimal.NewFromInt(100)).InexactFloat64())
-		if act.orders[3+n].Status <= cryptodb.PartiallyFilled {
+				tm.orders[3+n].Price.Sub(prevPrice).Abs().Div(prevPrice).Mul(decimal.NewFromInt(100)).InexactFloat64(),
+				tm.orders[3+n].Price.Sub(entryPrice).Abs().Div(entryPrice).Mul(decimal.NewFromInt(100)).InexactFloat64())
+		if tm.orders[3+n].Status <= cryptodb.PartiallyFilled {
 			takeProfitFloatEntry.Enable()
 		}
 	}
@@ -333,7 +333,7 @@ func (pf *planForm) makeTakeProfitItem(n int, decimals int32, tick decimal.Decim
 		takeProfitPrice, err := decimal.NewFromString(s)
 		switch {
 		case err != nil:
-			pf.takeProfitItems[n].HintText = fmt.Sprintf("enter a valid price in %s", act.pair.QuoteCurrency)
+			pf.takeProfitItems[n].HintText = fmt.Sprintf("enter a valid price in %s", tm.pair.QuoteCurrency)
 			if n != cryptodb.MaxTakeProfits-1 {
 				pf.takeProfitItems[n+1].Widget.(*FloatEntry).Disable()
 			}
@@ -374,8 +374,8 @@ func (pf *planForm) makeTradingViewItem() *widget.FormItem {
 	tradingViewLink := widget.NewHyperlink("", nil)
 	createButton := widget.NewButtonWithIcon("", theme.DocumentCreateIcon(), nil)
 
-	if act.plan.TradingViewPlan != "" {
-		tradingViewLink.URL, _ = url.Parse(act.plan.TradingViewPlan)
+	if tm.plan.TradingViewPlan != "" {
+		tradingViewLink.URL, _ = url.Parse(tm.plan.TradingViewPlan)
 		tradingViewLink.SetText("Open")
 		editEntry.Hide()
 		saveButton.Hide()
@@ -417,10 +417,10 @@ func (pf *planForm) makeTradingViewItem() *widget.FormItem {
 func (pf *planForm) makeNotesItem() *widget.FormItem {
 	notesMultiLineEntry := widget.NewMultiLineEntry()
 	notesMultiLineEntry.SetPlaceHolder("Enter notes...")
-	if act.plan.Notes != "" {
-		notesMultiLineEntry.SetText(act.plan.Notes)
+	if tm.plan.Notes != "" {
+		notesMultiLineEntry.SetText(tm.plan.Notes)
 	}
-	if act.plan.Status == cryptodb.Logged {
+	if tm.plan.Status == cryptodb.Logged {
 		notesMultiLineEntry.Disable()
 	}
 	notesMultiLineEntry.Wrapping = fyne.TextWrapWord

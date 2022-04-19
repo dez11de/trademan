@@ -17,21 +17,17 @@ type tradeMan struct {
 	pairs         []cryptodb.Pair
 	plans         []cryptodb.Plan
 	reviewOptions map[string][]string
-}
 
-var tm tradeMan
-
-type active struct {
 	pair   cryptodb.Pair
 	plan   cryptodb.Plan
 	orders []cryptodb.Order
 	review cryptodb.Review
 }
 
-var act active
+var tm tradeMan
 
-var application struct {
-	fa         fyne.App
+var ui struct {
+	app         fyne.App
 	mainWindow fyne.Window
 	planList   *widget.List
 }
@@ -61,20 +57,20 @@ func main() {
 		log.Panicf("unable to load review options: %s", err)
 	}
 
-	application.fa = app.NewWithID("nl.ganzeinfach.apps.bbtrader")
-	application.fa.Settings().SetTheme(&myTheme{})
-	application.mainWindow = application.fa.NewWindow(fmt.Sprintf("Trade Manager (%s)", dbName))
+	ui.app = app.NewWithID("nl.ganzeinfach.apps.bbtrader")
+	ui.app.Settings().SetTheme(&myTheme{})
+	ui.mainWindow = ui.app.NewWindow(fmt.Sprintf("Trade Manager (%s)", dbName))
 	mainContent := makeMainContent()
-	width := application.fa.Preferences().FloatWithFallback("main-width", 815.0)
-	height := application.fa.Preferences().FloatWithFallback("main-height", 610.0)
-	application.mainWindow.Resize(fyne.Size{Width: float32(width), Height: float32(height)})
-	application.mainWindow.SetCloseIntercept(func() {
-		application.fa.Preferences().SetFloat("main-width", float64(application.mainWindow.Canvas().Size().Width))
-		application.fa.Preferences().SetFloat("main-height", float64(application.mainWindow.Canvas().Size().Height))
-		application.mainWindow.Close()
+	width := ui.app.Preferences().FloatWithFallback("main-width", 815.0)
+	height := ui.app.Preferences().FloatWithFallback("main-height", 610.0)
+	ui.mainWindow.Resize(fyne.Size{Width: float32(width), Height: float32(height)})
+	ui.mainWindow.SetCloseIntercept(func() {
+		ui.app.Preferences().SetFloat("main-width", float64(ui.mainWindow.Canvas().Size().Width))
+		ui.app.Preferences().SetFloat("main-height", float64(ui.mainWindow.Canvas().Size().Height))
+		ui.mainWindow.Close()
 	})
 
-	application.mainWindow.SetContent(mainContent)
-	application.mainWindow.CenterOnScreen() // TODO: also remember position
-	application.mainWindow.ShowAndRun()
+	ui.mainWindow.SetContent(mainContent)
+	ui.mainWindow.CenterOnScreen() // TODO: also remember position
+	ui.mainWindow.ShowAndRun()
 }

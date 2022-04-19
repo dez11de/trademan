@@ -14,7 +14,7 @@ import (
 
 func MakePlanListSplit() *container.Split {
 	var err error
-	application.planList = widget.NewList(
+	ui.planList = widget.NewList(
 		func() int {
 			return len(tm.plans)
 		},
@@ -38,28 +38,26 @@ func MakePlanListSplit() *container.Split {
 			o.(*fyne.Container).Objects[1].(*fyne.Container).Objects[0].(*canvas.Text).Color = StatusColor(tm.plans[i].Status)
 		})
 
-	selectPlanLabel := container.New(layout.NewCenterLayout(), canvas.NewText("Select a plan from the list, or press + to make a new plan.", nil))
-
-	ListAndButtons := container.NewWithoutLayout(widget.NewLabel("Error loading plans. Check database connection."))
-	planListSplit := container.NewHSplit(ListAndButtons, container.NewMax(selectPlanLabel))
+	ListAndButtons := container.NewCenter(widget.NewLabel("Error loading plans. Check database connection."))
+	planListSplit := container.NewHSplit(ListAndButtons, container.NewCenter(widget.NewLabel("Select a plan from the list, or press + to make a new plan.")))
 	planListSplit.SetOffset(0.22)
 
-	application.planList.OnSelected = func(id widget.ListItemID) {
-		act.plan, _ = getPlan(tm.plans[id].ID)
-		act.pair = tm.pairs[int64(act.plan.PairID-1)]
-		act.orders, _ = getOrders(act.plan.ID)
-		act.review, _ = getReview(act.plan.ID)
+	ui.planList.OnSelected = func(id widget.ListItemID) {
+		tm.plan, _ = getPlan(tm.plans[id].ID)
+		tm.pair = tm.pairs[int64(tm.plan.PairID-1)]
+		tm.orders, _ = getOrders(tm.plan.ID)
+		tm.review, _ = getReview(tm.plan.ID)
 		planListSplit.Trailing = NewPlanContainer()
 
 		planListSplit.Refresh()
 	}
 
 	addPlanAction := widget.NewToolbarAction(theme.ContentAddIcon(), func() {
-		act.plan = cryptodb.Plan{}
-		act.pair = cryptodb.Pair{}
-		act.pair.QuoteCurrency = " . . . "
-		act.orders = cryptodb.NewOrders(0)
-		act.review = cryptodb.NewReview(0)
+		tm.plan = cryptodb.Plan{}
+		tm.pair = cryptodb.Pair{}
+		tm.pair.QuoteCurrency = " . . . "
+		tm.orders = cryptodb.NewOrders(0)
+		tm.review = cryptodb.NewReview(0)
 
 		planListSplit.Trailing = NewPlanContainer()
 
@@ -69,13 +67,13 @@ func MakePlanListSplit() *container.Split {
 	refreshListAction := widget.NewToolbarAction(theme.ViewRefreshIcon(), func() {
 		tm.plans, err = getPlans()
 		if err != nil {
-			dialog.ShowError(err, application.mainWindow)
+			dialog.ShowError(err, ui.mainWindow)
 		}
-		application.planList.Refresh()
+		ui.planList.Refresh()
 	})
 
 	actionBar := widget.NewToolbar(widget.NewToolbarSpacer(), refreshListAction, addPlanAction)
-	ListAndButtons = container.NewBorder(nil, actionBar, nil, nil, application.planList)
+	ListAndButtons = container.NewBorder(nil, actionBar, nil, nil, ui.planList)
 	planListSplit.Leading = ListAndButtons
 	planListSplit.Refresh()
 

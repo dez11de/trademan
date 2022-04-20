@@ -5,6 +5,7 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
+	"github.com/dez11de/cryptodb"
 )
 
 type reviewForm struct {
@@ -72,4 +73,14 @@ func (af *reviewForm) saveReviewAction() {
 func (af *reviewForm) loadReviewAction() {
 	tm.review, _ = getReview(tm.plan.ID)
 	af.parentWindow.Close()
+}
+
+func (af *reviewForm) archiveAction() {
+	af.gatherReview()
+	tm.plan.Status = cryptodb.Archived
+	saveReview(tm.review)
+	savePlan(tm.plan)
+	af.parentWindow.Close()
+	tm.plans, _ = getPlans()
+	ui.planList.Refresh()
 }

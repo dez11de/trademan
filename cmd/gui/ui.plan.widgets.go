@@ -328,7 +328,7 @@ func (pf *planForm) makeTakeProfitItem(n int, decimals int32, tick decimal.Decim
 			prevName = "entry"
 		} else {
 			prevPrice = decimal.RequireFromString(pf.takeProfitItems[n-1].Widget.(*FloatEntry).Text)
-			prevName = fmt.Sprintf("take profit #%d", n)
+			prevName = fmt.Sprintf("TP #%d", n)
 		}
 		takeProfitPrice, err := decimal.NewFromString(s)
 		switch {
@@ -420,7 +420,7 @@ func (pf *planForm) makeNotesItem() *widget.FormItem {
 	if tm.plan.Notes != "" {
 		notesMultiLineEntry.SetText(tm.plan.Notes)
 	}
-	if tm.plan.Status == cryptodb.Logged {
+	if tm.plan.Status == cryptodb.Archived {
 		notesMultiLineEntry.Disable()
 	}
 	notesMultiLineEntry.Wrapping = fyne.TextWrapWord

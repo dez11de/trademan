@@ -18,7 +18,7 @@ func HandleRequests(c RESTServerConfig) {
 	router.GET(APIv1Base+"pairs", allPairsHandler)
 
 	router.GET(APIv1Base+"execute/:ID", executePlanHandler)
-	router.GET(APIv1Base+"plans", getPlansHandler)
+    router.GET(APIv1Base+"plans/:Archived", getPlansHandler)
 	router.GET(APIv1Base+"plan/:ID", getPlanHandler)
 	router.POST(APIv1Base+"plan", savePlanHandler)
 
@@ -32,6 +32,6 @@ func HandleRequests(c RESTServerConfig) {
 
 	router.GET(APIv1Base+"logs/:PlanID", getLogsHandler)
 
-	log.Println("==========================[ API Server Ready ]==========================")
+	log.Println("=========================[ API Server Ready ]=========================")
 	log.Fatal(http.ListenAndServe(fmt.Sprintf("%s:%s", c.Host, c.Port), router))
 }

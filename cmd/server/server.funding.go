@@ -8,7 +8,7 @@ import (
 
 func processFundings() (err error) {
 	var plans []cryptodb.Plan
-	result := db.Where("status BETWEEN ? AND ?", cryptodb.Created, cryptodb.Logged).Find(&plans)
+	result := db.Where("status BETWEEN ? AND ?", cryptodb.Created, cryptodb.Archived).Find(&plans)
 	if result.Error != nil {
 		return result.Error
 	}

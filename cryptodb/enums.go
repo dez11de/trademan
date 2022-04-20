@@ -35,7 +35,7 @@ const (
 	Deactivated
 	Closed
 	Liquidated
-	Logged
+    Archived
 )
 
 type TakeProfitStrategy int

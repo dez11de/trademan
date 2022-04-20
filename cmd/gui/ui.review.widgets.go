@@ -107,8 +107,9 @@ func (af *reviewForm) makeNotesItem() *widget.FormItem {
 }
 
 func (af *reviewForm) makeToolBar() *widget.Toolbar {
+    archiveButton := widget.NewToolbarAction(theme.FolderIcon(), af.archiveAction)
 	saveAssassmentButton := widget.NewToolbarAction(theme.ConfirmIcon(), af.saveReviewAction)
 	cancelAssessmentButton := widget.NewToolbarAction(theme.ContentUndoIcon(), nil)
-	toolbar := widget.NewToolbar(widget.NewToolbarSpacer(), cancelAssessmentButton, saveAssassmentButton)
+	toolbar := widget.NewToolbar(widget.NewToolbarSpacer(), archiveButton, cancelAssessmentButton, saveAssassmentButton)
 	return toolbar
 }

@@ -477,11 +477,11 @@ func (i *TakeProfitMoment) Scan(value interface{}) error {
 	return nil
 }
 
-const _StatusName = "UnplannedPlannedCreatedOrderedNewUntriggeredPartiallyFilledFilledRejectedErrorStoppedPendingCancelCancelledDeactivatedClosedLiquidatedLogged"
+const _StatusName = "UnplannedPlannedCreatedOrderedNewUntriggeredPartiallyFilledFilledRejectedErrorStoppedPendingCancelCancelledDeactivatedClosedLiquidatedArchived"
 
-var _StatusIndex = [...]uint8{0, 9, 16, 23, 30, 33, 44, 59, 65, 73, 78, 85, 98, 107, 118, 124, 134, 140}
+var _StatusIndex = [...]uint8{0, 9, 16, 23, 30, 33, 44, 59, 65, 73, 78, 85, 98, 107, 118, 124, 134, 142}
 
-const _StatusLowerName = "unplannedplannedcreatedorderednewuntriggeredpartiallyfilledfilledrejectederrorstoppedpendingcancelcancelleddeactivatedclosedliquidatedlogged"
+const _StatusLowerName = "unplannedplannedcreatedorderednewuntriggeredpartiallyfilledfilledrejectederrorstoppedpendingcancelcancelleddeactivatedclosedliquidatedarchived"
 
 func (i Status) String() string {
 	if i < 0 || i >= Status(len(_StatusIndex)-1) {
@@ -510,10 +510,10 @@ func _StatusNoOp() {
 	_ = x[Deactivated-(13)]
 	_ = x[Closed-(14)]
 	_ = x[Liquidated-(15)]
-	_ = x[Logged-(16)]
+	_ = x[Archived-(16)]
 }
 
-var _StatusValues = []Status{Unplanned, Planned, Created, Ordered, New, Untriggered, PartiallyFilled, Filled, Rejected, Error, Stopped, PendingCancel, Cancelled, Deactivated, Closed, Liquidated, Logged}
+var _StatusValues = []Status{Unplanned, Planned, Created, Ordered, New, Untriggered, PartiallyFilled, Filled, Rejected, Error, Stopped, PendingCancel, Cancelled, Deactivated, Closed, Liquidated, Archived}
 
 var _StatusNameToValueMap = map[string]Status{
 	_StatusName[0:9]:          Unplanned,
@@ -548,8 +548,8 @@ var _StatusNameToValueMap = map[string]Status{
 	_StatusLowerName[118:124]: Closed,
 	_StatusName[124:134]:      Liquidated,
 	_StatusLowerName[124:134]: Liquidated,
-	_StatusName[134:140]:      Logged,
-	_StatusLowerName[134:140]: Logged,
+	_StatusName[134:142]:      Archived,
+	_StatusLowerName[134:142]: Archived,
 }
 
 var _StatusNames = []string{
@@ -569,7 +569,7 @@ var _StatusNames = []string{
 	_StatusName[107:118],
 	_StatusName[118:124],
 	_StatusName[124:134],
-	_StatusName[134:140],
+	_StatusName[134:142],
 }
 
 // StatusString retrieves an enum value from the enum constants string name.

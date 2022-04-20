@@ -60,7 +60,7 @@ func saveReviewHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Para
 	if review.Status == "Completed" {
 		var plan cryptodb.Plan
 		db.Where("id = ?", review.PlanID).First(&plan)
-		plan.Status = cryptodb.Logged
+		plan.Status = cryptodb.Archived
 		db.Save(&plan)
 	}
 

@@ -11,8 +11,9 @@ import (
 type reviewForm struct {
 	parentWindow fyne.Window
 
-	RiskSelectEntry                 *widget.SelectEntry
 	TimingSelectEntry               *widget.SelectEntry
+	RiskSelectEntry                 *widget.SelectEntry
+    RewardRiskSelectEntry           *widget.SelectEntry
 	StopLossSelectEntry             *widget.SelectEntry
 	EntrySelectEntry                *widget.SelectEntry
 	EmotionSelectEntry              *widget.SelectEntry
@@ -21,31 +22,37 @@ type reviewForm struct {
 	MoveStopLossInProfitSelectEntry *widget.SelectEntry
 	TakeProfitStrategySelectEntry   *widget.SelectEntry
 	TakeProfitCountSelectEntry      *widget.SelectEntry
+    FeeSelectEntry                  *widget.SelectEntry
+    ProfitSelectEntry               *widget.SelectEntry
 	NotesEntry                      *widget.Entry
 }
 
 var af reviewForm
 
 func makeReviewForm() *fyne.Container {
-	leftForm := widget.NewForm()
-	rightForm := widget.NewForm()
-	bottomForm := widget.NewForm()
+	leftColumn := widget.NewForm()
+	rightColumn := widget.NewForm()
+	bottom := widget.NewForm()
 
-	leftForm.AppendItem(af.makeRiskItem())
-	leftForm.AppendItem(af.makeTimingItem())
-	leftForm.AppendItem(af.makeStopLossItem())
-	leftForm.AppendItem(af.makeEntryItem())
-	leftForm.AppendItem(af.makeEmotionItem())
-	rightForm.AppendItem(af.makeFollowPlanItem())
-	rightForm.AppendItem(af.makeOrderManagementItem())
-	rightForm.AppendItem(af.makeMoveStopLossInProfitItem())
-	rightForm.AppendItem(af.makeTakeProfitStrategyItem())
-	rightForm.AppendItem(af.makeTakeProfitCountItem())
+	leftColumn.AppendItem(af.makeRiskItem())
+    leftColumn.AppendItem(af.makeRewardRiskItem())
+	leftColumn.AppendItem(af.makeEmotionItem())
+	leftColumn.AppendItem(af.makeTimingItem())
+	leftColumn.AppendItem(af.makeFollowPlanItem())
+	leftColumn.AppendItem(af.makeOrderManagementItem())
+	leftColumn.AppendItem(af.makeMoveStopLossInProfitItem())
 
-	bottomForm.AppendItem(af.makeNotesItem())
+	rightColumn.AppendItem(af.makeStopLossItem())
+	rightColumn.AppendItem(af.makeEntryItem())
+	rightColumn.AppendItem(af.makeTakeProfitStrategyItem())
+	rightColumn.AppendItem(af.makeTakeProfitCountItem())
+    rightColumn.AppendItem(af.makeFeeItem())
+    rightColumn.AppendItem(af.makeProfitItem())
 
-	totalContainer := container.NewVBox(container.New(layout.NewGridLayoutWithColumns(2), leftForm, rightForm),
-		bottomForm,
+	bottom.AppendItem(af.makeNotesItem())
+
+	totalContainer := container.NewVBox(container.New(layout.NewGridLayoutWithColumns(2), leftColumn, rightColumn),
+		bottom,
 		af.makeToolBar())
 
 	return totalContainer

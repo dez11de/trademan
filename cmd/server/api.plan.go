@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 
@@ -13,13 +12,12 @@ import (
 )
 
 func getPlansHandler(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	log.Printf("getPlansHandler")
 	var allPlans []cryptodb.Plan
 	var result *gorm.DB
-	if p.ByName("archived") != "true" {
+	if p.ByName("Archived") != "true" {
 		result = db.Not(cryptodb.Plan{Status: cryptodb.Archived}).Find(&allPlans)
 	} else {
-		result = db.Where("status == ?", cryptodb.Archived).Find(&allPlans)
+		result = db.Where("status = ?", cryptodb.Archived).Find(&allPlans)
 	}
 	if result.Error != nil {
 		w.WriteHeader(http.StatusInternalServerError)

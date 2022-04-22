@@ -75,7 +75,7 @@ func getPair(id uint) (pair cryptodb.Pair, err error) {
 }
 
 func getPlans() (plans []cryptodb.Plan, err error) {
-	resp, err := http.Get(BaseURL + "plans/false")
+    resp, err := http.Get(BaseURL + "plans/" + strconv.FormatBool(ui.showArchived))
 	if err != nil {
 		return plans, err
 	}

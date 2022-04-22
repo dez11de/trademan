@@ -57,13 +57,6 @@ func saveReviewHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Para
 		return
 	}
 
-	if review.Status == "Completed" {
-		var plan cryptodb.Plan
-		db.Where("id = ?", review.PlanID).First(&plan)
-		plan.Status = cryptodb.Archived
-		db.Save(&plan)
-	}
-
 	jsonResp, err := json.Marshal(review)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

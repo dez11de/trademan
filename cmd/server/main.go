@@ -6,7 +6,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bart613/decimal"
 	"github.com/dez11de/cryptodb"
 	"github.com/dez11de/exchange"
 )
@@ -43,11 +42,14 @@ func main() {
 			log.Fatalf("unable to reload pairs from exchange: %s", err)
 		}
 		for _, p := range exchangePairs {
-			time.Sleep(1543 * time.Millisecond)
-			p.Leverage.Long = decimal.NewFromFloat(10.0)
-			p.Leverage.Short = decimal.NewFromFloat(10.0)
-			e.SendLeverage(p.Name, p.QuoteCurrency, p.Leverage.Long.RoundStep(p.Leverage.Step, false), p.Leverage.Short.RoundStep(p.Leverage.Step, false))
-			db.Create(&p)
+			// TODO: add support for multiple currencies
+			if p.QuoteCurrency == "USDT" {
+				// time.Sleep(1543 * time.Millisecond)
+				// p.Leverage.Long = decimal.NewFromFloat(10.0)
+				// p.Leverage.Short = decimal.NewFromFloat(10.0)
+				// e.SendLeverage(p.Name, p.QuoteCurrency, p.Leverage.Long.RoundStep(p.Leverage.Step, false), p.Leverage.Short.RoundStep(p.Leverage.Step, false))
+				db.Create(&p)
+			}
 		}
 
 		exchangeWallet, err := e.GetCurrentWallet()
@@ -128,9 +130,11 @@ func main() {
 				log.Printf("error getting current pairs %v", err)
 			} else {
 				for _, p := range currentPairs {
-					err = db.CrupdatePair(&p)
-					if err != nil {
-						log.Printf("error writing pair to database %v", err)
+					if p.QuoteCurrency == "USDT" {
+						err = db.CrupdatePair(&p)
+						if err != nil {
+							log.Printf("error writing pair to database %v", err)
+						}
 					}
 				}
 			}

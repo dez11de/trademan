@@ -8,7 +8,7 @@ type Review struct {
 	ID                   uint64
 	PlanID               uint64
 	Risk                 string `gorm:"type:varchar(25)"`
-	RiskReward           string `gorm:"type:varchar(25)"`
+	RewardRisk           string `gorm:"type:varchar(25)"`
 	Timing               string `gorm:"type:varchar(25)"`
 	StopLoss             string `gorm:"type:varchar(25)"`
 	Entry                string `gorm:"type:varchar(25)"`

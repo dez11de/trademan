@@ -22,7 +22,7 @@ func (af *reviewForm) makeRiskItem() *widget.FormItem {
 	af.RiskSelectEntry = widget.NewSelectEntry(tm.reviewOptions["risk"])
 	af.RiskSelectEntry.SetText(tm.review.Risk)
 	i := widget.NewFormItem("Risk", af.RiskSelectEntry)
-	i.HintText = fmt.Sprintf("Risk was: %s%%", tm.plan.Risk.StringFixed(2))
+	i.HintText = fmt.Sprintf("Risk was: %s%%", tm.plan.Risk.StringFixed(1))
 
 	return i
 }
@@ -31,7 +31,7 @@ func (af *reviewForm) makeRewardRiskItem() *widget.FormItem {
 	af.RewardRiskSelectEntry = widget.NewSelectEntry(tm.reviewOptions["reward_risk"])
 	af.RewardRiskSelectEntry.SetText(tm.review.Risk)
 	i := widget.NewFormItem("Reward/Risk", af.RewardRiskSelectEntry)
-	i.HintText = fmt.Sprintf("RiskReward was: %.1f", tm.plan.RewardRiskRatio)
+	i.HintText = fmt.Sprintf("Reward/Risk was: %.1f", tm.plan.RewardRiskRatio)
 
 	return i
 }

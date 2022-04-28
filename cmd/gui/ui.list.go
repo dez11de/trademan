@@ -13,7 +13,6 @@ import (
 )
 
 func MakePlanListSplit() *container.Split {
-	var err error
 	ui.planList = widget.NewList(
 		func() int {
 			return len(tm.plans)
@@ -66,7 +65,8 @@ func MakePlanListSplit() *container.Split {
 	})
 
 	refreshListAction := widget.NewToolbarAction(theme.ViewRefreshIcon(), func() {
-		tm.plans, err = getPlans()
+        var err error
+        tm.plans, err = getPlans()
 		if err != nil {
 			dialog.ShowError(err, ui.mainWindow)
 		}

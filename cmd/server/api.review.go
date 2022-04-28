@@ -68,7 +68,7 @@ func saveReviewHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Para
 }
 
 func getReviewOptionsHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	colNames := []string{"risk", "timing", "stop_loss", "entry", "emotion", "follow_plan", "order_management", "move_stop_loss_in_profit", "take_profit_strategy", "take_profit_count"}
+	colNames := []string{"timing", "risk", "reward_risk", "stop_loss", "entry", "emotion", "follow_plan", "order_management", "move_stop_loss_in_profit", "take_profit_strategy", "take_profit_count", "fee", "profit"}
 	var colOptions []string
 	options := make(map[string][]string)
 

@@ -14,7 +14,7 @@ import (
 	"github.com/dez11de/cryptodb"
 )
 
-type planForm struct {
+type planContainer struct {
 	leftForm  *widget.Form
 	rightForm *widget.Form
 
@@ -27,39 +27,42 @@ type planForm struct {
 	takeProfitItems     [cryptodb.MaxTakeProfits]*widget.FormItem
 	notesItem           *widget.FormItem
 	tradingViewPlanItem *widget.FormItem
+
+	toolbar *widget.Toolbar
 }
 
-var pf planForm
+var pc planContainer
 
 func NewPlanContainer() *fyne.Container {
-	pf.leftForm = widget.NewForm()
-	pf.rightForm = widget.NewForm()
+	pc.leftForm = widget.NewForm()
+	pc.rightForm = widget.NewForm()
 	bottomForm := widget.NewForm()
 
-	pf.leftForm.AppendItem(pf.makePairItem())
-	pf.leftForm.AppendItem(pf.makeDirectionItem())
-	pf.leftForm.AppendItem(pf.makeRiskItem())
-	pf.leftForm.AppendItem(pf.makeTradingViewItem())
-	pf.leftForm.AppendItem(pf.makeTakeProfitStrategyItem())
-	pf.rightForm.AppendItem(pf.makeStopLossItem())
-	pf.rightForm.AppendItem(pf.makeEntryItem())
+	pc.leftForm.AppendItem(pc.makePairItem())
+	pc.leftForm.AppendItem(pc.makeDirectionItem())
+	pc.leftForm.AppendItem(pc.makeRiskItem())
+	pc.leftForm.AppendItem(pc.makeTradingViewItem())
+	pc.leftForm.AppendItem(pc.makeTakeProfitStrategyItem())
+	pc.rightForm.AppendItem(pc.makeStopLossItem())
+	pc.rightForm.AppendItem(pc.makeEntryItem())
 
 	for i := 0; i <= cryptodb.MaxTakeProfits-1; i++ {
-		pf.rightForm.AppendItem(pf.makeTakeProfitItem(i, tm.pair.PriceScale, tm.pair.Price.Tick))
+		pc.rightForm.AppendItem(pc.makeTakeProfitItem(i, tm.pair.PriceScale, tm.pair.Price.Tick))
 	}
-	pf.setQuoteCurrency()
-	pf.setPriceScale()
+	pc.setQuoteCurrency()
+	pc.setPriceScale()
 
-	bottomForm.AppendItem(pf.makeNotesItem())
-	totalContainer := container.NewVBox(pf.makeStatContainer(),
-		container.New(layout.NewGridLayoutWithColumns(2), pf.leftForm, pf.rightForm),
-        bottomForm,
-		pf.makeToolBar())
+	bottomForm.AppendItem(pc.makeNotesItem())
+	pc.toolbar = pc.makeToolbar()
+	totalContainer := container.NewVBox(pc.makeStatContainer(),
+		container.New(layout.NewGridLayoutWithColumns(2), pc.leftForm, pc.rightForm),
+		bottomForm,
+		pc.toolbar)
 
 	return totalContainer
 }
 
-func (pf *planForm) gatherPlan() {
+func (pf *planContainer) gatherPlan() {
 	tm.plan.PairID = tm.pair.ID
 	tm.plan.Direction.Scan(pf.directionItem.Widget.(*widget.RadioGroup).Selected)
 	tm.plan.Risk = decimal.RequireFromString(pf.riskItem.Widget.(*FloatEntry).Text)
@@ -70,7 +73,7 @@ func (pf *planForm) gatherPlan() {
 	tm.plan.Notes = pf.notesItem.Widget.(*widget.Entry).Text
 }
 
-func (pf *planForm) gatherOrders() {
+func (pf *planContainer) gatherOrders() {
 	tm.orders[cryptodb.MarketStopLoss].Price = decimal.RequireFromString(pf.stopLossItem.Widget.(*FloatEntry).Text)
 	tm.orders[cryptodb.Entry].Price = decimal.RequireFromString(pf.entryItem.Widget.(*FloatEntry).Text)
 	for i := 0; i < cryptodb.MaxTakeProfits; i++ {
@@ -83,7 +86,7 @@ func (pf *planForm) gatherOrders() {
 	}
 }
 
-func (pf *planForm) saveSetup() {
+func (pf *planContainer) saveSetup() {
 	pf.gatherPlan()
 	var err error
 	tm.plan, err = savePlan(tm.plan)
@@ -102,31 +105,24 @@ func (pf *planForm) saveSetup() {
 	if err != nil {
 		dialog.ShowError(err, ui.mainWindow)
 	}
-
-	tm.review.PlanID = tm.plan.ID
-	_, err = saveReview(tm.review)
-	if err != nil {
-		dialog.ShowError(err, ui.mainWindow)
-	}
 }
 
-func (pf *planForm) okAction() {
+func (pf *planContainer) okAction() {
 	pf.saveSetup()
 
 	tm.plans, _ = getPlans()
 	ui.planList.Refresh()
-	// makePlanForm()
 }
 
-func (pf *planForm) undoAction() {
+func (pf *planContainer) undoAction() {
 	tm.plan, _ = getPlan(tm.plan.ID)
 	tm.orders, _ = getOrders(tm.plan.ID)
-	// makePlanForm()
-	// pf.leftForm.Refresh()
-	// pf.rightForm.Refresh()
+	NewPlanContainer()
+	pf.leftForm.Refresh()
+	pf.rightForm.Refresh()
 }
 
-func (pf *planForm) executeAction() {
+func (pf *planContainer) executeAction() {
 	pf.saveSetup()
 	executePlan(tm.plan.ID)
 
@@ -134,7 +130,7 @@ func (pf *planForm) executeAction() {
 	ui.planList.Refresh()
 }
 
-func (pf *planForm) historyAction() {
+func (pf *planContainer) historyAction() {
 	logEntries, err := getLogs(tm.plan.ID)
 	if err != nil {
 		dialog.ShowError(err, ui.mainWindow)
@@ -162,9 +158,13 @@ func (pf *planForm) historyAction() {
 	logAnimation.Start()
 }
 
-func (pf *planForm) reviewAction() {
+func (pf *planContainer) reviewAction() {
+	pf.toolbar.Hide()
+	ui.planListSplit.Refresh()
 	reviewContainer := makeReviewForm()
 	af.parentWindow = ui.app.NewWindow("Review")
 	af.parentWindow.SetContent(reviewContainer)
 	af.parentWindow.Show()
+	pf.toolbar.Show()
+	ui.planListSplit.Refresh()
 }

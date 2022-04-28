@@ -148,15 +148,14 @@ func matchOrder(incomingOrder *exchange.Order) (o cryptodb.Order, err error) {
 
 	result := db.Where("system_order_id = ?", matchOrderID).Take(&order)
 	if result.Error != nil && incomingOrder.OrderType == "Market" {
-		// TODO: make sure the plan is still open and in the same direction?
 		result := db.Joins("JOIN plans ON orders.plan_id = plans.id").
 			Joins("JOIN pairs ON pairs.id = plans.pair_id").
-			Where("order_kind = ? AND pairs.name = ?", cryptodb.MarketStopLoss, incomingOrder.Symbol).
+			Where("orders.order_kind = ? AND pairs.name = ? AND orders.status = ?", cryptodb.MarketStopLoss, incomingOrder.Symbol, cryptodb.Unplanned).
 			Take(&order)
 		if result.Error != nil {
+            // Don't have an unplanned stoploss order for this pair
 			return o, result.Error
 		} else {
-			// First sign of stoploss order
 			order.SystemOrderID = incomingOrder.StopOrderID
 		}
 	} else {

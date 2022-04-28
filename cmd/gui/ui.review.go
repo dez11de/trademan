@@ -13,7 +13,7 @@ type reviewForm struct {
 
 	TimingSelectEntry               *widget.SelectEntry
 	RiskSelectEntry                 *widget.SelectEntry
-    RewardRiskSelectEntry           *widget.SelectEntry
+	RewardRiskSelectEntry           *widget.SelectEntry
 	StopLossSelectEntry             *widget.SelectEntry
 	EntrySelectEntry                *widget.SelectEntry
 	EmotionSelectEntry              *widget.SelectEntry
@@ -22,8 +22,8 @@ type reviewForm struct {
 	MoveStopLossInProfitSelectEntry *widget.SelectEntry
 	TakeProfitStrategySelectEntry   *widget.SelectEntry
 	TakeProfitCountSelectEntry      *widget.SelectEntry
-    FeeSelectEntry                  *widget.SelectEntry
-    ProfitSelectEntry               *widget.SelectEntry
+	FeeSelectEntry                  *widget.SelectEntry
+	ProfitSelectEntry               *widget.SelectEntry
 	NotesEntry                      *widget.Entry
 }
 
@@ -35,7 +35,7 @@ func makeReviewForm() *fyne.Container {
 	bottom := widget.NewForm()
 
 	leftColumn.AppendItem(af.makeRiskItem())
-    leftColumn.AppendItem(af.makeRewardRiskItem())
+	leftColumn.AppendItem(af.makeRewardRiskItem())
 	leftColumn.AppendItem(af.makeEmotionItem())
 	leftColumn.AppendItem(af.makeTimingItem())
 	leftColumn.AppendItem(af.makeFollowPlanItem())
@@ -46,8 +46,8 @@ func makeReviewForm() *fyne.Container {
 	rightColumn.AppendItem(af.makeEntryItem())
 	rightColumn.AppendItem(af.makeTakeProfitStrategyItem())
 	rightColumn.AppendItem(af.makeTakeProfitCountItem())
-    rightColumn.AppendItem(af.makeFeeItem())
-    rightColumn.AppendItem(af.makeProfitItem())
+	rightColumn.AppendItem(af.makeFeeItem())
+	rightColumn.AppendItem(af.makeProfitItem())
 
 	bottom.AppendItem(af.makeNotesItem())
 
@@ -60,20 +60,25 @@ func makeReviewForm() *fyne.Container {
 
 func (af *reviewForm) gatherReview() {
 	tm.review.Risk = af.RiskSelectEntry.Text
-	tm.review.Timing = af.TimingSelectEntry.Text
-	tm.review.StopLoss = af.StopLossSelectEntry.Text
-	tm.review.Entry = af.EntrySelectEntry.Text
+    tm.review.RewardRisk = af.RewardRiskSelectEntry.Text
 	tm.review.Emotion = af.EmotionSelectEntry.Text
+	tm.review.Timing = af.TimingSelectEntry.Text
 	tm.review.FollowPlan = af.FollowPlanSelectEntry.Text
 	tm.review.OrderManagement = af.OrderManagementSelectEntry.Text
+    tm.review.MoveStopLossInProfit = af.MoveStopLossInProfitSelectEntry.Text
+
+	tm.review.StopLoss = af.StopLossSelectEntry.Text
+	tm.review.Entry = af.EntrySelectEntry.Text
 	tm.review.TakeProfitStrategy = af.TakeProfitStrategySelectEntry.Text
 	tm.review.TakeProfitCount = af.TakeProfitCountSelectEntry.Text
+	tm.review.Fee = af.FeeSelectEntry.Text
+	tm.review.Profit = af.ProfitSelectEntry.Text
 	tm.review.Notes = af.NotesEntry.Text
 }
 
 func (af *reviewForm) saveReviewAction() {
 	af.gatherReview()
-	saveReview(tm.review)
+	tm.review, _ = saveReview(tm.review)
 	af.parentWindow.Close()
 }
 
@@ -84,10 +89,12 @@ func (af *reviewForm) loadReviewAction() {
 
 func (af *reviewForm) archiveAction() {
 	af.gatherReview()
+	tm.review, _ = saveReview(tm.review)
 	tm.plan.Status = cryptodb.Archived
-	saveReview(tm.review)
 	savePlan(tm.plan)
 	af.parentWindow.Close()
 	tm.plans, _ = getPlans()
+    ui.planListSplit.Trailing = ui.noPlanSelectedContainer
+    ui.planListSplit.Refresh()
 	ui.planList.Refresh()
 }

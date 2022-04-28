@@ -6,9 +6,7 @@ import (
 )
 
 func makeMainContent() *fyne.Container {
-	mainContent := container.NewBorder(nil, MakePerformanceContainer(), nil, nil, MakePlanListSplit())
-
-	return mainContent
+	return container.NewBorder(nil, MakePerformanceContainer(), nil, nil, MakePlanListSplit())
 }
 
 func makeMainMenu() *fyne.MainMenu {
@@ -17,8 +15,8 @@ func makeMainMenu() *fyne.MainMenu {
 		ui.showArchived = !ui.showArchived
 		showArchivedItem.Checked = ui.showArchived
 		tm.plans, _ = getPlans()
-        ui.planListSplit.Trailing = ui.noPlanSelectedContainer
-        ui.planListSplit.Refresh()
+		ui.planListSplit.Trailing = ui.noPlanSelectedContainer
+		ui.planListSplit.Refresh()
 		ui.planList.Refresh()
 	}
 

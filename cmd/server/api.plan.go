@@ -110,8 +110,12 @@ func executePlanHandler(w http.ResponseWriter, r *http.Request, params httproute
 
 	tx := db.Begin()
 	tx.Create(&cryptodb.Log{PlanID: plan.ID, Source: cryptodb.Server, Text: "Finalized orders."})
-	// TODO: this should handle an error
-	plan.FinalizeOrders(balance.Available, pair, orders)
+	// Only recalculate for unplanned orders, for now. TODO This should be able to handle adding or removing take profit orders.
+	if orders[cryptodb.Entry].Status == cryptodb.Unplanned {
+		// TODO: this should handle an error
+		plan.FinalizeOrders(balance.Available, pair, orders)
+	}
+
 	result := tx.Save(&orders)
 	if result.Error != nil {
 		w.WriteHeader(http.StatusInternalServerError)

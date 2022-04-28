@@ -17,7 +17,7 @@ import (
 	"github.com/lithammer/fuzzysearch/fuzzy"
 )
 
-func (pf *planForm) setQuoteCurrency() {
+func (pf *planContainer) setQuoteCurrency() {
 	pf.stopLossItem.Text = fmt.Sprintf("Stop Loss (%s)", tm.pair.QuoteCurrency)
 
 	pf.entryItem.Text = fmt.Sprintf("Entry (%s)", tm.pair.QuoteCurrency)
@@ -28,7 +28,7 @@ func (pf *planForm) setQuoteCurrency() {
 	pf.rightForm.Refresh()
 }
 
-func (pf *planForm) setPriceScale() {
+func (pf *planContainer) setPriceScale() {
 	pf.stopLossItem.Widget.(*FloatEntry).decimals = tm.pair.PriceScale
 	pf.stopLossItem.Widget.(*FloatEntry).tick = tm.pair.Price.Tick
 	pf.stopLossItem.Widget.(*FloatEntry).SetPlaceHolder(decimal.Zero.StringFixed(tm.pair.PriceScale))
@@ -72,7 +72,7 @@ func (fe *FloatEntry) FocusLost() {
 	fe.Entry.FocusLost()
 }
 
-func (ui *planForm) fzfPairs(s string) (possiblePairs []string) {
+func (ui *planContainer) fzfPairs(s string) (possiblePairs []string) {
 	var pairNames []string
 	for _, p := range tm.pairs {
 		pairNames = append(pairNames, p.Name)
@@ -91,7 +91,7 @@ func (ui *planForm) fzfPairs(s string) (possiblePairs []string) {
 	return possiblePairs
 }
 
-func (pf *planForm) makeStatContainer() *fyne.Container {
+func (pf *planContainer) makeStatContainer() *fyne.Container {
 	// TODO: make distinction between start RRR and evolved RRR
 	startRewardRiskRatioLabel := widget.NewLabel("Start RRR: ")
 	startRewardRiskRatioValue := widget.NewLabel(fmt.Sprintf("%.1f", 0.0))
@@ -114,7 +114,7 @@ func (pf *planForm) makeStatContainer() *fyne.Container {
 	return container
 }
 
-func (pf *planForm) makePairItem() *widget.FormItem {
+func (pf *planContainer) makePairItem() *widget.FormItem {
 	pairEntry := xwidget.NewCompletionEntry([]string{})
 	pairEntry.SetPlaceHolder("Select pair from list")
 	if tm.plan.PairID != 0 {
@@ -158,7 +158,7 @@ func (pf *planForm) makePairItem() *widget.FormItem {
 	return pf.pairItem
 }
 
-func (pf *planForm) makeDirectionItem() *widget.FormItem {
+func (pf *planContainer) makeDirectionItem() *widget.FormItem {
 	directionRadio := widget.NewRadioGroup(nil, nil)
 	directionRadio.Disable()
 	directionRadio.Horizontal = true
@@ -179,7 +179,7 @@ func (pf *planForm) makeDirectionItem() *widget.FormItem {
 	return pf.directionItem
 }
 
-func (pf *planForm) makeRiskItem() *widget.FormItem {
+func (pf *planContainer) makeRiskItem() *widget.FormItem {
 	riskEntry := NewFloatEntry(1, decimal.NewFromFloat(0.1))
 	riskEntry.Disable()
 	riskEntry.SetPlaceHolder("0.0")
@@ -207,7 +207,7 @@ func (pf *planForm) makeRiskItem() *widget.FormItem {
 	return pf.riskItem
 }
 
-func (pf *planForm) makeTakeProfitStrategyItem() *widget.FormItem {
+func (pf *planContainer) makeTakeProfitStrategyItem() *widget.FormItem {
 	tPStratSelect := widget.NewSelect(nil, nil)
 	tPStratSelect.Options = cryptodb.TakeProfitStrategyStrings()
 	tPStratSelect.Disable()
@@ -230,7 +230,7 @@ func (pf *planForm) makeTakeProfitStrategyItem() *widget.FormItem {
 	return pf.TPStratItem
 }
 
-func (pf *planForm) makeStopLossItem() *widget.FormItem {
+func (pf *planContainer) makeStopLossItem() *widget.FormItem {
 	StopLossFloatEntry := NewFloatEntry(tm.pair.PriceScale, tm.pair.Price.Tick)
 	StopLossFloatEntry.Disable()
 	pf.stopLossItem = widget.NewFormItem(fmt.Sprintf("Stop Loss (%s)", tm.pair.QuoteCurrency), StopLossFloatEntry)
@@ -258,7 +258,7 @@ func (pf *planForm) makeStopLossItem() *widget.FormItem {
 	return pf.stopLossItem
 }
 
-func (pf *planForm) makeEntryItem() *widget.FormItem {
+func (pf *planContainer) makeEntryItem() *widget.FormItem {
 	entryFloatEntry := NewFloatEntry(tm.pair.PriceScale, tm.pair.Price.Tick)
 	entryFloatEntry.Disable()
 	pf.entryItem = widget.NewFormItem(fmt.Sprintf("Entry (%s)", tm.pair.QuoteCurrency), entryFloatEntry)
@@ -296,7 +296,7 @@ func (pf *planForm) makeEntryItem() *widget.FormItem {
 	return pf.entryItem
 }
 
-func (pf *planForm) makeTakeProfitItem(n int, decimals int32, tick decimal.Decimal) *widget.FormItem {
+func (pf *planContainer) makeTakeProfitItem(n int, decimals int32, tick decimal.Decimal) *widget.FormItem {
 	takeProfitFloatEntry := NewFloatEntry(decimals, tick)
 	takeProfitFloatEntry.Disable()
 	pf.takeProfitItems[n] = widget.NewFormItem(fmt.Sprintf("TP #%d (%s)", n+1, tm.pair.QuoteCurrency), takeProfitFloatEntry)
@@ -367,7 +367,7 @@ func (pf *planForm) makeTakeProfitItem(n int, decimals int32, tick decimal.Decim
 	return pf.takeProfitItems[n]
 }
 
-func (pf *planForm) makeTradingViewItem() *widget.FormItem {
+func (pf *planContainer) makeTradingViewItem() *widget.FormItem {
 	editEntry := widget.NewEntry()
 	saveButton := widget.NewButtonWithIcon("", theme.DocumentSaveIcon(), nil)
 
@@ -414,7 +414,7 @@ func (pf *planForm) makeTradingViewItem() *widget.FormItem {
 	return pf.tradingViewPlanItem
 }
 
-func (pf *planForm) makeNotesItem() *widget.FormItem {
+func (pf *planContainer) makeNotesItem() *widget.FormItem {
 	notesMultiLineEntry := widget.NewMultiLineEntry()
 	notesMultiLineEntry.SetPlaceHolder("Enter notes...")
 	if tm.plan.Notes != "" {
@@ -430,7 +430,7 @@ func (pf *planForm) makeNotesItem() *widget.FormItem {
 	return pf.notesItem
 }
 
-func (pf *planForm) makeToolBar() *widget.Toolbar {
+func (pf *planContainer) makeToolbar() *widget.Toolbar {
 	reviewAction := widget.NewToolbarAction(theme.ListIcon(), pf.reviewAction)
 	historyAction := widget.NewToolbarAction(theme.HistoryIcon(), pf.historyAction)
 	executeAction := widget.NewToolbarAction(theme.UploadIcon(), pf.executeAction)

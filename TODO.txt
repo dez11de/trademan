@@ -8,6 +8,10 @@ Golang
 Refactor!
     Might not be the most fun, but is always worth it
 
+Limitchecker
+    Mail if seed limit (lower limit) is reached to add funds
+    Mail if double limit (upper limit) is reached to double funds (if possible)
+
 Confirmations
     Make sure confirmations are set before be able to send plan
 

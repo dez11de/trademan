@@ -11,6 +11,8 @@ Refactor!
 Confirmations
     Make sure confirmations are set before be able to send plan
 
+Investigate grid layout
+
 Remember window size and position
     For main window, review and confirmations
 

@@ -8,6 +8,9 @@ Golang
 Refactor!
     Might not be the most fun, but is always worth it
 
+Confirmations
+    Make sure confirmations are set before be able to send plan
+
 Remember window size and position
     For main window, review and confirmations
 
@@ -20,7 +23,7 @@ Subaccounts
     Lable subaccounts 
     Be able to select subaccount or all
     Show which subaccount a plan belongs to
-    support multpiple plans for pair
+    Support multpiple (active) plans for pair
 
 Reports
     Results per week, month, quarter, year

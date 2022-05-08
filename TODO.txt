@@ -18,8 +18,9 @@ Turn takeProfitEntry into a widget that can support
 Subaccounts
     Enter multiple subaccounts in configurations
     Lable subaccounts 
-    Be able to select subaccounts or all
+    Be able to select subaccount or all
     Show which subaccount a plan belongs to
+    support multpiple plans for pair
 
 Reports
     Results per week, month, quarter, year
